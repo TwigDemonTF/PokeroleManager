@@ -1,0 +1,21 @@
+{
+    "diagnostics.globals": [
+        "JSON",
+        "WebRequest",
+        "onUpdate",
+        "onLoad",
+        "self",
+        "WebSocket",
+        "headers",
+        "readNotebookByPlayer",
+        "Notes",
+        "playerColor",
+        "printToAll",
+        "getNotebookTabs",
+        "getNotebookByTitle",
+        "getNotebookByColor"
+    ],
+    "diagnostics.disable": [
+        "discard-returns"
+    ]
+}
