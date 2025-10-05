@@ -1,22 +1,2 @@
----
-
-kanban-plugin: basic
-
----
-
-## Backlog
-
-## Todo
-
-## Work in progress
-
-## Completed
-
-**Complete**
-
-
-%% kanban:settings
-```
-{"kanban-plugin":"basic"}
-```
-%%
+Create system for adding stats to encountered pokemon
+#Critical
