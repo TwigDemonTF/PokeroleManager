@@ -1,0 +1,55 @@
+# Test pokemon
+ 
+def test_pokemon_creation(client):
+    response = client.post("/data", json={
+        "Name": "Airalin",
+        "Level": 1,
+        "Gender": "Female",
+        "Age": 21,
+        "Nature": "Quiet",
+        "Ability": "Synchronize",
+        "BaseHealth": "3",
+        "Will": 6,
+        "Logic": 1,
+        "Instinct": 2,
+        "Primal": 0,
+        "HeldItem": "",
+        "Garment1": "",
+        "Garment2": "",
+        "Garment3": "",
+        "Status": "Healthy",
+        "PrimaryType": "Psychic",
+        "SecondaryType": "None",
+        "Strength": 1,
+        "StrengthPotential": 3,
+        "Dexterity": 1,
+        "DexterityPotential": 3,
+        "Vitality": 1,
+        "VitalityPotential": 3,
+        "Special": 2,
+        "SpecialPotential": 4,
+        "Insight": 1,
+        "InsightPotential": 3,
+        "Fight": 2,
+        "Survival": 0,
+        "Contest": 1,
+        "Brawl": 0,
+        "Channel": 0,
+        "Clash": 0,
+        "Evasion": 0,
+        "Alert": 0,
+        "Athletic": 0,
+        "NatureStat": 0,
+        "Stealth": 0,
+        "Allure": 0,
+        "Etiquette": 0,
+        "Intimidate": 0,
+        "Perform": 0,
+        "ExperiencePoints": 0,
+        "IsNpc": 0,
+        "Guid": "09c38c"
+    })
+
+    assert response.status_code == 201
+    assert "id" in response.json
+ 
