@@ -54,9 +54,9 @@ jobs:
         run: |
           cd ~/PokeroleManager/Api
           python3 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          ~/PokeroleManager/Api/venv/bin/pip install --upgrade pip
+          ~/PokeroleManager/Api/venv/bin/pip install -r requirements.txt
+          sudo systemctl daemon-reload
           sudo systemctl restart pokerole.service
 
       # 10. Deploy frontend (optional)
