@@ -7,7 +7,28 @@ on:
 
 jobs:
   run-tests:
-    uses: ./.github/workflows/pylint.yml
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          if [ -f Api/requirements.txt ]; then pip install -r Api/requirements.txt; fi
+          if [ -f Website/requirements.txt ]; then pip install -r Website/requirements.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run backend tests
+        run: pytest Api/tests --maxfail=1 --disable-warnings -q
+
+      - name: Run frontend tests
+        run: pytest Website/tests --maxfail=1 --disable-warnings -q
 
   deploy:
     needs: run-tests
