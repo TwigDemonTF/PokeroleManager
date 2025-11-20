@@ -29,15 +29,21 @@ jobs:
 
       - name: Run frontend tests
         run: pytest Website/tests --maxfail=1 --disable-warnings -q
-
+        
   deploy:
     needs: run-tests
     runs-on: ubuntu-latest
-
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=${PYTHONPATH}:$(pwd)" >> $GITHUB_ENV
+  
+      - name: Run backend tests
+        run: pytest Api/tests --maxfail=1 --disable-warnings -q
+  
       - name: Copy project to server via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -46,7 +52,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "."
           target: "~/PokeroleManager"
-
+  
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -59,3 +65,4 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart pokerole.service
+
