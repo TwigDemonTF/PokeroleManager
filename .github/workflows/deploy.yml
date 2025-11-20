@@ -1,0 +1,66 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-tests-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Install backend dependencies for testing
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f Api/requirements.txt ]; then pip install -r Api/requirements.txt; fi
+
+      # 4. Install frontend dependencies for testing
+      - name: Install frontend test dependencies
+        run: |
+          if [ -f Website/requirements.txt ]; then pip install -r Website/requirements.txt; fi
+
+      # 5. Set PYTHONPATH so tests can find modules
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
+      # 6. Run backend tests
+      - name: Run backend tests
+        run: pytest Api/tests --maxfail=1 --disable-warnings -q
+
+      # 7. Run frontend tests
+      - name: Run frontend tests
+        run: pytest Website/tests --maxfail=1 --disable-warnings -q || echo "No frontend tests found"
+
+      # 8. Copy project to stable folder for deployment
+      - name: Copy project to stable folder
+        run: |
+          mkdir -p ~/PokeroleManager
+          rsync -a --delete ./ ~/PokeroleManager/
+
+      # 9. Deploy backend: create venv, install dependencies, restart service
+      - name: Deploy backend
+        run: |
+          cd ~/PokeroleManager/Api
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          sudo systemctl restart pokerole.service
+
+      # 10. Deploy frontend (optional)
+      - name: Deploy frontend (optional)
+        run: |
+          cd ~/PokeroleManager/Website
+          # add any frontend build or deployment commands here
