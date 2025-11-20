@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship, backref
 
-from database import database
+from .database import database
 # from Enums.WeatherTypes import WeatherTypes
 # from Enums.GuildRanks import GuildRanks
 # from Enums.StatusTypes import StatusTypes
