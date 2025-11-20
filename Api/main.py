@@ -4,8 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from database import database
-from models import Pokemon, User
+from .database import database
+from .models import Pokemon, User
 
 
 import secrets
