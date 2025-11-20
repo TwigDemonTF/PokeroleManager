@@ -1,0 +1,40 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/pylint.yml
+
+  deploy:
+    needs: run-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy project to server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "."
+          target: "~/PokeroleManager"
+
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/PokeroleManager/Api
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart pokerole.service
