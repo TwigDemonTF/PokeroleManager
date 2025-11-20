@@ -134,7 +134,7 @@ document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
         }
     }
 
-    const response = await fetch("http://127.0.0.1:9000/data", {
+    const response = await fetch("http://192.168.193.96:9000/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),
