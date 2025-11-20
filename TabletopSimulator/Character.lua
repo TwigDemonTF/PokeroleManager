@@ -1,29 +1,24 @@
+characterData = {}
+
 function onLoad()
-    local notes = self.getGMNotes()
-    
-    local url = "http://127.0.0.1:5000/character/"
-    local headers = {
-        ["Content-Type"] = "application/json",
-        Accept = "application/json",
-    }
+    -- reload saved state
+    if self.script_state ~= "" then
+        characterData = JSON.decode(self.script_state)
+    end
+end
 
-    local characterData = {
-        title = "Character Data",
-        body = {notes},
-        labels = {"design"}
-    }
+function UpdateSelf(params)
+    local data = params.data
 
-    local body = JSON.encode(characterData)
+    characterData = data
 
-    WebSocket.custom(url, "POST", true, body, headers, function(request)
-        if request.is_error then
-            print("Request failed: " .. request.error)
-            return
-        end
+    -- Save persistently
+    self.script_state = JSON.encode(characterData)
 
-        print("Status Code:" .. request.response_code)
-        local res = JSON.decode(request.text)
+    -- Also expose to other scripts if needed
+    self.setVar("characterData", characterData)
+end
 
-        print("Response:" .. res.message)
-    end)
+function GetSelf()
+    return characterData
 end
