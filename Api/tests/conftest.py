@@ -1,7 +1,7 @@
 # Test client + database
 
 import pytest
-from app import app, database
+from Api import app, database
 
 @pytest.fixture
 def client():
