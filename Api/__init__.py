@@ -1,1 +1,1 @@
-from .app import app, database
+from .main import app, database
