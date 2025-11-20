@@ -39,9 +39,10 @@ jobs:
 
       - name: Deploy backend
         run: |
-          cd ~/github/actions-runner/_work/PokeroleManager/PokeroleManager/Api
-          python3 -m venv venv
+          cd ~/PokeroleManager/Api
+          python3 -m venv venv        # create venv in stable folder
           source venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
           sudo systemctl restart pokerole.service
 
