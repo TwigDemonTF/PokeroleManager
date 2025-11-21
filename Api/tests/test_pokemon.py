@@ -1,6 +1,11 @@
 # Test pokemon
  
 def test_pokemon_creation(client):
+    res = client.post("/register", json={
+        "username": twigdemon,
+        "password": twigdemon
+    })
+    
     response = client.post("/data", json={
         "GameId": "p15zow8i3k",
         "Name": "Airalin",
