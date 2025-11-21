@@ -5,8 +5,8 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .database import database
-from .models import Pokemon, User
-
+from .models import Pokemon, User, Game, GameEntities
+from .utils import generate_game_id
 
 import secrets
 
@@ -21,6 +21,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 database.init_app(app)
 
+
+# ! Pokemon has a conflicted name with the model, do not edit
 class PokemonApi(Resource):
     def post(self):
         raw = request.get_json()
@@ -30,6 +32,12 @@ class PokemonApi(Resource):
             return {"error": "No JSON received"}, 400
 
         try:
+            # 1. Find the game by GameId
+            game = Game.query.filter_by(gameId=raw.get("GameId")).first()
+            if not game:
+                return {"error": "Game not found"}, 404
+
+            # 2. Create the Pokemon
             pokemon = Pokemon(
                 name=raw.get("Name"),
                 level=raw.get("Level"),
@@ -37,6 +45,7 @@ class PokemonApi(Resource):
                 age=raw.get("Age"),
                 nature=raw.get("Nature"),
                 ability=raw.get("Ability"),
+                status=raw.get("Status"),
 
                 baseHealth=raw.get("BaseHealth"),
                 will=raw.get("Will"),
@@ -48,7 +57,6 @@ class PokemonApi(Resource):
                 garment1=raw.get("Garment1"),
                 garment2=raw.get("Garment2"),
                 garment3=raw.get("Garment3"),
-                Status=raw.get("Status"),
 
                 primaryType=raw.get("PrimaryType"),
                 secondaryType=raw.get("SecondaryType"),
@@ -89,6 +97,14 @@ class PokemonApi(Resource):
             )
 
             database.session.add(pokemon)
+            database.session.commit()  # Commit to get pokemon.id
+
+            # 3. Link Pokemon to Game via GameEntities
+            gameEntity = GameEntities(
+                gameId=game.id,
+                pokemonId=pokemon.id,
+            )
+            database.session.add(gameEntity)
             database.session.commit()
 
         except Exception as e:
@@ -96,8 +112,11 @@ class PokemonApi(Resource):
             database.session.rollback()
             return {"error": str(e)}, 500
 
-        return {"message": "Created", "id": pokemon.id}, 201
-
+        return {
+            "message": f"Created Pokémon '{pokemon.name}' in Game '{game.gameId}'",
+            "pokemonId": pokemon.id,
+            "gameEntityId": gameEntity.id
+        }, 201
 
 class Register(Resource):
     def get(self):
@@ -130,6 +149,15 @@ class Register(Resource):
         database.session.add(newUser)
         database.session.commit()
 
+        userGame = Game(
+            gameId=generate_game_id(10),
+            weather="None",
+            userId=newUser.id
+        )
+
+        database.session.add(userGame)
+        database.session.commit()
+
         return {"message": "User registered successfully"}, 201
 
 class Login(Resource):
@@ -152,17 +180,23 @@ class Login(Resource):
         if not check_password_hash(user.password, salted_input):
             return {"message": "Invalid username or password"}, 401
 
-        return {"message": f"Welcome, {username}!"}, 200
+        game_Id = Game.query.filter_by(userId=user.id).first().gameId
+        return {"message": f"Welcome, {username}!", "userId": user.id, "gameId": game_Id}, 200
 
 class PullCharacterData(Resource):
     def get(self, guid):
         character = Pokemon.query.filter_by(Guid=guid).first_or_404()
         return jsonify({"data": character.toDict()})
 
+class UserData(Resource):
+    def get(self, userId):
+        game = Game
+
 api.add_resource(PullCharacterData, "/PullCharacterData/<string:guid>")
 api.add_resource(PokemonApi, '/data')
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
+api.add_resource(UserData, "/UserData/<string:userId>")
 
 if __name__ == "__main__":
     with app.app_context():

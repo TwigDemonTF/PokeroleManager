@@ -6,7 +6,7 @@
 <body>
     <h2>Register</h2>
 
-    <form id="registerForm">
+    <form action="/Register" method="POST" id="registerForm">
         <label>Username:</label>
         <input name="username" id="username" required><br>
 
@@ -16,25 +16,8 @@
         <button type="submit">Register</button>
     </form>
 
-    <p id="result"></p>
-
-<script>
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const response = await fetch("http://192.168.193.96:9000/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    });
-
-    const result = await response.json();
-    document.getElementById("result").innerText = result.message;
-});
-</script>
-
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
 </body>
 </html>

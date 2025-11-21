@@ -17,6 +17,7 @@ class Pokemon(database.Model):
     age = database.Column(database.Integer, nullable=False, default=0)
     nature = database.Column(database.String(), nullable=True, default="None")
     ability = database.Column(database.String(), nullable=False, default="None")
+    status = database.Column(database.String(), nullable=True, default="Healthy")
 
     baseHealth = database.Column(database.Integer, nullable=False, default=3)
     will = database.Column(database.Integer, nullable=False, default=3)
@@ -28,7 +29,6 @@ class Pokemon(database.Model):
     garment1 = database.Column(database.String(), nullable=True, default="")
     garment2 = database.Column(database.String(), nullable=True, default="")
     garment3 = database.Column(database.String(), nullable=True, default="")
-    Status = database.Column(database.String(), nullable=True, default="Healthy")
 
     primaryType = database.Column(database.String(), nullable=False, default="Normal")
     secondaryType = database.Column(database.String(), nullable=True, default="None")
@@ -63,11 +63,9 @@ class Pokemon(database.Model):
     etiquette = database.Column(database.Integer, nullable=False, default=0)
     intimidate = database.Column(database.Integer, nullable=False, default=0)
     perform = database.Column(database.Integer, nullable=False, default=0) 
-
-
     experiencePoints = database.Column(database.Integer, nullable=False, default=0)
     isNpc = database.Column(database.Boolean, nullable=False)
-    Guid = database.Column(database.String(6), nullable=False)
+    Guid = database.Column(database.String(6), nullable=False, unique=True)
 
     def toDict(self):
         data = {}
@@ -80,5 +78,35 @@ class User(database.Model):
     __tablename__ = "User"
     id = database.Column(database.Integer, primary_key=True, nullable=False)
     username = database.Column(database.String(100), nullable=False, unique=True)
-    password = database.Column(database.String(200), nullable=False) # hashed(salt + password)
+    password = database.Column(database.String(200), nullable=False)  # hashed(salt + password)
     passwordSalt = database.Column(database.String(64), nullable=False)
+
+    # One-to-one relationship to Game
+    game = relationship("Game", back_populates="user", uselist=False)
+
+
+class Game(database.Model):
+    __tablename__ = "Game"
+    id = database.Column(database.Integer, primary_key=True, nullable=False)
+    gameId = database.Column(database.String(10), nullable=False)
+    weather = database.Column(database.String(20), nullable=False, default="None")
+
+    # One-to-one foreign key to User
+    userId = database.Column(database.Integer, database.ForeignKey('User.id'), nullable=False, unique=True)
+    user = relationship("User", back_populates="game")
+
+    # Relationship: one game can have many GameEntities
+    entities = relationship("GameEntities", back_populates="game")
+
+
+class GameEntities(database.Model):
+    __tablename__ = "GameEntities"
+    id = database.Column(database.Integer, primary_key=True, nullable=False)
+
+    # Foreign keys
+    gameId = database.Column(database.Integer, database.ForeignKey('Game.id'), nullable=False)
+    pokemonId = database.Column(database.Integer, database.ForeignKey('Pokemon.id'), nullable=False)
+
+    # Relationships
+    game = relationship("Game", back_populates="entities")
+    pokemon = relationship("Pokemon")
