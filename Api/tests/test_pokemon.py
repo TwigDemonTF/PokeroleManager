@@ -2,6 +2,7 @@
  
 def test_pokemon_creation(client):
     response = client.post("/data", json={
+        "GameId": "p15zow8i3k",
         "Name": "Airalin",
         "Level": 1,
         "Gender": "Female",
@@ -47,6 +48,7 @@ def test_pokemon_creation(client):
         "Perform": 0,
         "ExperiencePoints": 0,
         "IsNpc": 0,
+        "PlayerColor": "Black",
         "Guid": "09c38c"
     })
 
