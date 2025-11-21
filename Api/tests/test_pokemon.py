@@ -1,6 +1,13 @@
-# Test pokemon
- 
+from Api.models import Game  # import your models
+
 def test_pokemon_creation(client):
+    # 1. Create a game first
+    game = Game(gameId="p15zow8i3k", weather="None", userId=None)
+    from Api import database
+    database.session.add(game)
+    database.session.commit()
+
+    # 2. Now create the Pokémon
     response = client.post("/data", json={
         "GameId": "p15zow8i3k",
         "Name": "Airalin",
@@ -53,5 +60,5 @@ def test_pokemon_creation(client):
     })
 
     assert response.status_code == 201
-    assert "id" in response.json
- 
+    assert "pokemonId" in response.json
+    assert "gameEntityId" in response.json
