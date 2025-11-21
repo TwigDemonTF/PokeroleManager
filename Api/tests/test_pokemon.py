@@ -2,7 +2,7 @@ from Api.models import Game  # import your models
 
 def test_pokemon_creation(client):
     # 1. Create a game first
-    game = Game(gameId="p15zow8i3k", weather="None", userId=None)
+    game = Game(gameId="p15zow8i3k", weather="None", userId=1)
     from Api import database
     database.session.add(game)
     database.session.commit()
