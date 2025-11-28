@@ -11,16 +11,6 @@ def contextExample():
     }
     return render_template('ayayay.html', **context)
 
-@app.route('/Game', methods=['GET', 'POST'])
-def game():
-    # Get game player entities
-
-    context = {
-        "Pokemon": ["Placeholder", "Placeholder 2"]
-    }
-
-    return render_template('game.html', **context)
-
 @app.route('/Login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -66,8 +56,16 @@ def register():
     return render_template('register.html')
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def addPokemon():
+    res = requests.get("http://127.0.0.1:9000/basePokemon")
+    res = res.json()
+    print(res)
+    return render_template('add_pokemon.html', basePokemon=res)
+
+
+@app.route('/Game')
+def game():
+    return render_template('game.html')
 
 if __name__ == "__main__":
     with app.app_context():

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Pokémon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select {
+            padding: 6px;
+            width: 95%;
+        }
+        .full {
+            grid-column: span 2;
+        }
+        button {
+            padding: 10px 15px;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Create Pokémon</h1>
+
+<form id="pokemonForm">
+
+    <!-- Species -->
+    <label>Species</label>
+    <select id="BasePokemonId" name="BasePokemonId" required>
+        <option value="">Select species...</option>
+        {% for mon in basePokemon.data %}
+            <option value="{{ mon.id }}">{{ mon.name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Nickname -->
+    <label>Nickname</label>
+    <input name="Name">
+
+    <label>Level</label><input name="Level" type="number" value="1">
+    <label>Gender</label><input name="Gender">
+    <label>Age</label><input name="Age" type="number" value="0">
+
+    <label>Nature</label><input name="Nature">
+    <label>Ability</label><input name="Ability">
+
+    <label>Status</label><input name="Status" value="Healthy">
+
+    <label>Will</label><input name="Will" type="number" value="3">
+    <label>Logic</label><input name="Logic" type="number" value="1">
+
+    <label>Instinct</label><input name="Instinct" type="number" value="1">
+    <label>Primal</label><input name="Primal" type="number" value="0">
+
+    <!-- Items -->
+    <label>HeldItem</label><input name="HeldItem">
+    <label>Garment1</label><input name="Garment1">
+    <label>Garment2</label><input name="Garment2">
+    <label>Garment3</label><input name="Garment3">
+
+    <label>IsNpc</label>
+    <select name="IsNpc">
+        <option value="false">False</option>
+        <option value="true">True</option>
+    </select>
+
+    <label>Experience Points</label><input name="ExperiencePoints" type="number" value="0">
+    <label>Player Color</label><input name="PlayerColor" type="text" value="None">
+    <label>Guid</label><input name="Guid" type="string" value="">
+
+    <button class="full" type="submit">Submit Pokémon</button>
+</form>
+
+
+<script>
+document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const json = {};
+
+    for (const [key, value] of formData.entries()) {
+        if (!isNaN(value) && value !== "") {
+            json[key] = Number(value);
+        } else if (value === "true" || value === "false") {
+            json[key] = value === "true";
+        } else {
+            json[key] = value;
+        }
+    }
+
+    const response = await fetch("http://192.168.193.96:9000/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+    });
+
+    const result = await response.json();
+    alert("Server response: " + JSON.stringify(result));
+});
+</script>
+
+</body>
+</html>

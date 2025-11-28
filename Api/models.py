@@ -7,10 +7,65 @@ from .database import database
 # from Enums.Types import Types
 
 
-class Pokemon(database.Model):
-    __tablename__ = "Pokemon"
+class BasePokemon(database.Model):
+    __tablename__ = "BasePokemon"
 
     id = database.Column(database.Integer, primary_key=True, nullable=False)
+    name = database.Column(database.String(), nullable=False, default="")
+
+    baseHealth = database.Column(database.Integer, nullable=False, default=3)
+    will = database.Column(database.Integer, nullable=False, default=3)
+    logic = database.Column(database.Integer, nullable=True, default=1)
+    instinct = database.Column(database.Integer, nullable=True, default=1)
+    primal = database.Column(database.Integer, nullable=True, default=0)
+
+    primaryType = database.Column(database.String(), nullable=False, default="Normal")
+    secondaryType = database.Column(database.String(), nullable=True, default="None")
+
+    strength = database.Column(database.Integer, nullable=False, default=0)
+    strengthPotential = database.Column(database.Integer, nullable=False, default=0)
+
+    dexterity = database.Column(database.Integer, nullable=False, default=0)
+    dexterityPotential = database.Column(database.Integer, nullable=False, default=0)
+
+    vitality = database.Column(database.Integer, nullable=False, default=0)
+    vitalityPotential = database.Column(database.Integer, nullable=False, default=0)
+
+    special = database.Column(database.Integer, nullable=False, default=0)
+    specialPotential = database.Column(database.Integer, nullable=False, default=0)
+
+    insight = database.Column(database.Integer, nullable=False, default=0)
+    insightPotential = database.Column(database.Integer, nullable=False, default=0)
+
+    fight = database.Column(database.Integer, nullable=False, default=0)
+    survival = database.Column(database.Integer, nullable=False, default=0)
+    contest = database.Column(database.Integer, nullable=False, default=0)
+    brawl = database.Column(database.Integer, nullable=False, default=0)
+    channel = database.Column(database.Integer, nullable=False, default=0)
+    clash = database.Column(database.Integer, nullable=False, default=0)
+    evasion = database.Column(database.Integer, nullable=False, default=0)
+    alert = database.Column(database.Integer, nullable=False, default=0)
+    athletic = database.Column(database.Integer, nullable=False, default=0)
+    natureStat = database.Column(database.Integer, nullable=False, default=0)
+    stealth = database.Column(database.Integer, nullable=False, default=0)
+    allure = database.Column(database.Integer, nullable=False, default=0)
+    etiquette = database.Column(database.Integer, nullable=False, default=0)
+    intimidate = database.Column(database.Integer, nullable=False, default=0)
+    perform = database.Column(database.Integer, nullable=False, default=0) 
+
+    def toDict(self):
+        data = {}
+        for column in self.__table__.columns:
+            if column.name != "id":
+                data[column.name] = getattr(self, column.name)
+        return data
+
+class GamePokemon(database.Model):
+    __tablename__ = "GamePokemon"
+    id = database.Column(database.Integer, primary_key=True, nullable=False)
+    basePokemonId = database.Column(database.Integer, database.ForeignKey("BasePokemon.id"))
+    basePokemon = relationship("BasePokemon")
+
     name = database.Column(database.String(), nullable=False, default="")
     level = database.Column(database.Integer, nullable=False, default=0)
     gender = database.Column(database.String(), nullable=True, default="None")
@@ -63,16 +118,11 @@ class Pokemon(database.Model):
     etiquette = database.Column(database.Integer, nullable=False, default=0)
     intimidate = database.Column(database.Integer, nullable=False, default=0)
     perform = database.Column(database.Integer, nullable=False, default=0) 
+
     experiencePoints = database.Column(database.Integer, nullable=False, default=0)
     isNpc = database.Column(database.Boolean, nullable=False)
+    playerColor = database.Column(database.String(20), nullable=False, default="None")
     Guid = database.Column(database.String(6), nullable=False, unique=True)
-
-    def toDict(self):
-        data = {}
-        for column in self.__table__.columns:
-            if column.name != "id":
-                data[column.name] = getattr(self, column.name)
-        return data
 
 class User(database.Model):
     __tablename__ = "User"
@@ -105,8 +155,8 @@ class GameEntities(database.Model):
 
     # Foreign keys
     gameId = database.Column(database.Integer, database.ForeignKey('Game.id'), nullable=False)
-    pokemonId = database.Column(database.Integer, database.ForeignKey('Pokemon.id'), nullable=False)
+    pokemonId = database.Column(database.Integer, database.ForeignKey('GamePokemon.id'), nullable=False)
 
     # Relationships
     game = relationship("Game", back_populates="entities")
-    pokemon = relationship("Pokemon")
+    pokemon = relationship("GamePokemon")
