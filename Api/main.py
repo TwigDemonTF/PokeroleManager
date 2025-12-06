@@ -5,7 +5,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .database import database
-from .models import BasePokemon, GamePokemon, User, Game, GameEntities
+from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment
 from .utils import generate_game_id
 
 import secrets
@@ -21,12 +21,19 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 database.init_app(app)
 
-# ! BasePokemon has a conflicted name with the model, do not edit
 class BasePokemonApi(Resource):
     def get(self):
-        rows = BasePokemon.query.with_entities(BasePokemon.id, BasePokemon.name).all()
-        data = [row._asdict() for row in rows]
-        return jsonify({"data": data})
+        base_pokemon = BasePokemon.query.all()
+
+        data = []
+
+        for p in base_pokemon:
+            data.append({
+                "id": p.id,
+                "name": p.name
+            })
+
+        return jsonify(data)
     
     def post(self):
         raw = request.get_json()
@@ -81,7 +88,6 @@ class BasePokemonApi(Resource):
                 "pokemonId": basePokemon.id,
             }, 201
 
-# ! GamePokemon has a conflicted name with the model, do not edit
 class GamePokemonApi(Resource):
     def post(self):
         raw = request.get_json()
@@ -91,43 +97,43 @@ class GamePokemonApi(Resource):
             return {"error": "No JSON received"}, 400
 
         try:
-            # 1. Get game
-            game = Game.query.filter_by(gameId=raw.get("GameId")).first()
+            # 1. Fetch Game using gameId (lowercase from form)
+            game = Game.query.filter_by(gameId=raw.get("gameId")).first()
             if not game:
                 return {"error": "Game not found"}, 404
 
-            # 2. Get the BasePokemon template
-            base = BasePokemon.query.get(raw.get("BasePokemonId"))
+            # 2. Load BasePokemon
+            base = BasePokemon.query.get(raw.get("basePokemonId"))
             if not base:
                 return {"error": "BasePokemon not found"}, 404
 
-            # 3. Create GamePokemon using base stats
+            # 3. Create GamePokemon
             gamePokemon = GamePokemon(
                 basePokemonId=base.id,
 
-                # User fields
-                name=raw.get("Name"),
-                level=raw.get("Level"),
-                gender=raw.get("Gender"),
-                age=raw.get("Age"),
-                nature=raw.get("Nature"),
-                ability=raw.get("Ability"),
-                status=raw.get("Status"),
-                heldItem=raw.get("HeldItem"),
-                garment1=raw.get("Garment1"),
-                garment2=raw.get("Garment2"),
-                garment3=raw.get("Garment3"),
+                # User-input fields (use correct model names)
+                name=raw.get("name"),
+                level=raw.get("level"),
+                gender=raw.get("gender"),
+                age=raw.get("age"),
+
+                natureId=raw.get("natureId"),
+                abilityId=raw.get("abilityId"),
+                status=raw.get("status"),
+
+                itemId=raw.get("itemId"),
+                isNpc=raw.get("isNpc", False),
+                experiencePoints=raw.get("experiencePoints", 0),
+                playerColor=raw.get("playerColor"),
+                Guid=raw.get("Guid"),
+
+                # Base stats
+                baseHealth=base.baseHealth,
                 will=base.will,
                 logic=base.logic,
                 instinct=base.instinct,
                 primal=base.primal,
-                isNpc=raw.get("IsNpc"),
-                playerColor=raw.get("PlayerColor"),
-                experiencePoints=raw.get("ExperiencePoints"),
-                Guid=raw.get("Guid"),
 
-                # Auto-filled from BasePokemon
-                baseHealth=base.baseHealth,
                 primaryType=base.primaryType,
                 secondaryType=base.secondaryType,
 
@@ -162,7 +168,16 @@ class GamePokemonApi(Resource):
             database.session.add(gamePokemon)
             database.session.commit()
 
-            # 4. Link Pokemon to game
+            # 4. Attach garments (MANY-TO-MANY)
+            garment_ids = raw.get("garments", [])
+            for gid in garment_ids:
+                garment = Garment.query.get(gid)
+                if garment:
+                    gamePokemon.garments.append(garment)
+
+            database.session.commit()
+
+            # 5. Link Pokémon into gameEntities table
             gameEntity = GameEntities(
                 gameId=game.id,
                 pokemonId=gamePokemon.id,
@@ -326,92 +341,193 @@ class PullCharacterData(Resource):
 
 class GameApi(Resource):
     def get(self, gameId):
-        # Query all GamePokemon associated with the given gameId
+
+        # Get all NON-NPC pokemon for this game
         allPokemon = (
             database.session.query(GamePokemon)
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
             .join(Game, GameEntities.gameId == Game.id)
             .filter(Game.gameId == gameId)
+            .filter(GamePokemon.isNpc == False)
             .all()
         )
 
         if not allPokemon:
-            return {
-                "data": [],
-                "message": "No characters found for this gameId"
-            }, 404
+            return {"data": [], "message": "No characters found"}, 200
 
         result = []
 
-        for targetPokemon in allPokemon:
-            base = targetPokemon.basePokemon
+        for p in allPokemon:
+
+            base = p.basePokemon  # FK relationship
+
+            # Resolve readable names for FK ids
+            nature = Nature.query.get(p.natureId) if p.natureId else None
+            ability = Ability.query.get(p.abilityId) if p.abilityId else None
+            item = Item.query.get(p.itemId) if p.itemId else None
+
+            # Get garments names as a list
+            garments = [g.name for g in p.garments] if p.garments else []
 
             data = {
                 "GameId": gameId,
-                "Guid": targetPokemon.Guid,
-                "Name": targetPokemon.name,
-                "Level": targetPokemon.level,
-                "Gender": targetPokemon.gender,
-                "Age": targetPokemon.age,
-                "Nature": targetPokemon.nature,
-                "Ability": targetPokemon.ability,
-                "BaseHealth": targetPokemon.baseHealth or base.baseHealth,
-                "Will": targetPokemon.will or base.will,
-                "Logic": targetPokemon.logic or base.logic,
-                "Instinct": targetPokemon.instinct or base.instinct,
-                "Primal": targetPokemon.primal or base.primal,
-                "HeldItem": targetPokemon.heldItem,
-                "Garment1": targetPokemon.garment1,
-                "Garment2": targetPokemon.garment2,
-                "Garment3": targetPokemon.garment3,
-                "Status": targetPokemon.status,
-                "PrimaryType": targetPokemon.primaryType or base.primaryType,
-                "SecondaryType": targetPokemon.secondaryType or base.secondaryType,
+                "Guid": p.Guid,
+                "Name": p.name,
+                "Level": p.level,
+                "Gender": p.gender,
+                "Age": p.age,
+                "Nature": nature.name if nature else None,
+                "Ability": ability.name if ability else None,
+                "HeldItem": item.name if item else None,
+                "Garments": [g.name for g in p.garments] if p.garments else [],
+                "Status": p.status,
+
+                "BaseHealth": p.baseHealth or base.baseHealth,
+                "Will": p.will or base.will,
+                "Logic": p.logic or base.logic,
+                "Instinct": p.instinct or base.instinct,
+                "Primal": p.primal or base.primal,
+
+                "PrimaryType": (p.primaryType.name if p.primaryType else (base.primaryType.name if base.primaryType else None)),
+                "SecondaryType": (p.secondaryType.name if p.secondaryType else (base.secondaryType.name if base.secondaryType else None)),
 
                 # Stats
-                "Strength": targetPokemon.strength or base.strength,
-                "StrengthPotential": targetPokemon.strengthPotential or base.strengthPotential,
-                "Dexterity": targetPokemon.dexterity or base.dexterity,
-                "DexterityPotential": targetPokemon.dexterityPotential or base.dexterityPotential,
-                "Vitality": targetPokemon.vitality or base.vitality,
-                "VitalityPotential": targetPokemon.vitalityPotential or base.vitalityPotential,
-                "Special": targetPokemon.special or base.special,
-                "SpecialPotential": targetPokemon.specialPotential or base.specialPotential,
-                "Insight": targetPokemon.insight or base.insight,
-                "InsightPotential": targetPokemon.insightPotential or base.insightPotential,
+                "Strength": p.strength or base.strength,
+                "StrengthPotential": p.strengthPotential or base.strengthPotential,
+                "Dexterity": p.dexterity or base.dexterity,
+                "DexterityPotential": p.dexterityPotential or base.dexterityPotential,
+                "Vitality": p.vitality or base.vitality,
+                "VitalityPotential": p.vitalityPotential or base.vitalityPotential,
+                "Special": p.special or base.special,
+                "SpecialPotential": p.specialPotential or base.specialPotential,
+                "Insight": p.insight or base.insight,
+                "InsightPotential": p.insightPotential or base.insightPotential,
 
                 # Skills
-                "Fight": targetPokemon.fight or base.fight,
-                "Survival": targetPokemon.survival or base.survival,
-                "Contest": targetPokemon.contest or base.contest,
-                "Brawl": targetPokemon.brawl or base.brawl,
-                "Channel": targetPokemon.channel or base.channel,
-                "Clash": targetPokemon.clash or base.clash,
-                "Evasion": targetPokemon.evasion or base.evasion,
-                "Alert": targetPokemon.alert or base.alert,
-                "Athletic": targetPokemon.athletic or base.athletic,
-                "NatureStat": targetPokemon.natureStat or base.natureStat,
-                "Stealth": targetPokemon.stealth or base.stealth,
-                "Allure": targetPokemon.allure or base.allure,
-                "Etiquette": targetPokemon.etiquette or base.etiquette,
-                "Intimidate": targetPokemon.intimidate or base.intimidate,
-                "Perform": targetPokemon.perform or base.perform,
+                "Fight": p.fight or base.fight,
+                "Survival": p.survival or base.survival,
+                "Contest": p.contest or base.contest,
+                "Brawl": p.brawl or base.brawl,
+                "Channel": p.channel or base.channel,
+                "Clash": p.clash or base.clash,
+                "Evasion": p.evasion or base.evasion,
+                "Alert": p.alert or base.alert,
+                "Athletic": p.athletic or base.athletic,
+                "NatureStat": p.natureStat or base.natureStat,
+                "Stealth": p.stealth or base.stealth,
+                "Allure": p.allure or base.allure,
+                "Etiquette": p.etiquette or base.etiquette,
+                "Intimidate": p.intimidate or base.intimidate,
+                "Perform": p.perform or base.perform,
 
-                "ExperiencePoints": targetPokemon.experiencePoints,
-                "IsNpc": targetPokemon.isNpc,
-                "PlayerColor": targetPokemon.playerColor,
+                "ExperiencePoints": p.experiencePoints,
+                "IsNpc": p.isNpc,
+                "PlayerColor": p.playerColor,
             }
 
             result.append(data)
 
         return {"data": result}, 200
 
+
+class NatureApi(Resource):
+    def post(self):
+        data = request.get_json()
+
+        newNature = Nature(
+            name=data.get("Name"),
+            description=data.get("Description"),
+        )
+        database.session.add(newNature)
+        database.session.commit()
+    
+    def get(self):
+        natures = Nature.query.all()
+
+        data = [{"id": None, "name": "None"}]
+
+        for n in natures:
+            data.append({
+                "id": n.id,
+                "name": n.name
+            })
+
+        return jsonify(data)
+
+class AbilityApi(Resource):
+    def post(self):
+        data = request.get_json()
+
+        newAbility = Ability(
+            name=data.get("Name"),
+            flavorText=data.get("FlavorText"),
+            effect=data.get("Effect")
+        )
+        database.session.add(newAbility)
+        database.session.commit()
+
+    def get(self):
+        abilities = Ability.query.all()
+
+        data = [{"id": None, "name": "None"}]
+
+        for a in abilities:
+            data.append({
+                "id": a.id,
+                "name": a.name
+            })
+
+        return jsonify(data)
+
+class ItemApi(Resource):
+    def post(self):
+        data = request.get_json()
+
+        newItem = Item(
+            name=data.get("Name"),
+            description=data.get("Description"),
+            effect=data.get("Effect")
+        )
+        database.session.add(newItem)
+        database.session.commit()
+    
+    def get(self):
+        items = Item.query.all()
+
+        data = [{"id": None, "name": "None"}]
+
+        for i in items:
+            data.append({
+                "id": i.id,
+                "name": i.name
+            })
+
+        return jsonify(data)
+
+class GarmentApi(Resource):
+    def get(self):
+        garments = Garment.query.all()
+
+        data = [{"id": None, "name": "None"}]
+
+        for g in garments:
+            data.append({
+                "id": g.id,
+                "name": g.name
+            })
+
+        return jsonify(data)
+
+api.add_resource(Register, "/register")
+api.add_resource(Login, "/login")
 api.add_resource(PullCharacterData, "/PullCharacterData/<string:gameId>/<string:guid>")
 api.add_resource(BasePokemonApi, "/basePokemon")
 api.add_resource(GamePokemonApi, '/gamePokemon')
-api.add_resource(Register, "/register")
-api.add_resource(Login, "/login")
 api.add_resource(GameApi, "/PullAllPokemon/<string:gameId>")
+api.add_resource(NatureApi, "/nature")
+api.add_resource(AbilityApi, "/ability")
+api.add_resource(ItemApi, "/item")
+api.add_resource(GarmentApi, "/garment")
 
 if __name__ == "__main__":
     with app.app_context():

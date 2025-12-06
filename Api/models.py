@@ -1,11 +1,15 @@
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Enum
 
 from .database import database
-# from Enums.WeatherTypes import WeatherTypes
-# from Enums.GuildRanks import GuildRanks
-# from Enums.StatusTypes import StatusTypes
-# from Enums.Types import Types
+from .Enums.Types import Types as TypeEnum
+from .Enums.BagSize import BagSizeEnum
 
+pokemon_garments = database.Table(
+    "pokemon_garments",
+    database.Column("pokemon_id", database.Integer, database.ForeignKey("GamePokemon.id"), primary_key=True),
+    database.Column("garment_id", database.Integer, database.ForeignKey("Garment.id"), primary_key=True),
+)
 
 class BasePokemon(database.Model):
     __tablename__ = "BasePokemon"
@@ -19,8 +23,8 @@ class BasePokemon(database.Model):
     instinct = database.Column(database.Integer, nullable=True, default=1)
     primal = database.Column(database.Integer, nullable=True, default=0)
 
-    primaryType = database.Column(database.String(), nullable=False, default="Normal")
-    secondaryType = database.Column(database.String(), nullable=True, default="None")
+    primaryType = database.Column(Enum(TypeEnum), nullable=False)
+    secondaryType = database.Column(Enum(TypeEnum), nullable=True)
 
     strength = database.Column(database.Integer, nullable=False, default=0)
     strengthPotential = database.Column(database.Integer, nullable=False, default=0)
@@ -70,8 +74,16 @@ class GamePokemon(database.Model):
     level = database.Column(database.Integer, nullable=False, default=0)
     gender = database.Column(database.String(), nullable=True, default="None")
     age = database.Column(database.Integer, nullable=False, default=0)
-    nature = database.Column(database.String(), nullable=True, default="None")
-    ability = database.Column(database.String(), nullable=False, default="None")
+
+    primaryType = database.Column(Enum(TypeEnum))
+    secondaryType = database.Column(Enum(TypeEnum), nullable=True)
+
+    natureId = database.Column(database.Integer, database.ForeignKey("Nature.id"))
+    nature_rel = relationship("Nature", back_populates="pokemon")
+
+    abilityId = database.Column(database.Integer, database.ForeignKey("Ability.id"))
+    ability_rel = relationship("Ability", back_populates="pokemon")
+
     status = database.Column(database.String(), nullable=True, default="Healthy")
 
     baseHealth = database.Column(database.Integer, nullable=False, default=3)
@@ -80,13 +92,12 @@ class GamePokemon(database.Model):
     instinct = database.Column(database.Integer, nullable=True, default=1)
     primal = database.Column(database.Integer, nullable=True, default=0)
 
-    heldItem = database.Column(database.String(), nullable=True, default="")
-    garment1 = database.Column(database.String(), nullable=True, default="")
-    garment2 = database.Column(database.String(), nullable=True, default="")
-    garment3 = database.Column(database.String(), nullable=True, default="")
+    bag = relationship("PokemonBag", back_populates="pokemon", uselist=False)
 
-    primaryType = database.Column(database.String(), nullable=False, default="Normal")
-    secondaryType = database.Column(database.String(), nullable=True, default="None")
+    itemId = database.Column(database.Integer, database.ForeignKey("Item.id"), nullable=True)
+    heldItem = relationship("Item")
+
+    garments = relationship("Garment", secondary=pokemon_garments)
 
     strength = database.Column(database.Integer, nullable=False, default=0)
     strengthPotential = database.Column(database.Integer, nullable=False, default=0)
@@ -160,3 +171,60 @@ class GameEntities(database.Model):
     # Relationships
     game = relationship("Game", back_populates="entities")
     pokemon = relationship("GamePokemon")
+
+class Nature(database.Model):
+    __tablename__ = "Nature"
+
+    id = database.Column(database.Integer, primary_key=True)
+    name = database.Column(database.String(50), nullable=False)
+    description = database.Column(database.Text, nullable=False)
+
+    pokemon = relationship("GamePokemon", back_populates="nature_rel")
+
+class Ability(database.Model):
+    __tablename__ = "Ability"
+
+    id = database.Column(database.Integer, primary_key=True)
+    name = database.Column(database.String(50), nullable=False)
+    flavorText = database.Column(database.Text, nullable=False)
+    effect = database.Column(database.Text, nullable=False)
+
+    pokemon = relationship("GamePokemon", back_populates="ability_rel")
+
+class Item(database.Model):
+    __tablename__ = "Item"
+
+    id = database.Column(database.Integer, primary_key=True)
+    name = database.Column(database.String(50), nullable=False)
+    description = database.Column(database.Text, nullable=True)
+    effect = database.Column(database.Text, nullable=True)
+
+class Garment(database.Model):
+    __tablename__ = "Garment"
+
+    id = database.Column(database.Integer, primary_key=True)
+    name = database.Column(database.String(50), nullable=False)
+    description = database.Column(database.Text, nullable=True)
+    effect = database.Column(database.Text, nullable=True)
+
+class BagItem(database.Model):
+    __tablename__ = "BagItem"
+
+    id = database.Column(database.Integer, primary_key=True)
+    itemId = database.Column(database.Integer, database.ForeignKey("Item.id"), nullable=False)
+    bagId = database.Column(database.Integer, database.ForeignKey("PokemonBag.id"), nullable=False)
+
+    # relationships
+    item = relationship("Item")
+    bag = relationship("PokemonBag", back_populates="items")
+
+class PokemonBag(database.Model):
+    __tablename__ = "PokemonBag"
+
+    id = database.Column(database.Integer, primary_key=True)
+    bagSize = database.Column(Enum(BagSizeEnum), nullable=False, default=BagSizeEnum.size5)
+
+    pokemonId = database.Column(database.Integer, database.ForeignKey("GamePokemon.id"))
+    pokemon = relationship("GamePokemon", back_populates="bag")
+
+    items = relationship("BagItem", back_populates="bag", cascade="all, delete-orphan")

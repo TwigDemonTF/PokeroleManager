@@ -57,15 +57,18 @@ def register():
 
 @app.route('/')
 def addPokemon():
-    res = requests.get("http://127.0.0.1:9000/basePokemon")
-    res = res.json()
-    print(res)
-    return render_template('add_pokemon.html', basePokemon=res)
+    context = {
+        "gameId": session.get("gameId"),
+    }
+    return render_template('add_pokemon.html', **context)
 
 
 @app.route('/Game')
 def game():
-    return render_template('game.html')
+    context = {
+        "gameId": session.get("gameId")
+    }
+    return render_template('game.html', **context)
 
 if __name__ == "__main__":
     with app.app_context():

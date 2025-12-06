@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+    <p style="position: absolute; top: 0; left: 0;">game Id: {{ gameId }}</p>
 <head>
     <meta charset="UTF-8">
     <title>Create Pokémon</title>
@@ -17,16 +18,9 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
-        label {
-            font-weight: bold;
-        }
-        input, select {
-            padding: 6px;
-            width: 95%;
-        }
-        .full {
-            grid-column: span 2;
-        }
+        label { font-weight: bold; }
+        input, select { padding: 6px; width: 95%; }
+        .full { grid-column: span 2; }
         button {
             padding: 10px 15px;
             margin-top: 15px;
@@ -34,85 +28,179 @@
         }
     </style>
 </head>
+
 <body>
 
 <h1>Create Pokémon</h1>
 
 <form id="pokemonForm">
 
-    <!-- Species -->
+    <!-- Base Pokémon FK -->
     <label>Species</label>
-    <select id="BasePokemonId" name="BasePokemonId" required>
-        <option value="">Select species...</option>
-        {% for mon in basePokemon.data %}
-            <option value="{{ mon.id }}">{{ mon.name }}</option>
-        {% endfor %}
+    <select id="BasePokemonId" name="basePokemonId" required>
+        <option value="">Loading...</option>
     </select>
 
     <!-- Nickname -->
     <label>Nickname</label>
-    <input name="Name">
+    <input name="name">
 
-    <label>Level</label><input name="Level" type="number" value="1">
-    <label>Gender</label><input name="Gender">
-    <label>Age</label><input name="Age" type="number" value="0">
+    <label>Level</label>
+    <input name="level" type="number" value="1">
 
-    <label>Nature</label><input name="Nature">
-    <label>Ability</label><input name="Ability">
+    <label>Gender</label>
+    <select name="gender">
+        <option value="None">None</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select>
 
-    <label>Status</label><input name="Status" value="Healthy">
+    <label>Age</label>
+    <input name="age" type="number" value="0">
 
-    <label>Will</label><input name="Will" type="number" value="3">
-    <label>Logic</label><input name="Logic" type="number" value="1">
+    <!-- Nature FK -->
+    <label>Nature</label>
+    <select id="NatureId" name="natureId">
+        <option value="">Loading...</option>
+    </select>
 
-    <label>Instinct</label><input name="Instinct" type="number" value="1">
-    <label>Primal</label><input name="Primal" type="number" value="0">
+    <!-- Ability FK -->
+    <label>Ability</label>
+    <select id="AbilityId" name="abilityId">
+        <option value="">Loading...</option>
+    </select>
 
-    <!-- Items -->
-    <label>HeldItem</label><input name="HeldItem">
-    <label>Garment1</label><input name="Garment1">
-    <label>Garment2</label><input name="Garment2">
-    <label>Garment3</label><input name="Garment3">
+    <!-- Status Enum -->
+    <label>Status</label>
+    <select id="Status" name="status"></select>
 
-    <label>IsNpc</label>
-    <select name="IsNpc">
+    <label>Will</label><input name="will" type="number" value="3">
+    <label>Logic</label><input name="logic" type="number" value="1">
+
+    <label>Instinct</label><input name="instinct" type="number" value="1">
+    <label>Primal</label><input name="primal" type="number" value="0">
+
+    <!-- Item FK -->
+    <label>Held Item</label>
+    <select id="ItemId" name="itemId">
+        <option value="">None</option>
+    </select>
+
+    <!-- Garments FK -->
+    <label>Garment 1</label>
+    <select id="Garment1" name="Garment1"></select>
+
+    <label>Garment 2</label>
+    <select id="Garment2" name="Garment2"></select>
+
+    <label>Garment 3</label>
+    <select id="Garment3" name="Garment3"></select>
+
+    <label>Is NPC?</label>
+    <select name="isNpc">
         <option value="false">False</option>
         <option value="true">True</option>
     </select>
 
-    <label>Experience Points</label><input name="ExperiencePoints" type="number" value="0">
-    <label>Player Color</label><input name="PlayerColor" type="text" value="None">
-    <label>Guid</label><input name="Guid" type="string" value="">
+    <label>Experience Points</label>
+    <input name="experiencePoints" type="number" value="0">
+
+    <label>Player Color</label>
+    <input name="playerColor" type="text" value="None">
+
+    <label>Guid</label>
+    <input name="Guid" type="text" value="">
+    <input type="hidden" name="gameId" id="GameId" value="{{ gameId }}">
 
     <button class="full" type="submit">Submit Pokémon</button>
+
 </form>
 
-
 <script>
+async function loadSelect(selectId, url, labelField = "name") {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = `<option value="">Loading...</option>`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        sel.innerHTML = ""; // clear old content
+
+        data.forEach((item, index) => {
+            const opt = document.createElement("option");
+            opt.value = item.id === null ? "" : item.id;
+            opt.textContent = item[labelField];
+
+            // default select the "None" entry
+            if (index === 0) opt.selected = true;
+
+            sel.appendChild(opt);
+        });
+
+    } catch (err) {
+        sel.innerHTML = `<option>Error loading</option>`;
+    }
+}
+
+
+function loadEnum(selectId, values) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = "";
+    values.forEach(v => {
+        sel.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+}
+
+async function loadAllFKs() {
+    await loadSelect("BasePokemonId", "http://127.0.0.1:9000/basePokemon");
+    await loadSelect("NatureId", "http://127.0.0.1:9000/nature");
+    await loadSelect("AbilityId", "http://127.0.0.1:9000/ability");
+    await loadSelect("ItemId", "http://127.0.0.1:9000/item");
+    await loadSelect("Garment1", "http://127.0.0.1:9000/garment");
+    await loadSelect("Garment2", "http://127.0.0.1:9000/garment");
+    await loadSelect("Garment3", "http://127.0.0.1:9000/garment");
+
+    const statusValues = [
+        "Healthy","Burn1","Burn2","Burn3","Poisoned",
+        "Badly Poisoned","Frozen","Asleep","Paralyzed",
+        "Confused","Disabled","Flinched","In Love"
+    ];
+
+    loadEnum("Status", statusValues);
+}
+
+document.addEventListener("DOMContentLoaded", loadAllFKs);
+
 document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
+    const form = new FormData(e.target);
     const json = {};
 
-    for (const [key, value] of formData.entries()) {
-        if (!isNaN(value) && value !== "") {
-            json[key] = Number(value);
-        } else if (value === "true" || value === "false") {
-            json[key] = value === "true";
+    for (const [key, val] of form.entries()) {
+        if (val === "") continue;
+
+        if (val === "true" || val === "false") {
+            json[key] = val === "true";
+        } else if (!isNaN(val)) {
+            json[key] = Number(val);
         } else {
-            json[key] = value;
+            json[key] = val;
         }
     }
 
-    const response = await fetch("http://192.168.193.96:9000/data", {
+    // Combine garments (if your API wants an array)
+    json["garments"] = [form.get("Garment1"), form.get("Garment2"), form.get("Garment3")]
+        .filter(v => v !== "");
+
+    const res = await fetch("http://127.0.0.1:9000/gamePokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(json),
+        body: JSON.stringify(json)
     });
 
-    const result = await response.json();
-    alert("Server response: " + JSON.stringify(result));
+    const result = await res.json();
+    alert("Server response: " + JSON.stringify(result, null, 2));
 });
 </script>
 
