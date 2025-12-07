@@ -152,13 +152,15 @@ function loadEnum(selectId, values) {
 }
 
 async function loadAllFKs() {
-    await loadSelect("BasePokemonId", "http://127.0.0.1:9000/basePokemon");
-    await loadSelect("NatureId", "http://127.0.0.1:9000/nature");
-    await loadSelect("AbilityId", "http://127.0.0.1:9000/ability");
-    await loadSelect("ItemId", "http://127.0.0.1:9000/item");
-    await loadSelect("Garment1", "http://127.0.0.1:9000/garment");
-    await loadSelect("Garment2", "http://127.0.0.1:9000/garment");
-    await loadSelect("Garment3", "http://127.0.0.1:9000/garment");
+    const tmp1 = loadSelect("BasePokemonId", "http://127.0.0.1:9000/basePokemon");
+    const tmp2 = loadSelect("NatureId", "http://127.0.0.1:9000/nature");
+    const tmp3 = loadSelect("AbilityId", "http://127.0.0.1:9000/ability");
+    const tmp4 = loadSelect("ItemId", "http://127.0.0.1:9000/item");
+    const tmp5 = loadSelect("Garment1", "http://127.0.0.1:9000/garment");
+    const tmp6 = loadSelect("Garment2", "http://127.0.0.1:9000/garment");
+    const tmp7 = loadSelect("Garment3", "http://127.0.0.1:9000/garment");
+
+    await Promise.all([tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7])
 
     const statusValues = [
         "Healthy","Burn1","Burn2","Burn3","Poisoned",

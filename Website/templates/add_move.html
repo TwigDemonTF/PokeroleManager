@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Move</title>
+
+    <style>
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;   /* TWO COLUMNS */
+            gap: 12px 24px;                  /* row gap | column gap */
+            max-width: 900px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        input, select {
+            padding: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Make sure each label-input pair stays aligned */
+        label, input, select {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Create Move</h1>
+
+<form action="#" method="POST">
+
+    <label for="Name">Name</label>
+    <input type="text" name="Name">
+
+    <label for="effectText">Effect Text</label>
+    <input type="text" name="effectText">
+
+    <label for="flavorText">Flavor Text</label>
+    <input type="text" name="flavorText">
+
+    <label for="basePower">Base Power</label>
+    <input type="number" name="basePower">
+
+    <label for="reducedAccuracy">Reduced Accuracy</label>
+    <input type="number" name="reducedAccuracy" value="0">
+
+    <label for="types">Type</label>
+    <select name="types">
+        {% for item in data.types %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="damageTypes">Damage Type</label>
+    <select name="damageTypes">
+        {% for item in data.damageTypes %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="priority">Priority</label>
+    <select name="priority">
+        {% for item in data.priority %}
+            {% if item.value != 0 %}
+                <option value="{{ item.value }}">{{ item.value }}</option>
+            {% else %}
+                <option selected value="{{ item.value }}">{{ item.value }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+
+    <label for="targets">Target</label>
+    <select name="targets">
+        {% for item in data.targets %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    {% for field in data.booleanFields %}
+        <label for="{{field}}">{{field}}</label>
+        <input type="checkbox" name="{{field}}" value="1">
+    {% endfor %}
+
+    <label for="multiHits">Hit Count</label>
+    <select name="multiHits">
+        {% for item in data.multiHits %}
+            <option value="{{ item.value }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="healTypes">Heal Type</label>
+    <select name="healTypes">
+        {% for item in data.healTypes %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+
+    <!-- Accuracy Modifiers -->
+    <label for="accuracyModifier1">Accuracy Modifier 1</label>
+    <select name="accuracyModifier1">
+        {% for item in data.accuracyModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="accuracyModifier2">Accuracy Modifier 2</label>
+    <select name="accuracyModifier2">
+        {% for item in data.accuracyModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="accuracyModifier3">Accuracy Modifier 3</label>
+    <select name="accuracyModifier3">
+        {% for item in data.accuracyModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Damage Modifiers -->
+    <label for="damageModifier1">Damage Modifier 1</label>
+    <select name="damageModifier1">
+        {% for item in data.damageModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="damageModifier2">Damage Modifier 2</label>
+    <select name="damageModifier2">
+        {% for item in data.damageModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="damageModifier3">Damage Modifier 3</label>
+    <select name="damageModifier3">
+        {% for item in data.damageModifiers %}
+            <option value="{{ item.id }}">{{ item.value }}</option>
+        {% endfor %}
+    </select>
+
+    <button type"submit">Submit</button>
+
+</form>
+
+</body>
+</html>

@@ -5,8 +5,18 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .database import database
-from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment
-from .utils import generate_game_id
+from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment, AccuracyModifierGroup, DamageModifierGroup, HealMove, MoveEffect, MoveEffectConnection, Move, MoveConnection
+from .utils import generate_game_id, enum_to_dict_list, getBooleanFields
+
+from .Enums.Types import Types as TypeEnum
+from .Enums.Move.DamageType import DamageTypeEnum
+from .Enums.Move.EffectLevel import EffectLevelEnum
+from .Enums.Move.HealMoveTypes import HealMoveTypesEnum
+from .Enums.Move.HitCount import HitCountEnum
+from .Enums.Move.Modifier import ModifierEnum
+from .Enums.Move.MoveEffectType import MoveEffectTypeEnum
+from .Enums.Move.Priority import PriorityEnum
+from .Enums.Move.Target import TargetEnum
 
 import secrets
 
@@ -349,6 +359,7 @@ class GameApi(Resource):
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
             .join(Game, GameEntities.gameId == Game.id)
             .filter(Game.gameId == gameId)
+            .filter(GamePokemon.isNpc == False)
             .all()
         )
 
@@ -631,6 +642,138 @@ class GarmentApi(Resource):
 
         return jsonify(data)
 
+class MoveApi(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+
+            # required
+            name = data.get("name")
+            move_type = data.get("type")
+            damage_type = data.get("damageType")
+
+            if not name or not move_type or not damage_type:
+                return {"error": "name, type, and damageType are required"}, 400
+
+            move = Move(
+                name=name,
+                type=TypeEnum[move_type],
+                damageType=DamageTypeEnum[damage_type]
+            )
+
+            # numeric fields
+            move.basePower = data.get("basePower")
+            move.reducedAccuracy = data.get("reducedAccuracy")
+
+            # enums
+            if data.get("priority"):
+                move.priority = PriorityEnum[data["priority"]]
+
+            if data.get("target"):
+                move.target = TargetEnum[data["target"]]
+
+            if data.get("multiHitCount"):
+                move.multiHitCount = HitCountEnum[data["multiHitCount"]]
+
+            # booleans
+            boolean_flags = [
+                "hasCritical", "hasLethal", "hasBlock", "hasRecoil", "hasWeatherChange",
+                "hasModifiedDamage", "alwaysHitEffect", "alwaysFailEffect",
+                "isChargeMove", "isFistBased", "isHighCrit", "isNeverFail",
+                "isHealingMove", "isShieldMove", "isSoundBased", "isMultiHit",
+                "isSwitchMove", "requiresRecharge"
+            ]
+
+            for flag in boolean_flags:
+                if flag in data:
+                    setattr(move, flag, bool(data[flag]))
+
+            # relations
+            move.healingTypeId = data.get("healingTypeId")
+            move.accuracyModifiersId = data.get("accuracyModifiersId")
+            move.damageModifiersId = data.get("damageModifiersId")
+            move.modifiedDamageId = data.get("modifiedDamageId")
+
+            database.session.add(move)
+            database.session.commit()
+
+            return {"success": True, "moveId": move.id}, 200
+
+        except Exception as e:
+            database.session.rollback()
+            return {"error": str(e)}, 500
+
+class AddMove(Resource):
+    def get(self):
+        data = {
+            "types": enum_to_dict_list(TypeEnum),
+            "damageTypes": enum_to_dict_list(DamageTypeEnum),
+            "priority": enum_to_dict_list(PriorityEnum),
+            "targets": enum_to_dict_list(TargetEnum),
+            "multiHits": enum_to_dict_list(HitCountEnum),
+            "healTypes": enum_to_dict_list(HealMoveTypesEnum),
+            "accuracyModifiers": enum_to_dict_list(ModifierEnum),
+            "damageModifiers":  enum_to_dict_list(ModifierEnum),
+            "booleanFields": getBooleanFields()
+        }
+
+        return data, 200
+    def post(self):
+        data = request.get_json()
+
+        print(data)
+
+        # --- 1. Create AccuracyModifierGroup ---
+        accuracy_group = AccuracyModifierGroup(
+            accuracyModifier1=ModifierEnum[data["accuracyModifier1"]],
+            accuracyModifier2=ModifierEnum[data["accuracyModifier2"]],
+            accuracyModifier3=ModifierEnum[data["accuracyModifier3"]],
+        )
+        database.session.add(accuracy_group)
+        database.session.flush()  # Flush to get accuracy_group.id
+
+        # --- 2. Create DamageModifierGroup ---
+        damage_group = DamageModifierGroup(
+            damageModifier1=ModifierEnum[data["damageModifier1"]],
+            damageModifier2=ModifierEnum[data["damageModifier2"]],
+            damageModifier3=ModifierEnum[data["damageModifier3"]],
+        )
+        database.session.add(damage_group)
+        database.session.flush()  # Flush to get damage_group.id
+
+        booleanFields = getBooleanFields()
+        def parse_bool(key):
+            for key in booleanFields:
+                if key in data:
+                    return True
+                else:
+                    return False
+        
+        boolean_values = {field: parse_bool(field) for field in booleanFields}
+
+        # --- 3. Create Move ---
+        move = Move(
+            name=data["Name"],
+            effectText=data.get("effectText"),
+            flavorText=data.get("flavorText"),
+            basePower=int(data.get("basePower", 0)),
+            reducedAccuracy=int(data.get("reducedAccuracy", 0)),
+            type=TypeEnum[data["types"]],
+            damageType=DamageTypeEnum[data["damageTypes"]],
+            priority=PriorityEnum(int(data.get("priority", 0))),
+            target=TargetEnum[data["targets"]],
+            multiHitCount=HitCountEnum(int(data.get("multiHits", 1))),
+            healingTypeId=None,  # Set if needed
+            accuracyModifiersId=accuracy_group.id,
+            damageModifiersId=damage_group.id,
+            **boolean_values
+        )
+
+        database.session.add(move)
+        database.session.commit()
+
+        return jsonify({"status": "success", "move_id": move.id})
+
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(PullCharacterData, "/PullCharacterData/<string:gameId>/<string:guid>")
@@ -642,6 +785,8 @@ api.add_resource(NatureApi, "/nature")
 api.add_resource(AbilityApi, "/ability")
 api.add_resource(ItemApi, "/item")
 api.add_resource(GarmentApi, "/garment")
+
+api.add_resource(AddMove, "/addMove")
 
 if __name__ == "__main__":
     with app.app_context():

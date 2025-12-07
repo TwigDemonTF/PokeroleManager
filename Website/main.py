@@ -77,6 +77,21 @@ def battle():
     }
     return render_template("battle.html", **context)
 
+@app.route("/Move", methods=["GET", "POST"])
+def move():
+    if request.method == "POST":
+        data = request.form.to_dict()
+        print("hit")
+        res = requests.post(f"{url}/addMove", json=data)
+
+    res = requests.get(f"{url}/addMove")
+    # print(res)
+    context = {
+        "gameId": session.get("gameId"),
+        "data": res.json()
+    }
+    return render_template("add_move.html", **context)
+
 if __name__ == "__main__":
     with app.app_context():
         pass
