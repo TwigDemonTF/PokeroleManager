@@ -87,6 +87,7 @@ class GamePokemon(database.Model):
     status = database.Column(database.String(), nullable=True, default="Healthy")
 
     baseHealth = database.Column(database.Integer, nullable=False, default=3)
+    health = database.Column(database.Integer, nullable=False)
     will = database.Column(database.Integer, nullable=False, default=3)
     logic = database.Column(database.Integer, nullable=True, default=1)
     instinct = database.Column(database.Integer, nullable=True, default=1)

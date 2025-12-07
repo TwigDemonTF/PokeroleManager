@@ -12,7 +12,7 @@ import secrets
 
 # Set app
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["*"])
 api = Api(app)
 
 # Database Config
@@ -129,6 +129,7 @@ class GamePokemonApi(Resource):
 
                 # Base stats
                 baseHealth=base.baseHealth,
+                health=base.baseHealth + base.vitality,
                 will=base.will,
                 logic=base.logic,
                 instinct=base.instinct,
@@ -348,7 +349,6 @@ class GameApi(Resource):
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
             .join(Game, GameEntities.gameId == Game.id)
             .filter(Game.gameId == gameId)
-            .filter(GamePokemon.isNpc == False)
             .all()
         )
 
@@ -427,8 +427,121 @@ class GameApi(Resource):
 
             result.append(data)
 
-        return {"data": result}, 200
+        return {"data": result, "pokemons": result}, 200
 
+class BattleApi(Resource):
+    def post(self):
+        """
+        POST /api/pokemon/batch
+        Body: { "guids": ["GUID1", "GUID2"], "gameId": "game123" }
+        Returns full Pokémon data for the requested GUIDs in that game.
+        """
+        data = request.get_json()
+        if not data:
+            return {"message": "No data provided", "data": []}, 400
+
+        guids = data.get("guids")
+        game_id = data.get("gameId")
+        if not guids or not isinstance(guids, list):
+            return {"message": "GUIDs must be a non-empty list", "data": []}, 400
+        if not game_id:
+            return {"message": "gameId is required", "data": []}, 400
+
+        # Query GamePokemon filtered by GUIDs and gameId
+        pokemons = (
+            database.session.query(GamePokemon)
+            .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
+            .join(Game, GameEntities.gameId == Game.id)
+            .filter(Game.gameId == game_id)
+            .filter(GamePokemon.Guid.in_(guids))
+            .all()
+        )
+
+        if not pokemons:
+            return {"data": [], "message": "No Pokémon found for given GUIDs in this game"}, 200
+
+        result = []
+        for p in pokemons:
+            base = p.basePokemon  # FK relationship
+
+            # Resolve FK readable names
+            nature = Nature.query.get(p.natureId) if p.natureId else None
+            ability = Ability.query.get(p.abilityId) if p.abilityId else None
+            item = Item.query.get(p.itemId) if p.itemId else None
+
+            garments = [g.name for g in p.garments] if p.garments else []
+
+            pokemon_data = {
+                "GameId": game_id,
+                "Guid": p.Guid,
+                "Name": p.name,
+                "Level": p.level,
+                "Gender": p.gender,
+                "Age": p.age,
+                "Nature": {
+                    "name": nature.name,
+                    "description": nature.description,
+                } if nature else None,
+                "Ability": {
+                    "name": ability.name,
+                    "flavorText": ability.flavorText,
+                    "effect": ability.effect,
+                } if ability else None,
+                "HeldItem": {
+                    "name": item.name,
+                    "description": item.description,
+                    "effect": item.effect,
+                } if item else None,
+                "Garments": [g.name for g in p.garments] if p.garments else [],
+                "Status": p.status,
+
+                "BaseHealth": p.baseHealth or base.baseHealth,
+                "Health": p.health,
+                "Will": p.will or base.will,
+                "Logic": p.logic or base.logic,
+                "Instinct": p.instinct or base.instinct,
+                "Primal": p.primal or base.primal,
+
+                "PrimaryType": (p.primaryType.name if p.primaryType else (base.primaryType.name if base.primaryType else None)),
+                "SecondaryType": (p.secondaryType.name if p.secondaryType else (base.secondaryType.name if base.secondaryType else None)),
+
+                # Stats
+                "Strength": p.strength if p.strength is not None else base.strength,
+                "StrengthPotential": p.strengthPotential if p.strengthPotential is not None else base.strengthPotential,
+                "Dexterity": p.dexterity if p.dexterity is not None else base.dexterity,
+                "DexterityPotential": p.dexterityPotential if p.dexterityPotential is not None else base.dexterityPotential,
+                "Vitality": p.vitality if p.vitality is not None else base.vitality,
+                "VitalityPotential": p.vitalityPotential if p.vitalityPotential is not None else base.vitalityPotential,
+                "Special": p.special if p.special is not None else base.special,
+                "SpecialPotential": p.specialPotential if p.specialPotential is not None else base.specialPotential,
+                "Insight": p.insight if p.insight is not None else base.insight,
+                "InsightPotential": p.insightPotential if p.insightPotential is not None else base.insightPotential,
+
+                # Skills
+                "Fight": p.fight if p.fight is not None else base.fight,
+                "Survival": p.survival if p.survival is not None else base.survival,
+                "Contest": p.contest if p.contest is not None else base.contest,
+                "Brawl": p.brawl if p.brawl is not None else base.brawl,
+                "Channel": p.channel if p.channel is not None else base.channel,
+                "Clash": p.clash if p.clash is not None else base.clash,
+                "Evasion": p.evasion if p.evasion is not None else base.evasion,
+                "Alert": p.alert if p.alert is not None else base.alert,
+                "Athletic": p.athletic if p.athletic is not None else base.athletic,
+                "NatureStat": p.natureStat if p.natureStat is not None else base.natureStat,
+                "Stealth": p.stealth if p.stealth is not None else base.stealth,
+                "Allure": p.allure if p.allure is not None else base.allure,
+                "Etiquette": p.etiquette if p.etiquette is not None else base.etiquette,
+                "Intimidate": p.intimidate if p.intimidate is not None else base.intimidate,
+                "Perform": p.perform if p.perform is not None else base.perform,
+
+                "ExperiencePoints": p.experiencePoints,
+                "IsNpc": p.isNpc,
+                "PlayerColor": p.playerColor,
+            }
+
+            result.append(pokemon_data)
+
+        return {"data": result, "pokemons": result}, 200
 
 class NatureApi(Resource):
     def post(self):
@@ -524,6 +637,7 @@ api.add_resource(PullCharacterData, "/PullCharacterData/<string:gameId>/<string:
 api.add_resource(BasePokemonApi, "/basePokemon")
 api.add_resource(GamePokemonApi, '/gamePokemon')
 api.add_resource(GameApi, "/PullAllPokemon/<string:gameId>")
+api.add_resource(BattleApi, '/battleData')
 api.add_resource(NatureApi, "/nature")
 api.add_resource(AbilityApi, "/ability")
 api.add_resource(ItemApi, "/item")

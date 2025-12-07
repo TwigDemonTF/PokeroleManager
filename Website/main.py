@@ -70,6 +70,13 @@ def game():
     }
     return render_template('game.html', **context)
 
+@app.route("/Battle")
+def battle():
+    context = {
+        "gameId": session.get("gameId")
+    }
+    return render_template("battle.html", **context)
+
 if __name__ == "__main__":
     with app.app_context():
         pass

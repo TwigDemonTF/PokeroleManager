@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en">
+<style>
+/* ---------------------------------------------------------
+   GLOBAL SCALING
+--------------------------------------------------------- */
+:root {
+  --card-scale: 1;
+
+  --gap: 12px;
+  --card-bg: #111;
+  --card-border: #333;
+  --panel-bg: #363636;
+  --muted: #9aa;
+  --accent: hotpink;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  margin: 0;
+  background: #222121;
+  color: hotpink;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------
+   LAYOUT
+--------------------------------------------------------- */
+
+header {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-bg);
+  border-bottom: 2px solid hotpink;
+}
+header h1 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.wrap {
+    width: 100%;
+    height: 100%;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: var(--gap);
+  padding: 18px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------------
+   LEFT SIDEBAR
+--------------------------------------------------------- */
+
+.selectors {
+  background: var(--panel-bg);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  max-height: 78vh;
+  overflow: auto;
+}
+.selectors h2 {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+}
+
+.select-row {
+  display: flex;
+  gap: 8px;
+}
+
+select {
+  width: 100%;
+  min-height: 220px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  background: #0b7285;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button.ghost {
+  background: transparent;
+  border: 1px solid #234;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------
+   GRID OF POKÉMON CARDS
+--------------------------------------------------------- */
+
+.stage {
+  background: transparent;
+  width: 98.5vw;
+}
+.stage-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;                 /* scales with .poke font-size (em-based inside) */
+  align-items: flex-start;  /* ensure items align at top */
+}
+
+/* ---------------------------------------------------------
+   CARD (MAIN SCALING TARGET)
+--------------------------------------------------------- */
+
+.poke {
+    /* controls internal scaling */
+    font-size: calc(1rem * var(--card-scale));
+    background: var(--panel-bg);
+    padding: 0.75em;
+    background:
+    linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+    linear-gradient(to right, black, hotpink) border-box;
+    border: 3px solid transparent;
+    border-radius: 12.5px;
+    color: #9aa !important;
+
+    /* flex behaviour */
+    flex: 1 1 240px;   /* grow | shrink | base-width */
+    min-width: 100%;  /* prevents extreme squishing */
+    max-width: 100%;    /* ignored by flex but keeps intent clear */
+    box-sizing: border-box;
+}
+
+.poke--narrow {
+  max-width: 420px; /* optional: add this class to keep cards readable */
+}
+
+.poke .head {
+  display: flex;
+  gap: 0.6em;
+  align-items: center;
+}
+
+/* ---------------------------------------------------------
+   AVATAR (scales cleanly)
+--------------------------------------------------------- */
+
+.avatar {
+  width: 3.75em;
+  height: 3.75em;
+  border-radius: 0.5em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------------------------------------------------
+   META
+--------------------------------------------------------- */
+
+.meta {
+  flex: 1;
+}
+.meta h3 {
+  margin: 0;
+  font-size: 1em;
+}
+.meta .sub {
+  font-size: 0.78em;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------
+   TYPES & BADGES
+--------------------------------------------------------- */
+
+.types {
+  margin-top: 0.4em;
+  display: flex;
+  gap: 0.4em;
+}
+
+.type,
+.badge {
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  border-radius: 0.4em;
+}
+
+/* ---------------------------------------------------------
+   STATS AREA
+--------------------------------------------------------- */
+
+.bars {
+    display: grid;
+    grid-template-columns: 0.8fr 0.8fr; /* smaller columns */
+    column-gap: 0.5em;
+    row-gap: 0.3em;
+    width: 60%;
+}
+
+.stat {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+.stat b {
+    width: 4.1em; /* tighten label width */
+}
+
+.stat .val {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   STAT CIRCLES (scalable)
+--------------------------------------------------------- */
+
+.stat-circles {
+  display: flex;
+  gap: 0.25em;
+  cursor: pointer;
+}
+
+.stat-circles .circle {
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background-color: #333;
+  border: 1px solid #555;
+  transition: background 0.2s;
+}
+
+.stat-circles .circle.filled {
+  background-color: var(--accent);
+}
+
+/* ---------------------------------------------------------
+   MOVES
+--------------------------------------------------------- */
+
+.moves {
+  display: flex;
+  gap: 0.4em;
+  margin-top: 0.6em;
+}
+
+.move-slot {
+  min-height: 2.25em;
+  font-size: 0.85em;
+  padding: 0.4em 0.6em;
+  background: rgba(255,255,255,0.03);
+  border-radius: 0.4em;
+  border: 1px solid var(--card-border);
+  flex: 1;
+}
+
+/* ---------------------------------------------------------
+   TOOLTIPS
+--------------------------------------------------------- */
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.tooltip .tooltip-content {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    position: absolute;
+    z-index: 20;
+    background: #111;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.8rem;
+    width: 240px;
+    top: 120%;
+    left: 0;
+}
+
+.tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   HEALTH BAR
+--------------------------------------------------------- */
+
+.hp-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-top: 8px;
+}
+
+.hp-btn {
+    background: #222;
+    color: #ccc;
+    border: 1px solid #444;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    user-select: none;
+}
+
+.hp-btn:hover {
+    background: #333;
+}
+
+.hp-bar {
+    flex: 1;
+    height: 12px;
+    background: #222;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #444;
+    max-width: 85%;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: #28c76f; /* healthy green */
+    width: 50%; /* default, updated in JS */
+    transition: width 0.2s ease;
+}
+
+
+/* ---------------------------------------------------------
+   MISC
+--------------------------------------------------------- */
+
+.big {
+  display: flex;
+  gap: 0.8em;
+  align-items: center;
+}
+
+footer {
+  padding: 12px 18px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+--------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  .selectors {
+    order: 2;
+  }
+}
+</style>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Battle — Select Pokémon</title>
+</head>
+<body>
+  <header>
+    <h1>Battle — pick participants</h1>
+    <div style="margin-left:auto; color:var(--muted)">Front: http://localhost:8000 · API: http://localhost:9000</div>
+  </header>
+
+  <div class="wrap">
+    <aside class="selectors">
+      <h2>Available Pokémon (your game)</h2>
+      <div style="display:flex; gap:8px; margin-bottom:8px">
+        <input id="search" placeholder="search name or GUID" style="flex:1;padding:8px;border-radius:6px;border:1px solid #1f2937;background:transparent;color:inherit">
+        <button id="refresh">Refresh</button>
+      </div>
+
+      <div class="select-row">
+        <div style="flex:1;">
+          <label style="font-size:0.8rem">Players (non-NPC)</label>
+          <select id="players" multiple></select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:0.8rem">NPCs</label>
+          <select id="npcs" multiple></select>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="fetchStats">Fetch stats</button>
+        <button id="selectAllPlayers" class="ghost">Select all players</button>
+        <button id="selectAllNpcs" class="ghost">Select all NPCs</button>
+      </div>
+
+      <div style="margin-top:12px; font-size:0.82rem; color:var(--muted)">
+        Tip: hold Ctrl / Cmd to select multiple. Click "Fetch stats" to render selected Pokémon on the right.
+      </div>
+    </aside>
+
+    <main class="stage">
+        <div id="initiativePanel"
+            style="margin-bottom: 1.5rem; padding: 12px; background: rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px;">
+            <div style="display:flex; align-items:center;">
+                <h3 style="margin:0;">Initiative Order</h3>
+                <button id="autoRollNpcs" class="ghost" style="margin-left:auto;">Start Battle (roll NPCs)</button>
+            </div>
+            <div id="initiativeList" style="margin-top:8px; display:flex; flex-direction:column; gap:4px;"></div>
+        </div>
+      <div class="stage-controls">
+        <div style="font-weight:600">Stage</div>
+        <div style="margin-left:8px; color:var(--muted)">Showing <span id="count">0</span> Pokémon</div>
+        <div style="margin-left:auto; display:flex; gap:8px">
+          <button style="display: none;" id="clearStage" class="ghost">Clear</button>
+          <button id="zoomIn" class="ghost">Zoom +</button>
+          <button style="margin-right: 25%;" id="zoomOut" class="ghost">Zoom -</button>
+        </div>
+      </div>
+        <div id="battleColumns" style="display:flex; gap:2rem;">
+        <div style="flex:1;">
+            <h3 style="margin-bottom:6px;">Players</h3>
+            <div class="grid" id="playersGrid"></div>
+        </div>
+
+        <div style="flex:1;">
+            <h3 style="margin-bottom:6px;">NPCs</h3>
+            <div class="grid" id="npcsGrid"></div>
+        </div>
+        </div>
+    </main>
+  </div>
+
+  <footer>
+    Expected API endpoints (configurable inside the script):
+    <ul>
+      <li><code>GET /api/game/pokemons</code> — returns array of all GamePokemon for the connected game, each item should include at least: <code>Guid</code>, <code>name</code>, <code>isNpc</code>, and summary stats.</li>
+      <li><code>POST /api/pokemon/batch</code> — accepts JSON <code>{ guids: ["GUID1","GUID2", ...] }</code> and returns full GamePokemon objects for the requested GUIDs (used to render detailed cards).</li>
+    </ul>
+  </footer>
+
+  <script>
+    // Configuration — edit to match your back-end and auth method
+    const API_BASE = 'http://127.0.0.1:9000';
+    // If you use cookies/session auth (Flask login), keep credentials: 'include'
+    const FETCH_OPTS = { headers: {'Content-Type':'application/json'}};
+    const GAME_ID = "{{ gameId }}"
+
+    const playersSelect = document.getElementById('players');
+    const npcsSelect = document.getElementById('npcs');
+    const searchInput = document.getElementById('search');
+    const stageGrid = document.getElementById('stageGrid');
+    const countEl = document.getElementById('count');
+
+    let allPokemonCache = []; // cached list from GET /api/game/pokemons
+    let zoom = 1;
+    let initiativeMap = {}; // guid → initiative number
+
+    function makeTooltip(label, data) {
+        if (!data) return label;
+
+        return `
+            <div class="tooltip">
+                ${label}
+                <div class="tooltip-content">
+                    <strong>${data.name}</strong><br><br>
+                    ${data.description ? `<div>${data.description}</div><br>` : ""}
+                    ${data.effect ? `<div><em>${data.effect}</em></div>` : ""}
+                    ${data.flavorText ? `<div style="color:#9aa">"${data.flavorText}"</div>` : ""}
+                </div>
+            </div>
+        `;
+    }
+
+    function computeInitiative(poke) {
+        // Change this rule if you want different initiative logic
+        let d6 = Math.floor(Math.random() * (7 - 1)) + 1
+        console.log(d6)
+        return d6 + poke.dexterity + poke.survival ?? 0;
+    }
+
+    function updateInitiativePanel(pokes) {
+        const listEl = document.getElementById("initiativeList");
+        listEl.innerHTML = "";
+
+        const filled = pokes.filter(p => initiativeMap[p.guid] !== undefined);
+
+        const sorted = filled.sort((a,b) => initiativeMap[b.guid] - initiativeMap[a.guid]);
+
+        sorted.forEach((p, idx) => {
+            const row = document.createElement('div');
+            row.style.display = "flex";
+            row.style.justifyContent = "space-between";
+            row.style.padding = "4px 8px";
+            row.style.background = "rgba(255,255,255,0.02)";
+            row.style.borderRadius = "6px";
+            row.style.fontSize = "0.88rem";
+
+            // Determine name color
+            let nameColor = "inherit";
+            if (!p.isNpc && p.playerColor && p.playerColor !== "None") {
+                nameColor = p.playerColor;  // use frontend-supplied color
+            }
+
+            row.innerHTML = `
+                <div>
+                    <strong>${idx + 1}.</strong>
+                    <span style="color:${nameColor}">${p.name}</span>
+                </div>
+                <div style="color:var(--muted)">
+                    ${initiativeMap[p.guid]} 
+                    (${p.isNpc ? "NPC" : "Player"})
+                </div>
+            `;
+
+            listEl.appendChild(row);
+        });
+    }
+
+    function renderInitiative(pokes) {
+        const listEl = document.getElementById('initiativeList');
+        listEl.innerHTML = '';
+
+        // Sort highest → lowest
+        const sorted = [...pokes].sort((a,b) => computeInitiative(b) - computeInitiative(a));
+
+        sorted.forEach((p, index) => {
+            const row = document.createElement('div');
+            row.style.padding = "4px 8px";
+            row.style.borderRadius = "6px";
+            row.style.background = "rgba(255,255,255,0.02)";
+            row.style.display = "flex";
+            row.style.justifyContent = "space-between";
+            row.style.fontSize = "0.88rem";
+
+            row.innerHTML = `
+                <div><strong>${index+1}.</strong> ${p.name}</div>
+                <div style="color:var(--muted)">
+                    ${p.isNpc ? 'NPC' : 'Player'}
+                </div>
+            `;
+
+            listEl.appendChild(row);
+        });
+    }
+
+    document.getElementById("autoRollNpcs").addEventListener("click", () => {
+        // roll NPCs with missing initiative
+        for (const p of currentPokesOnField) {
+            if (p.isNpc && initiativeMap[p.guid] === undefined) {
+                const roll = Math.floor(Math.random()*6)+1;
+                const total = roll + (p.dexterity ?? 0) + (p.survival ?? 0);
+                initiativeMap[p.guid] = total;
+            }
+        }
+        updateInitiativePanel(currentPokesOnField);
+    });
+
+
+    function normalizePokemon(p){
+        return {
+            guid: p.Guid ?? p.guid,
+            name: p.Name ?? p.name,
+            isNpc: p.IsNpc ?? p.isNpc,
+
+            level: p.Level ?? p.level,
+            status: p.Status ?? p.status,
+            primaryType: p.PrimaryType ?? p.primaryType,
+            secondaryType: p.SecondaryType ?? p.secondaryType,
+            heldItem: p.HeldItem ?? p.heldItem,
+
+            health: p.Health ?? p.health,
+            baseHealth: p.BaseHealth ?? p.baseHealth,
+
+            ability: p.Ability ?? p.ability ?? null,
+            nature: p.Nature ?? p.nature ?? null,
+
+            // Stats
+            strength: p.Strength ?? p.strength,
+            dexterity: p.Dexterity ?? p.dexterity,
+            vitality: p.Vitality ?? p.vitality,
+            special: p.Special ?? p.special,
+            insight: p.Insight ?? p.insight,
+
+            strengthPotential: p.StrengthPotential ?? p.strengthPotential ?? 0,
+            dexterityPotential: p.DexterityPotential ?? p.dexterityPotential ?? 0,
+            vitalityPotential: p.VitalityPotential ?? p.vitalityPotential ?? 0,
+            specialPotential: p.SpecialPotential ?? p.specialPotential ?? 0,
+            insightPotential: p.InsightPotential ?? p.insightPotential ?? 0,
+
+            // Skills
+            fight: p.Fight ?? p.fight,
+            survival: p.Survival ?? p.survival,
+            contest: p.Contest ?? p.contest,
+            brawl: p.Brawl ?? p.brawl,
+            evasion: p.Evasion ?? p.evasion,
+            channel: p.Channel ?? p.channel,
+            clash: p.Clash ?? p.clash,
+            alert: p.Alert ?? p.alert,
+            athletic: p.Athletic ?? p.athletic,
+            natureStat: p.NatureStat ?? p.natureStat,
+            stealth: p.Stealth ?? p.stealth,
+            perform: p.Perform ?? p.perform,
+
+            playerColor: p.PlayerColor ?? p.playerColor ?? null,
+        };
+    }
+
+    function createStatCircles(statName, value, potential) {
+    const container = document.createElement('div');
+    container.className = 'stat-circles';
+
+    for (let i = 1; i <= potential; i++) {
+        const c = document.createElement('div');
+        c.className = 'circle' + (i <= value ? ' filled' : '');
+        c.addEventListener('click', () => {
+        if (i <= value) {
+            value = i - 1; // decrease
+        } else {
+            value = i; // increase
+        }
+        // update circles visually
+        Array.from(container.children).forEach((circle, idx) => {
+            circle.classList.toggle('filled', idx < value);
+        });
+        });
+        container.appendChild(c);
+    }
+
+    return container;
+    }
+
+    async function loadAll(){
+    try{
+        const res = await fetch(`${API_BASE}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
+        if(!res.ok) throw new Error('Failed to load pokemons');
+
+        const raw = await res.json();
+        const list = raw.data || raw.pokemons || raw || [];
+
+        // Normalize keys so the rest of the UI works
+        allPokemonCache = list.map(p => normalizePokemon(p));
+
+        renderSelects(allPokemonCache);
+    }catch(e){
+        console.error(e);
+        alert('Error loading pokemons — open console for details');
+    }
+    }
+
+    function renderSelects(list){
+    playersSelect.innerHTML = '';
+    npcsSelect.innerHTML = '';
+
+    const q = (searchInput.value || '').trim().toLowerCase();
+
+    list.forEach(p => {
+        const guid = p.guid;  // ALWAYS lowercase, since our normalizePokemon guarantees it
+
+        if (!guid) return; // safety
+
+        if (q && !p.name.toLowerCase().includes(q) && !guid.toLowerCase().includes(q)) {
+        return;
+        }
+
+        const opt = document.createElement('option');
+        opt.value = guid;
+        opt.textContent = `${p.name} (${guid})`;
+        opt.dataset.obj = JSON.stringify(p);
+
+        if (p.isNpc) npcsSelect.appendChild(opt);
+        else playersSelect.appendChild(opt);
+    });
+    }
+
+    function getSelectedGuids(){
+      const a = Array.from(playersSelect.selectedOptions).map(o=>o.value);
+      const b = Array.from(npcsSelect.selectedOptions).map(o=>o.value);
+      return {players:a,npcs:b,all:a.concat(b)};
+    }
+
+    async function fetchSelectedAndRender(){
+        const guids = getSelectedGuids().all;
+        if(!guids.length){ alert('No Pokémon selected'); return; }
+
+        try{
+            const res = await fetch(`${API_BASE}/battleData`, {
+            ...FETCH_OPTS,
+            method:'POST',
+            body: JSON.stringify({ guids, gameId: GAME_ID })
+            });
+
+            if(!res.ok){
+            console.warn("Batch endpoint missing, falling back to cached list");
+            const selected = allPokemonCache.filter(p => guids.includes(p.guid));
+            return renderStage(selected);
+            }
+
+            const raw = await res.json();
+            const list = raw.data || raw.pokemons || [];
+
+            // Normalize keys just like loadAll()
+            const pokes = list.map(p => normalizePokemon(p));
+
+            renderStage(pokes);
+        }catch(err){
+            console.error(err);
+            alert('Error fetching selected Pokémon details — check console');
+        }
+    }
+
+    function renderStage(pokes){
+        currentPokesOnField = pokes;
+        const playersGrid = document.getElementById('playersGrid');
+        const npcsGrid   = document.getElementById('npcsGrid');
+
+        playersGrid.innerHTML = '';
+        npcsGrid.innerHTML   = '';
+
+        renderInitiative(pokes);
+
+        pokes.forEach(p => {
+            // create card container
+            const card = document.createElement('div'); 
+            card.className = 'poke';
+
+            // head (+ meta)
+            const head = document.createElement('div'); head.className='head'; head.style.fontSize = "22px"; head.style.marginLeft = "1%"
+            const meta = document.createElement('div'); meta.className='meta';
+            const titleRow = document.createElement('div');
+            titleRow.style.display = "flex";
+            titleRow.style.alignItems = "center";
+            titleRow.style.justifyContent = "space-between";
+
+            const title = document.createElement('h3');
+            title.style.margin = "0";
+            title.textContent = `${p.name} ${p.level ? 'Lv ' + p.level : ''}`;
+            titleRow.appendChild(title);
+
+            // Ability badge (tooltip-enabled)
+            // if (p.ability) {
+            //     const abilityBadge = document.createElement('div');
+            //     abilityBadge.className = "badge";
+            //     abilityBadge.style.marginLeft = "auto";
+            //     abilityBadge.style.fontSize = "20px"
+            //     abilityBadge.innerHTML = makeTooltip(
+            //         p.ability.name,
+            //         p.ability
+            //     );
+            //     titleRow.appendChild(abilityBadge);
+            // }
+
+            meta.appendChild(titleRow);
+
+            // GUID/status line unchanged:
+            const sub = document.createElement('div');
+            sub.className='sub';
+            sub.innerHTML = `GUID: ${p.guid || p.Guid} · ${p.status || 'Healthy'}`;
+            meta.appendChild(sub);
+            head.appendChild(meta);
+            card.appendChild(head);
+
+            // types and item
+            const tline = document.createElement('div'); tline.className='types';
+            if(p.primaryType) { const t = document.createElement('div'); t.className='type'; t.textContent = p.primaryType; t.style.fontSize = "20px"; tline.appendChild(t); }
+            if(p.secondaryType) { const t = document.createElement('div'); t.className='type'; t.textContent = p.secondaryType; tline.appendChild(t); }
+            if (p.heldItem) {
+                const it = document.createElement('div');
+                it.className = 'badge';
+                it.innerHTML = makeTooltip(
+                    "Item: " + p.heldItem.name,
+                    p.heldItem
+                );
+                it.style.fontSize = "17px"
+                tline.appendChild(it);
+            }
+            if (p.ability) {
+                const ab = document.createElement('div');
+                ab.className = "badge";
+                ab.innerHTML = makeTooltip("Ability: " + p.ability.name, p.ability);
+                ab.style.fontSize = "17px"
+                tline.appendChild(ab);
+            }
+            if (p.nature) {
+                const nt = document.createElement('div');
+                nt.className = "badge";
+                nt.innerHTML = makeTooltip("Nature: " + p.nature.name, p.nature);
+                nt.style.fontSize = "17px"
+                tline.appendChild(nt);
+            }
+            card.appendChild(tline);
+
+            // HEALTH BAR SYSTEM
+            const maxHp = (p.baseHealth ?? 0) + (p.vitality ?? 0);
+            let currentHp = p.health ?? maxHp;
+
+            // lethal damage (default 0)
+            if (p.lethal == null) p.lethal = 0;
+            let currentLethal = p.lethal;
+
+            // Container
+            const hpContainer = document.createElement('div');
+            hpContainer.className = "hp-bar-container";
+
+            // Minus button
+            const minusBtn = document.createElement('div');
+            minusBtn.className = "hp-btn";
+            minusBtn.textContent = "–";
+
+            // Plus button
+            const plusBtn = document.createElement('div');
+            plusBtn.className = "hp-btn";
+            plusBtn.textContent = "+";
+
+            // Bar
+            const bar = document.createElement('div');
+            bar.className = "hp-bar";
+
+            const fill = document.createElement('div');
+            fill.className = "hp-bar-fill";
+            bar.appendChild(fill);
+
+            // Update bar fill width + color
+            function updateHpBar() {
+                const pct = Math.max(0, Math.min(1, currentHp / maxHp));
+                fill.style.width = (pct * 100) + "%";
+
+                // Color shifts based on % HP
+                if (pct > 0.5) fill.style.background = "#28c76f"; // green
+                else if (pct > 0.25) fill.style.background = "#f5c04f"; // yellow
+                else fill.style.background = "#ea5455"; // red
+            }
+
+            // Button behavior
+            minusBtn.onclick = () => {
+                currentHp = Math.max(0, currentHp - 1);
+                p.health = currentHp; // keep state updated
+                updateHpBar();
+            };
+
+            plusBtn.onclick = () => {
+                currentHp = Math.max(0, Math.min(maxHp, currentHp + 1));
+                p.health = currentHp;
+                updateHpBar();
+            };
+
+            updateHpBar();
+
+            // HP text with status
+            const hpText = document.createElement('span');
+            hpText.style.marginLeft = "0.5em";
+            hpText.style.color = "var(--muted)";
+            hpText.style.fontSize = "0.9em";
+            hpText.textContent = ` ${currentHp}/${maxHp} · ${p.status || 'Healthy'}`;
+
+            // Build row: – [bar] + HP text
+            hpContainer.appendChild(minusBtn);
+            hpContainer.appendChild(bar);
+            hpContainer.appendChild(plusBtn);
+            hpContainer.appendChild(hpText);
+
+            card.appendChild(hpContainer);
+
+            // ========== LETHAL HP ==========
+
+            // Toggle button
+            const lethalToggle = document.createElement("button");
+            lethalToggle.textContent = "Show Lethal HP";
+            lethalToggle.style.marginTop = "4px";
+            lethalToggle.style.fontSize = "0.75rem";
+            lethalToggle.style.padding = "3px 6px";
+
+            // Lethal bar container
+            const lethalContainer = document.createElement('div');
+            lethalContainer.className = "hp-bar-container";
+            lethalContainer.style.display = "none"; // hidden by default
+
+            // lethal buttons
+            const lethalMinus = document.createElement('div');
+            lethalMinus.className = "hp-btn";
+            lethalMinus.textContent = "–";
+
+            const lethalPlus = document.createElement('div');
+            lethalPlus.className = "hp-btn";
+            lethalPlus.textContent = "+";
+
+            // lethal bar
+            const lethalBar = document.createElement('div');
+            lethalBar.className = "hp-bar";
+
+            const lethalFill = document.createElement('div');
+            lethalFill.className = "hp-bar-fill";
+            lethalBar.appendChild(lethalFill);
+
+            // lethal text
+            const lethalText = document.createElement('span');
+            lethalText.style.marginLeft = "0.5em";
+            lethalText.style.color = "var(--muted)";
+            lethalText.style.fontSize = "0.9em";
+
+            function updateLethalBar() {
+                const pct = Math.max(0, Math.min(1, currentLethal / maxHp));
+                lethalFill.style.width = (pct * 100) + "%";
+
+                // Lethal bar color (purple gradient)
+                if (pct === 1) lethalFill.style.background = "#ff004c"; // DEAD
+                else lethalFill.style.background = "#8e44ad";           // purple
+
+                lethalText.textContent = ` ${currentLethal}/${maxHp} lethal`;
+            }
+
+            // lethal button logic
+            lethalMinus.onclick = () => {
+                currentLethal = Math.max(0, currentLethal - 1);
+                p.lethal = currentLethal;
+                updateLethalBar();
+            };
+
+            lethalPlus.onclick = () => {
+                currentLethal = Math.min(maxHp, currentLethal + 1);
+                p.lethal = currentLethal;
+                updateLethalBar();
+            };
+
+            updateLethalBar();
+
+            // assemble lethal bar
+            lethalContainer.appendChild(lethalMinus);
+            lethalContainer.appendChild(lethalBar);
+            lethalContainer.appendChild(lethalPlus);
+            lethalContainer.appendChild(lethalText);
+
+            // toggle logic
+            lethalToggle.onclick = () => {
+                if (lethalContainer.style.display === "none") {
+                    lethalContainer.style.display = "flex";
+                    lethalToggle.textContent = "Hide Lethal HP";
+                } else {
+                    lethalContainer.style.display = "none";
+                    lethalToggle.textContent = "Show Lethal HP";
+                }
+            };
+
+            card.appendChild(lethalToggle);
+            card.appendChild(lethalContainer);
+
+            // stats grid
+            const bars = document.createElement('div'); 
+            bars.className='bars';
+
+            // Base stats with individual potentials
+            const baseStats = [
+            { key: 'strength', potentialKey: 'strengthPotential' },
+            { key: 'dexterity', potentialKey: 'dexterityPotential' },
+            { key: 'vitality', potentialKey: 'vitalityPotential' },
+            { key: 'special', potentialKey: 'specialPotential' },
+            { key: 'insight', potentialKey: 'insightPotential' }
+            ];
+
+            baseStats.forEach(s => {
+            const st = document.createElement('div'); st.className='stat';
+            const label = document.createElement('b'); label.textContent = s.key;
+            const val = createStatCircles(s.key, p[s.key] ?? 0, p[s.potentialKey] ?? 0);
+            st.appendChild(label);
+            st.appendChild(val);
+            bars.appendChild(st);
+            });
+
+            // Skills with fixed potential of 5
+            const skills = ['fight','survival','contest','brawl','evasion','channel','clash','alert','athletic','nature','stealth','perform'];
+            skills.forEach(k => {
+            const st = document.createElement('div'); st.className='stat';
+            const label = document.createElement('b'); label.textContent = k;
+            const val = createStatCircles(k, p[k] ?? 0, 5);
+            st.appendChild(label);
+            st.appendChild(val);
+            bars.appendChild(st);
+            });
+
+            card.appendChild(bars);
+
+            // INITIATIVE INPUT AREA
+            if (!p.isNpc) {
+                const initBox = document.createElement('div');
+                initBox.style.marginTop = "10px";
+                initBox.style.padding = "6px";
+                initBox.style.background = "rgba(255,255,255,0.04)";
+                initBox.style.border = "1px solid var(--card-border)";
+                initBox.style.borderRadius = "8px";
+
+                initBox.innerHTML = `
+                    <label style="font-size:0.82rem; color:var(--muted)">Initiative</label>
+                    <input 
+                        type="number"
+                        style="width:80px; padding:4px; margin-left:8px; background:transparent; color:white; border:1px solid #333; border-radius:4px;"
+                        value="${initiativeMap[p.guid] ?? ''}"
+                    />
+                `;
+
+                const input = initBox.querySelector("input");
+                input.addEventListener("input", () => {
+                    initiativeMap[p.guid] = Number(input.value);
+                    updateInitiativePanel(pokes);
+                });
+
+                card.appendChild(initBox);
+            } else {
+            }
+
+            if (p.isNpc) npcsGrid.appendChild(card);
+            else playersGrid.appendChild(card);
+            updateInitiativePanel(pokes);
+        });
+
+        countEl.textContent = pokes.length;
+        document.documentElement.style.setProperty('--scale', zoom);
+    }
+
+
+    // UI wired actions
+    document.getElementById('refresh').addEventListener('click', loadAll);
+    // document.getElementById('fetchStats').addEventListener('click', fetchSelectedAndRender);
+    document.getElementById('selectAllPlayers').addEventListener('click', ()=>{ for(let i=0;i<playersSelect.options.length;i++) playersSelect.options[i].selected=true });
+    document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<npcsSelect.options.length;i++) npcsSelect.options[i].selected=true });
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        zoom = Math.min(1.6, zoom + 0.1);
+        document.documentElement.style.setProperty('--card-scale', zoom);
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        zoom = Math.max(0.6, zoom - 0.1);
+        document.documentElement.style.setProperty('--card-scale', zoom);
+    });
+
+    document.getElementById('fetchStats').addEventListener('click', () => {
+        // Hide all elements with class 'selectors'
+        document.querySelectorAll('.selectors').forEach(el => {
+            el.style.display = 'none';
+        });
+        document.getElementById("clearStage").style.display = "block"
+        // Then fetch and render stats
+        fetchSelectedAndRender();
+    });
+
+    document.getElementById('clearStage').addEventListener('click', () => { 
+        // Clear grids
+        const playersGrid = document.getElementById('playersGrid');
+        const npcsGrid = document.getElementById('npcsGrid');
+
+        playersGrid.innerHTML = '';
+        npcsGrid.innerHTML = '';
+
+        // Reset count
+        countEl.textContent = '0';
+
+        // Reset initiative state
+        initiativeMap = {};
+        currentPokesOnField = [];
+
+        // Clear initiative UI
+        document.getElementById("initiativeList").innerHTML = "";
+
+        // Show selectors again
+        document.querySelectorAll('.selectors').forEach(el => {
+            el.style.display = '';
+        });
+
+        // Hide clear button again
+        document.getElementById("clearStage").style.display = "none";
+    });
+
+    // quick search filtering
+    let searchTimer = null;
+    searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderSelects(allPokemonCache), 250) });
+
+    // initial load
+    loadAll();
+
+    // ---- NOTES for backend integration (also in footer):
+    // - GET /api/game/pokemons should return JSON { pokemons: [ { Guid, name, isNpc, level, status, baseHealth, health, primaryType, secondaryType, heldItem, ... } ] }
+    // - POST /api/pokemon/batch accepts { guids: [...] } and returns { pokemons: [ ...full objects... ] }
+    // - If your backend uses different field names, adapt the script to map them (e.g. Guid vs guid)
+    // - You may want to enable CORS on port 9000 or serve frontend from the same origin.
+  </script>
+</body>
+</html>
