@@ -148,6 +148,10 @@ class GamePokemon(database.Model):
     playerColor = database.Column(database.String(20), nullable=False, default="None")
     Guid = database.Column(database.String(6), nullable=False, unique=True)
 
+    @property
+    def learned_moves(self):
+        return [mc.move.name for mc in self.move_connections]
+
 class User(database.Model):
     __tablename__ = "User"
     id = database.Column(database.Integer, primary_key=True, nullable=False)

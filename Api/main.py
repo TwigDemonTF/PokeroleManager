@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from .database import database
 from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment, AccuracyModifierGroup, DamageModifierGroup, HealMove, MoveEffect, MoveEffectConnection, Move, MoveConnection
-from .utils import generate_game_id, enum_to_dict_list, getBooleanFields
+from .utils import generate_game_id, enum_to_dict_list, getBooleanFields, extract_modifiers_from_group
 
 from .Enums.Types import Types as TypeEnum
 from .Enums.Move.DamageType import DamageTypeEnum
@@ -359,7 +359,7 @@ class GameApi(Resource):
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
             .join(Game, GameEntities.gameId == Game.id)
             .filter(Game.gameId == gameId)
-            .filter(GamePokemon.isNpc == False)
+            # .filter(GamePokemon.isNpc == False)
             .all()
         )
 
@@ -372,14 +372,91 @@ class GameApi(Resource):
 
             base = p.basePokemon  # FK relationship
 
-            # Resolve readable names for FK ids
             nature = Nature.query.get(p.natureId) if p.natureId else None
             ability = Ability.query.get(p.abilityId) if p.abilityId else None
             item = Item.query.get(p.itemId) if p.itemId else None
 
-            # Get garments names as a list
-            garments = [g.name for g in p.garments] if p.garments else []
+            moves_data = []
 
+            # --- Build full move objects properly ---
+            for mc in p.move_connections:
+                move = mc.move
+
+                # Accuracy mods
+                acc_mods = extract_modifiers_from_group(
+                    move.accuracy_modifier_group,
+                    "accuracyModifier"
+                )
+
+                # Damage mods
+                dmg_mods = extract_modifiers_from_group(
+                    move.damage_modifier_group,
+                    "damageModifier"
+                )
+
+                # Heal move
+                heal_data = None
+                if move.heal_move:
+                    heal_data = {
+                        "healType": move.heal_move.healType.name if move.heal_move.healType else None,
+                        "healAmount": move.heal_move.healAmount
+                    }
+
+                # Effects
+                effects = []
+                for conn in move.effect_connections:
+                    me = conn.move_effect
+                    effects.append({
+                        "effect": me.effect.name,
+                        "effectLevel": me.effectLevel.name,
+                        "effectLevelDice": me.effectLevelDice
+                    })
+
+                # Final move object (matching frontend!)
+                move_json = {
+                    "id": move.id,
+                    "name": move.name,
+                    "type": move.type.name if move.type else None,
+                    "damageType": move.damageType.name if move.damageType else None,
+
+                    "basePower": move.basePower,
+                    "target": move.target.name if move.target else None,
+                    "priority": move.priority.name if move.priority else None,
+
+                    "accuracyModifiers": acc_mods,
+                    "damageModifiers": dmg_mods,
+                    "reducedAccuracy": move.reducedAccuracy,
+
+                    "hasCritical": move.hasCritical,
+                    "hasLethal": move.hasLethal,
+                    "hasBlock": move.hasBlock,
+                    "hasRecoil": move.hasRecoil,
+                    "hasWeatherChange": move.hasWeatherChange,
+                    "weatherChangeTo": move.weatherChangeTo.name if move.weatherChangeTo else None,
+                    "hasModifiedDamage": move.hasModifiedDamage,
+                    "alwaysHitEffect": move.alwaysHitEffect,
+                    "alwaysFailEffect": move.alwaysFailEffect,
+                    "isChargeMove": move.isChargeMove,
+                    "isFistBased": move.isFistBased,
+                    "isHighCrit": move.isHighCrit,
+                    "isNeverFail": move.isNeverFail,
+                    "isHealingMove": move.isHealingMove,
+                    "isShieldMove": move.isShieldMove,
+                    "isSoundBased": move.isSoundBased,
+                    "isMultiHit": move.isMultiHit,
+                    "multiHitCount": move.multiHitCount.name if move.multiHitCount else None,
+                    "isSwitchMove": move.isSwitchMove,
+                    "requiresRecharge": move.requiresRecharge,
+
+                    "healMove": heal_data,
+                    "effects": effects,
+                    "effectText": move.effectText,
+                    "flavorText": move.flavorText,
+                }
+
+                moves_data.append(move_json)
+
+            # ——— Build Pokémon Output ———
             data = {
                 "GameId": gameId,
                 "Guid": p.Guid,
@@ -393,16 +470,18 @@ class GameApi(Resource):
                 "Garments": [g.name for g in p.garments] if p.garments else [],
                 "Status": p.status,
 
+                # Core stats
                 "BaseHealth": p.baseHealth or base.baseHealth,
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,
                 "Instinct": p.instinct or base.instinct,
                 "Primal": p.primal or base.primal,
 
+                # Types
                 "PrimaryType": (p.primaryType.name if p.primaryType else (base.primaryType.name if base.primaryType else None)),
                 "SecondaryType": (p.secondaryType.name if p.secondaryType else (base.secondaryType.name if base.secondaryType else None)),
 
-                # Stats
+                # Attributes
                 "Strength": p.strength or base.strength,
                 "StrengthPotential": p.strengthPotential or base.strengthPotential,
                 "Dexterity": p.dexterity or base.dexterity,
@@ -434,6 +513,12 @@ class GameApi(Resource):
                 "ExperiencePoints": p.experiencePoints,
                 "IsNpc": p.isNpc,
                 "PlayerColor": p.playerColor,
+
+                # ✔ Full move objects returned
+                "Moves": moves_data,
+
+                # IDs too (frontend uses these for dropdown)
+                "MoveIds": [mc.move.id for mc in p.move_connections],
             }
 
             result.append(data)
@@ -446,6 +531,7 @@ class BattleApi(Resource):
         POST /api/pokemon/batch
         Body: { "guids": ["GUID1", "GUID2"], "gameId": "game123" }
         Returns full Pokémon data for the requested GUIDs in that game.
+        Includes full move objects identical to GameApi.
         """
         data = request.get_json()
         if not data:
@@ -458,7 +544,6 @@ class BattleApi(Resource):
         if not game_id:
             return {"message": "gameId is required", "data": []}, 400
 
-        # Query GamePokemon filtered by GUIDs and gameId
         pokemons = (
             database.session.query(GamePokemon)
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
@@ -469,19 +554,99 @@ class BattleApi(Resource):
         )
 
         if not pokemons:
-            return {"data": [], "message": "No Pokémon found for given GUIDs in this game"}, 200
+            return {
+                "data": [],
+                "message": "No Pokémon found for given GUIDs in this game"
+            }, 200
 
         result = []
-        for p in pokemons:
-            base = p.basePokemon  # FK relationship
 
-            # Resolve FK readable names
+        for p in pokemons:
+            base = p.basePokemon
+
             nature = Nature.query.get(p.natureId) if p.natureId else None
             ability = Ability.query.get(p.abilityId) if p.abilityId else None
             item = Item.query.get(p.itemId) if p.itemId else None
 
-            garments = [g.name for g in p.garments] if p.garments else []
+            # ---------- MOVE PROCESSING (COPIED FROM GameApi) ----------
+            moves_data = []
 
+            for mc in p.move_connections:
+                move = mc.move
+
+                acc_mods = extract_modifiers_from_group(
+                    move.accuracy_modifier_group,
+                    "accuracyModifier"
+                )
+
+                dmg_mods = extract_modifiers_from_group(
+                    move.damage_modifier_group,
+                    "damageModifier"
+                )
+
+                heal_data = None
+                if move.heal_move:
+                    heal_data = {
+                        "healType": move.heal_move.healType.name
+                            if move.heal_move.healType else None,
+                        "healAmount": move.heal_move.healAmount
+                    }
+
+                effects = []
+                for conn in move.effect_connections:
+                    me = conn.move_effect
+                    effects.append({
+                        "effect": me.effect.name,
+                        "effectLevel": me.effectLevel.name,
+                        "effectLevelDice": me.effectLevelDice
+                    })
+
+                move_json = {
+                    "id": move.id,
+                    "name": move.name,
+                    "type": move.type.name if move.type else None,
+                    "damageType": move.damageType.name if move.damageType else None,
+
+                    "basePower": move.basePower,
+                    "target": move.target.name if move.target else None,
+                    "priority": move.priority.name if move.priority else None,
+
+                    "accuracyModifiers": acc_mods,
+                    "damageModifiers": dmg_mods,
+                    "reducedAccuracy": move.reducedAccuracy,
+
+                    "hasCritical": move.hasCritical,
+                    "hasLethal": move.hasLethal,
+                    "hasBlock": move.hasBlock,
+                    "hasRecoil": move.hasRecoil,
+                    "hasWeatherChange": move.hasWeatherChange,
+                    "weatherChangeTo": move.weatherChangeTo.name
+                        if move.weatherChangeTo else None,
+                    "hasModifiedDamage": move.hasModifiedDamage,
+                    "alwaysHitEffect": move.alwaysHitEffect,
+                    "alwaysFailEffect": move.alwaysFailEffect,
+                    "isChargeMove": move.isChargeMove,
+                    "isFistBased": move.isFistBased,
+                    "isHighCrit": move.isHighCrit,
+                    "isNeverFail": move.isNeverFail,
+                    "isHealingMove": move.isHealingMove,
+                    "isShieldMove": move.isShieldMove,
+                    "isSoundBased": move.isSoundBased,
+                    "isMultiHit": move.isMultiHit,
+                    "multiHitCount": move.multiHitCount.name
+                        if move.multiHitCount else None,
+                    "isSwitchMove": move.isSwitchMove,
+                    "requiresRecharge": move.requiresRecharge,
+
+                    "healMove": heal_data,
+                    "effects": effects,
+                    "effectText": move.effectText,
+                    "flavorText": move.flavorText,
+                }
+
+                moves_data.append(move_json)
+
+            # ---------- POKÉMON CORE DATA ----------
             pokemon_data = {
                 "GameId": game_id,
                 "Guid": p.Guid,
@@ -489,32 +654,45 @@ class BattleApi(Resource):
                 "Level": p.level,
                 "Gender": p.gender,
                 "Age": p.age,
+
                 "Nature": {
                     "name": nature.name,
                     "description": nature.description,
                 } if nature else None,
+
                 "Ability": {
                     "name": ability.name,
                     "flavorText": ability.flavorText,
                     "effect": ability.effect,
                 } if ability else None,
+
                 "HeldItem": {
                     "name": item.name,
                     "description": item.description,
                     "effect": item.effect,
                 } if item else None,
+
                 "Garments": [g.name for g in p.garments] if p.garments else [],
                 "Status": p.status,
 
                 "BaseHealth": p.baseHealth or base.baseHealth,
                 "Health": p.health,
+
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,
                 "Instinct": p.instinct or base.instinct,
                 "Primal": p.primal or base.primal,
 
-                "PrimaryType": (p.primaryType.name if p.primaryType else (base.primaryType.name if base.primaryType else None)),
-                "SecondaryType": (p.secondaryType.name if p.secondaryType else (base.secondaryType.name if base.secondaryType else None)),
+                "PrimaryType": (
+                    p.primaryType.name if p.primaryType
+                    else base.primaryType.name if base.primaryType
+                    else None
+                ),
+                "SecondaryType": (
+                    p.secondaryType.name if p.secondaryType
+                    else base.secondaryType.name if base.secondaryType
+                    else None
+                ),
 
                 # Stats
                 "Strength": p.strength if p.strength is not None else base.strength,
@@ -548,10 +726,15 @@ class BattleApi(Resource):
                 "ExperiencePoints": p.experiencePoints,
                 "IsNpc": p.isNpc,
                 "PlayerColor": p.playerColor,
+
+                # ✔ Added full moves (NOW MATCHES GameApi)
+                "Moves": moves_data,
+
+                # ✔ Include IDs too
+                "MoveIds": [mc.move.id for mc in p.move_connections],
             }
 
             result.append(pokemon_data)
-
         return {"data": result, "pokemons": result}, 200
 
 class NatureApi(Resource):
@@ -743,11 +926,7 @@ class AddMove(Resource):
 
         booleanFields = getBooleanFields()
         def parse_bool(key):
-            for key in booleanFields:
-                if key in data:
-                    return True
-                else:
-                    return False
+            return key in data
         
         boolean_values = {field: parse_bool(field) for field in booleanFields}
 
@@ -774,6 +953,78 @@ class AddMove(Resource):
 
         return jsonify({"status": "success", "move_id": move.id})
 
+class MoveManipulation(Resource):
+    def get(self):
+        moves = Move.query.all()
+        return {
+            "moves": [
+                {"id": m.id, "name": m.name, "type": m.type.name}
+                for m in moves
+            ]
+        }, 200
+
+    def post(self):
+        data = request.get_json()
+
+        guid = data.get("Guid")
+        move_id = data.get("MoveId")
+        replace_index = data.get("ReplaceIndex")  # optional
+
+        if not guid or not move_id:
+            return {"error": "Guid and MoveId required"}, 400
+
+        pokemon = GamePokemon.query.filter_by(Guid=guid).first()
+        if not pokemon:
+            return {"error": "Pokémon not found"}, 404
+
+        move = Move.query.get(move_id)
+        if not move:
+            return {"error": "Move not found"}, 404
+
+        # Current moves
+        current_moves = pokemon.move_connections
+        move_count = len(current_moves)
+
+        # ------------------------------------------------------------
+        # REPLACE MOVE
+        # ------------------------------------------------------------
+        if replace_index is not None:
+            replace_index = int(replace_index)
+
+            if replace_index < 0 or replace_index >= 4:
+                return {"error": "ReplaceIndex must be 0-3"}, 400
+
+            if replace_index >= move_count:
+                return {"error": f"No move exists at index {replace_index}"}, 400
+
+            if any(mc.moveId == move_id for mc in current_moves):
+                return {"error": "Pokémon already knows this move"}, 400
+
+            mc = current_moves[replace_index]
+            mc.moveId = move_id
+            database.session.commit()
+
+            return {
+                "message": "Move replaced",
+                "slot": replace_index,
+                "move": move.name
+            }, 200
+
+        # ------------------------------------------------------------
+        # ADD MOVE
+        # ------------------------------------------------------------
+        if move_count >= 4:
+            return {"error": "Already has 4 moves. Use ReplaceIndex."}, 400
+
+        if any(mc.moveId == move_id for mc in current_moves):
+            return {"error": "Pokémon already knows this move"}, 400
+
+        new_mc = MoveConnection(pokemonId=pokemon.id, moveId=move_id)
+        database.session.add(new_mc)
+        database.session.commit()
+
+        return {"message": "Move added", "move": move.name}, 200
+
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(PullCharacterData, "/PullCharacterData/<string:gameId>/<string:guid>")
@@ -785,6 +1036,7 @@ api.add_resource(NatureApi, "/nature")
 api.add_resource(AbilityApi, "/ability")
 api.add_resource(ItemApi, "/item")
 api.add_resource(GarmentApi, "/garment")
+api.add_resource(MoveManipulation, "/moveManipulation")
 
 api.add_resource(AddMove, "/addMove")
 

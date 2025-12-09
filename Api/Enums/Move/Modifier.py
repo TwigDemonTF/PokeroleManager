@@ -1,6 +1,10 @@
 from enum import Enum
 
 class ModifierEnum(Enum):
+    NONE = None
+    Strength = "Strength"
+    Special = "Special"
+    Insight = "Insight"
     Dexterity = "Dexterity"
     Fight = "Fight"
     Brawl = "Brawl"
@@ -13,7 +17,6 @@ class ModifierEnum(Enum):
     Allure = "Allure"
     Nature = "Nature"
     Survival = "Survival"
-    Insight = "Insight"
     Will = "Will"
     Smart = "Smart"
     Beauty = "Beauty"

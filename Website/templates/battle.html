@@ -255,20 +255,45 @@ button.ghost {
    MOVES
 --------------------------------------------------------- */
 
-.moves {
-  display: flex;
-  gap: 0.4em;
-  margin-top: 0.6em;
+.move-card {
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    font-size: 12px;
+    padding: 8px;
+    margin: 0;
+    min-width: 190px;
 }
 
-.move-slot {
-  min-height: 2.25em;
-  font-size: 0.85em;
-  padding: 0.4em 0.6em;
-  background: rgba(255,255,255,0.03);
-  border-radius: 0.4em;
-  border: 1px solid var(--card-border);
-  flex: 1;
+.move-card:hover {
+    background: #2c2c2c;
+}
+
+.move-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.move-name {
+    font-size: 18px;
+}
+
+.move-footer {
+    font-style: italic;
+    opacity: 0.8;
+    margin-top: 8px;
+    border-top: 1px solid #555;
+    padding-top: 6px;
+}
+
+.move-card .move-name {
+    font-size: 14px;
+}
+
+.move-card .move-right {
+    font-size: 12px;
 }
 
 /* ---------------------------------------------------------
@@ -475,6 +500,7 @@ footer {
     let allPokemonCache = []; // cached list from GET /api/game/pokemons
     let zoom = 1;
     let initiativeMap = {}; // guid → initiative number
+    let allMoves = [];
 
     function makeTooltip(label, data) {
         if (!data) return label;
@@ -623,6 +649,9 @@ footer {
             perform: p.Perform ?? p.perform,
 
             playerColor: p.PlayerColor ?? p.playerColor ?? null,
+
+            Moves: p.Moves ?? p.moves ?? [],
+            MoveIds: p.MoveIds ?? p.moveIds ?? [],
         };
     }
 
@@ -651,21 +680,21 @@ footer {
     }
 
     async function loadAll(){
-    try{
-        const res = await fetch(`${API_BASE}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
-        if(!res.ok) throw new Error('Failed to load pokemons');
+      try{
+          const res = await fetch(`${API_BASE}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
+          if(!res.ok) throw new Error('Failed to load pokemons');
 
-        const raw = await res.json();
-        const list = raw.data || raw.pokemons || raw || [];
+          const raw = await res.json();
+          const list = raw.data || raw.pokemons || raw || [];
 
-        // Normalize keys so the rest of the UI works
-        allPokemonCache = list.map(p => normalizePokemon(p));
+          // Normalize keys so the rest of the UI works
+          allPokemonCache = list.map(p => normalizePokemon(p));
 
-        renderSelects(allPokemonCache);
-    }catch(e){
-        console.error(e);
-        alert('Error loading pokemons — open console for details');
-    }
+          renderSelects(allPokemonCache);
+      }catch(e){
+          console.error(e);
+          alert('Error loading pokemons — open console for details');
+      }
     }
 
     function renderSelects(list){
@@ -745,8 +774,14 @@ footer {
             card.className = 'poke';
 
             // head (+ meta)
-            const head = document.createElement('div'); head.className='head'; head.style.fontSize = "22px"; head.style.marginLeft = "1%"
-            const meta = document.createElement('div'); meta.className='meta';
+            const head = document.createElement('div'); 
+            head.className='head'; 
+            head.style.fontSize = "22px"; 
+            head.style.marginLeft = "1%";
+
+            const meta = document.createElement('div'); 
+            meta.className='meta';
+
             const titleRow = document.createElement('div');
             titleRow.style.display = "flex";
             titleRow.style.alignItems = "center";
@@ -756,23 +791,8 @@ footer {
             title.style.margin = "0";
             title.textContent = `${p.name} ${p.level ? 'Lv ' + p.level : ''}`;
             titleRow.appendChild(title);
-
-            // Ability badge (tooltip-enabled)
-            // if (p.ability) {
-            //     const abilityBadge = document.createElement('div');
-            //     abilityBadge.className = "badge";
-            //     abilityBadge.style.marginLeft = "auto";
-            //     abilityBadge.style.fontSize = "20px"
-            //     abilityBadge.innerHTML = makeTooltip(
-            //         p.ability.name,
-            //         p.ability
-            //     );
-            //     titleRow.appendChild(abilityBadge);
-            // }
-
             meta.appendChild(titleRow);
 
-            // GUID/status line unchanged:
             const sub = document.createElement('div');
             sub.className='sub';
             sub.innerHTML = `GUID: ${p.guid || p.Guid} · ${p.status || 'Healthy'}`;
@@ -781,58 +801,68 @@ footer {
             card.appendChild(head);
 
             // types and item
-            const tline = document.createElement('div'); tline.className='types';
-            if(p.primaryType) { const t = document.createElement('div'); t.className='type'; t.textContent = p.primaryType; t.style.fontSize = "20px"; tline.appendChild(t); }
-            if(p.secondaryType) { const t = document.createElement('div'); t.className='type'; t.textContent = p.secondaryType; tline.appendChild(t); }
+            const tline = document.createElement('div'); 
+            tline.className='types';
+
+            if(p.primaryType) { 
+                const t = document.createElement('div'); 
+                t.className='type'; 
+                t.textContent = p.primaryType; 
+                t.style.fontSize = "20px"; 
+                tline.appendChild(t); 
+            }
+
+            if(p.secondaryType) { 
+                const t = document.createElement('div'); 
+                t.className='type'; 
+                t.textContent = p.secondaryType; 
+                tline.appendChild(t); 
+            }
+
             if (p.heldItem) {
                 const it = document.createElement('div');
                 it.className = 'badge';
-                it.innerHTML = makeTooltip(
-                    "Item: " + p.heldItem.name,
-                    p.heldItem
-                );
-                it.style.fontSize = "17px"
+                it.innerHTML = makeTooltip("Item: " + p.heldItem.name, p.heldItem);
+                it.style.fontSize = "17px";
                 tline.appendChild(it);
             }
+
             if (p.ability) {
                 const ab = document.createElement('div');
                 ab.className = "badge";
                 ab.innerHTML = makeTooltip("Ability: " + p.ability.name, p.ability);
-                ab.style.fontSize = "17px"
+                ab.style.fontSize = "17px";
                 tline.appendChild(ab);
             }
+
             if (p.nature) {
                 const nt = document.createElement('div');
                 nt.className = "badge";
                 nt.innerHTML = makeTooltip("Nature: " + p.nature.name, p.nature);
-                nt.style.fontSize = "17px"
+                nt.style.fontSize = "17px";
                 tline.appendChild(nt);
             }
+
             card.appendChild(tline);
 
             // HEALTH BAR SYSTEM
             const maxHp = (p.baseHealth ?? 0) + (p.vitality ?? 0);
             let currentHp = p.health ?? maxHp;
 
-            // lethal damage (default 0)
             if (p.lethal == null) p.lethal = 0;
             let currentLethal = p.lethal;
 
-            // Container
             const hpContainer = document.createElement('div');
             hpContainer.className = "hp-bar-container";
 
-            // Minus button
             const minusBtn = document.createElement('div');
             minusBtn.className = "hp-btn";
             minusBtn.textContent = "–";
 
-            // Plus button
             const plusBtn = document.createElement('div');
             plusBtn.className = "hp-btn";
             plusBtn.textContent = "+";
 
-            // Bar
             const bar = document.createElement('div');
             bar.className = "hp-bar";
 
@@ -840,40 +870,37 @@ footer {
             fill.className = "hp-bar-fill";
             bar.appendChild(fill);
 
-            // Update bar fill width + color
-            function updateHpBar() {
-                const pct = Math.max(0, Math.min(1, currentHp / maxHp));
-                fill.style.width = (pct * 100) + "%";
-
-                // Color shifts based on % HP
-                if (pct > 0.5) fill.style.background = "#28c76f"; // green
-                else if (pct > 0.25) fill.style.background = "#f5c04f"; // yellow
-                else fill.style.background = "#ea5455"; // red
-            }
-
-            // Button behavior
-            minusBtn.onclick = () => {
-                currentHp = Math.max(0, currentHp - 1);
-                p.health = currentHp; // keep state updated
-                updateHpBar();
-            };
-
-            plusBtn.onclick = () => {
-                currentHp = Math.max(0, Math.min(maxHp, currentHp + 1));
-                p.health = currentHp;
-                updateHpBar();
-            };
-
-            updateHpBar();
-
-            // HP text with status
             const hpText = document.createElement('span');
             hpText.style.marginLeft = "0.5em";
             hpText.style.color = "var(--muted)";
             hpText.style.fontSize = "0.9em";
-            hpText.textContent = ` ${currentHp}/${maxHp} · ${p.status || 'Healthy'}`;
 
-            // Build row: – [bar] + HP text
+            function updateHpBar() {
+                const pct = Math.max(0, Math.min(1, currentHp / maxHp));
+                fill.style.width = (pct * 100) + "%";
+
+                if (pct > 0.5) fill.style.background = "#28c76f";
+                else if (pct > 0.25) fill.style.background = "#f5c04f";
+                else fill.style.background = "#ea5455";
+
+                hpText.textContent = ` ${currentHp}/${maxHp} · ${p.status || 'Healthy'}`;
+            }
+
+            minusBtn.onclick = () => {
+                currentHp = Math.max(0, currentHp - 1);
+                p.health = currentHp;
+                updateHpBar();
+            };
+
+            plusBtn.onclick = () => {
+                currentHp = Math.min(maxHp, currentHp + 1);
+                p.health = currentHp;
+                updateHpBar();
+            };
+
+            // Initial render
+            updateHpBar();
+
             hpContainer.appendChild(minusBtn);
             hpContainer.appendChild(bar);
             hpContainer.appendChild(plusBtn);
@@ -881,7 +908,7 @@ footer {
 
             card.appendChild(hpContainer);
 
-            // ========== LETHAL HP ==========
+            // ========== LETHAL HP ========== //
 
             // Toggle button
             const lethalToggle = document.createElement("button");
@@ -891,29 +918,30 @@ footer {
             lethalToggle.style.padding = "3px 6px";
 
             // Lethal bar container
-            const lethalContainer = document.createElement('div');
+            const lethalContainer = document.createElement("div");
             lethalContainer.className = "hp-bar-container";
             lethalContainer.style.display = "none"; // hidden by default
 
-            // lethal buttons
-            const lethalMinus = document.createElement('div');
+            // Lethal buttons
+            const lethalMinus = document.createElement("div");
             lethalMinus.className = "hp-btn";
             lethalMinus.textContent = "–";
 
-            const lethalPlus = document.createElement('div');
+            const lethalPlus = document.createElement("div");
             lethalPlus.className = "hp-btn";
             lethalPlus.textContent = "+";
 
-            // lethal bar
-            const lethalBar = document.createElement('div');
+            // Lethal bar
+            const lethalBar = document.createElement("div");
             lethalBar.className = "hp-bar";
 
-            const lethalFill = document.createElement('div');
+            const lethalFill = document.createElement("div");
             lethalFill.className = "hp-bar-fill";
+
             lethalBar.appendChild(lethalFill);
 
-            // lethal text
-            const lethalText = document.createElement('span');
+            // Lethal text
+            const lethalText = document.createElement("span");
             lethalText.style.marginLeft = "0.5em";
             lethalText.style.color = "var(--muted)";
             lethalText.style.fontSize = "0.9em";
@@ -923,13 +951,16 @@ footer {
                 lethalFill.style.width = (pct * 100) + "%";
 
                 // Lethal bar color (purple gradient)
-                if (pct === 1) lethalFill.style.background = "#ff004c"; // DEAD
-                else lethalFill.style.background = "#8e44ad";           // purple
+                if (pct === 1) {
+                    lethalFill.style.background = "#ff004c"; // DEAD
+                } else {
+                    lethalFill.style.background = "#8e44ad"; // purple
+                }
 
-                lethalText.textContent = ` ${currentLethal}/${maxHp} lethal`;
+                lethalText.textContent = `${currentLethal}/${maxHp} lethal`;
             }
 
-            // lethal button logic
+            // Lethal button logic
             lethalMinus.onclick = () => {
                 currentLethal = Math.max(0, currentLethal - 1);
                 p.lethal = currentLethal;
@@ -944,13 +975,13 @@ footer {
 
             updateLethalBar();
 
-            // assemble lethal bar
+            // Assemble lethal bar
             lethalContainer.appendChild(lethalMinus);
             lethalContainer.appendChild(lethalBar);
             lethalContainer.appendChild(lethalPlus);
             lethalContainer.appendChild(lethalText);
 
-            // toggle logic
+            // Toggle logic
             lethalToggle.onclick = () => {
                 if (lethalContainer.style.display === "none") {
                     lethalContainer.style.display = "flex";
@@ -961,79 +992,206 @@ footer {
                 }
             };
 
-            card.appendChild(lethalToggle);
+            card.appendChild(lethalToggle); 
             card.appendChild(lethalContainer);
 
-            // stats grid
-            const bars = document.createElement('div'); 
-            bars.className='bars';
+            // === STATS + MOVES SIDE-BY-SIDE WRAPPER ===
+            const statsAndMoves = document.createElement("div");
+            statsAndMoves.style.display = "flex";
+            statsAndMoves.style.gap = "1rem";
+            statsAndMoves.style.marginTop = "10px";
+            statsAndMoves.style.alignItems = "flex-start";
 
-            // Base stats with individual potentials
+            // -------- STATS COLUMN --------
+            const bars = document.createElement("div");
+            bars.className = "bars";   // your existing CSS still applies
+            bars.style.flex = "0 0 auto"; // prevent stretching
+
             const baseStats = [
-            { key: 'strength', potentialKey: 'strengthPotential' },
-            { key: 'dexterity', potentialKey: 'dexterityPotential' },
-            { key: 'vitality', potentialKey: 'vitalityPotential' },
-            { key: 'special', potentialKey: 'specialPotential' },
-            { key: 'insight', potentialKey: 'insightPotential' }
+                { key: 'strength', potentialKey: 'strengthPotential' },
+                { key: 'dexterity', potentialKey: 'dexterityPotential' },
+                { key: 'vitality', potentialKey: 'vitalityPotential' },
+                { key: 'special', potentialKey: 'specialPotential' },
+                { key: 'insight', potentialKey: 'insightPotential' }
             ];
 
             baseStats.forEach(s => {
-            const st = document.createElement('div'); st.className='stat';
-            const label = document.createElement('b'); label.textContent = s.key;
-            const val = createStatCircles(s.key, p[s.key] ?? 0, p[s.potentialKey] ?? 0);
-            st.appendChild(label);
-            st.appendChild(val);
-            bars.appendChild(st);
+                const st = document.createElement('div'); 
+                st.className='stat';
+                const label = document.createElement('b'); 
+                label.textContent = s.key;
+                const val = createStatCircles(s.key, p[s.key] ?? 0, p[s.potentialKey] ?? 0);
+                st.appendChild(label);
+                st.appendChild(val);
+                bars.appendChild(st);
             });
 
-            // Skills with fixed potential of 5
-            const skills = ['fight','survival','contest','brawl','evasion','channel','clash','alert','athletic','nature','stealth','perform'];
+            const skills = [
+                'fight','survival','contest','brawl','evasion',
+                'channel','clash','alert','athletic','nature',
+                'stealth','perform'
+            ];
+
             skills.forEach(k => {
-            const st = document.createElement('div'); st.className='stat';
-            const label = document.createElement('b'); label.textContent = k;
-            const val = createStatCircles(k, p[k] ?? 0, 5);
-            st.appendChild(label);
-            st.appendChild(val);
-            bars.appendChild(st);
+                const st = document.createElement('div'); 
+                st.className='stat';
+                const label = document.createElement('b'); 
+                label.textContent = k;
+                const val = createStatCircles(k, p[k] ?? 0, 5);
+                st.appendChild(label);
+                st.appendChild(val);
+                bars.appendChild(st);
             });
 
-            card.appendChild(bars);
+            // Add stats column to wrapper
+            statsAndMoves.appendChild(bars);
 
-            // INITIATIVE INPUT AREA
-            if (!p.isNpc) {
-                const initBox = document.createElement('div');
-                initBox.style.marginTop = "10px";
-                initBox.style.padding = "6px";
-                initBox.style.background = "rgba(255,255,255,0.04)";
-                initBox.style.border = "1px solid var(--card-border)";
-                initBox.style.borderRadius = "8px";
+            // -------- MOVES COLUMN --------
+            if (p.Moves && Array.isArray(p.Moves)) {
+                const movesWrapper = document.createElement("div");
+                movesWrapper.style.display = "grid";
+                movesWrapper.style.gridTemplateColumns = "1fr 1fr";
+                movesWrapper.style.columnGap = "10px";
+                movesWrapper.style.rowGap = "10px";
+                movesWrapper.style.minWidth = "300px";
+                movesWrapper.style.flex = "0 0 0 0";
 
-                initBox.innerHTML = `
-                    <label style="font-size:0.82rem; color:var(--muted)">Initiative</label>
-                    <input 
-                        type="number"
-                        style="width:80px; padding:4px; margin-left:8px; background:transparent; color:white; border:1px solid #333; border-radius:4px;"
-                        value="${initiativeMap[p.guid] ?? ''}"
-                    />
-                `;
-
-                const input = initBox.querySelector("input");
-                input.addEventListener("input", () => {
-                    initiativeMap[p.guid] = Number(input.value);
-                    updateInitiativePanel(pokes);
+                p.Moves.forEach(m => {
+                    const moveCardContainer = document.createElement("div");
+                    moveCardContainer.innerHTML = renderMoveCard(m);
+                    movesWrapper.appendChild(moveCardContainer.firstElementChild);
                 });
 
-                card.appendChild(initBox);
-            } else {
+                statsAndMoves.appendChild(movesWrapper);
             }
+
+            // Add whole block to card
+            card.appendChild(statsAndMoves);
+
+            // INITIATIVE INPUT AREA (players + NPCs)
+            const initBox = document.createElement('div');
+            initBox.style.marginTop = "10px";
+            initBox.style.padding = "6px";
+            initBox.style.background = "rgba(255,255,255,0.04)";
+            initBox.style.border = "1px solid var(--card-border)";
+            initBox.style.borderRadius = "8px";
+
+            initBox.innerHTML = `
+                <label style="font-size:0.82rem; color:var(--muted)">Initiative</label>
+                <input 
+                    type="number"
+                    style="width:80px; padding:4px; margin-left:8px; background:transparent; color:white; border:1px solid #333; border-radius:4px;"
+                    value="${initiativeMap[p.guid] ?? ''}"
+                />
+            `;
+
+            const input = initBox.querySelector("input");
+            input.addEventListener("input", () => {
+                initiativeMap[p.guid] = Number(input.value);
+                updateInitiativePanel(pokes);
+            });
+
+            card.appendChild(initBox);
 
             if (p.isNpc) npcsGrid.appendChild(card);
             else playersGrid.appendChild(card);
+
             updateInitiativePanel(pokes);
         });
 
         countEl.textContent = pokes.length;
         document.documentElement.style.setProperty('--scale', zoom);
+    }
+
+
+    function renderMoveCard(move) {
+        const accuracyMods = []
+
+        const damageMods = [];
+
+        if (move.damageModifiers?.length) {
+            damageMods.push(
+                move.damageModifiers
+                    .filter(m => m != null && m !== "NONE")
+                    .join(" + ")
+            );
+        }
+
+        if (move.accuracyModifiers?.length) {
+            accuracyMods.push(
+              move.accuracyModifiers
+                .filter(m => m != null && m !== "NONE")
+                .join(" + ")
+            )
+        }
+
+        if (move.basePower && move.basePower !== 0) {
+            damageMods.push(move.basePower);
+        }
+
+        const damagePool = damageMods.join(" + ") || "-";
+
+        const tooltip = buildTooltip(move)
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '&#10;');
+        
+        return `
+        <div class="move-card" title="${tooltip}">
+            <div class="move-header">
+                <span class="move-name">${move.name}</span>
+                <span class="move-right">
+                    Base Power: ${move.basePower ?? "-"} (${move.damageType})
+                </span>
+            </div>
+
+            <div>Type: ${move.type}</div>
+            <div>Accuracy: ${accuracyMods}</div>
+            <div>Damage Pool: ${damagePool}</div>
+            <div>Added Effect: ${move.effectText || "-"}</div>
+
+            <div class="move-footer">${move.flavorText || ""}</div>
+        </div>`;
+    }
+
+    function buildTooltip(move) {
+        const fields = [
+            ["Priority", move.priority],
+            ["Target", move.target],
+            ["Reduced Accuracy", move.reducedAccuracy],
+            ["Crit", move.hasCritical],
+            ["Lethal", move.hasLethal],
+            ["Block", move.hasBlock],
+            ["Recoil", move.hasRecoil],
+            move.hasWeatherChange ? ["Weather Change", move.weatherChangeTo] : null,
+            ["Modified Damage", move.hasModifiedDamage],
+            ["Always Hit", move.alwaysHitEffect],
+            ["Always Fail", move.alwaysFailEffect],
+            ["Charge Move", move.isChargeMove],
+            ["Fist Based", move.isFistBased],
+            ["High Crit", move.isHighCrit],
+            ["Never Fail", move.isNeverFail],
+            move.isHealingMove ? ["Healing Move", "Yes"] : null,
+            move.isShieldMove ? ["Shield Move", "Yes"] : null,
+            move.isSoundBased ? ["Sound Based", "Yes"] : null,
+            move.isSwitchMove ? ["Switch Move", "Yes"] : null,
+            move.requiresRecharge ? ["Requires Recharge", "Yes"] : null,
+            move.isMultiHit ? ["Multi Hit", move.multiHitCount || "Yes"] : null,
+        ];
+
+        const filtered = fields
+            .filter(f =>
+                f &&
+                f[1] !== false &&
+                f[1] !== null &&
+                f[1] !== undefined &&
+                f[1] !== ""
+            )
+            .map(f => `${f[0]}: ${f[1]}`);
+
+        return filtered.join("\n");
     }
 
 
@@ -1052,15 +1210,17 @@ footer {
         document.documentElement.style.setProperty('--card-scale', zoom);
     });
 
-    document.getElementById('fetchStats').addEventListener('click', () => {
-        // Hide all elements with class 'selectors'
+    async function handleFetchStats() {
         document.querySelectorAll('.selectors').forEach(el => {
             el.style.display = 'none';
         });
-        document.getElementById("clearStage").style.display = "block"
-        // Then fetch and render stats
+
+        document.getElementById("clearStage").style.display = "block";
+
         fetchSelectedAndRender();
-    });
+    }
+
+    document.getElementById('fetchStats').addEventListener('click', handleFetchStats);
 
     document.getElementById('clearStage').addEventListener('click', () => { 
         // Clear grids

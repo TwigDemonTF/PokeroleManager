@@ -17,3 +17,21 @@ def getBooleanFields():
         if isinstance(column.type, Boolean)
     ]
     return boolean_fields
+
+def extract_modifiers_from_group(group, prefix):
+    """
+    Extracts modifiers from group.accuracyModifier1/2/3 or damageModifier1/2/3.
+    prefix = 'accuracyModifier' or 'damageModifier'
+    """
+    if not group:
+        return []
+
+    fields = [f"{prefix}{i}" for i in (1,2,3)]
+    mods = []
+
+    for field in fields:
+        value = getattr(group, field, None)
+        if value is not None:
+            mods.append(value.name)
+
+    return mods
