@@ -13,6 +13,8 @@ from .Enums.Move.Modifier import ModifierEnum
 from .Enums.Move.MoveEffectType import MoveEffectTypeEnum
 from .Enums.Move.Priority import PriorityEnum
 from .Enums.Move.Target import TargetEnum
+from .Enums.Items.ShopTiers import ShopTierEnum
+from .Enums.Items.ItemCategory import ItemCategoryEnum
 
 
 pokemon_garments = database.Table(
@@ -84,6 +86,7 @@ class GamePokemon(database.Model):
     level = database.Column(database.Integer, nullable=False, default=0)
     gender = database.Column(database.String(), nullable=True, default="None")
     age = database.Column(database.Integer, nullable=False, default=0)
+    apples = database.Column(database.Integer, nullable=False, default=0)
 
     primaryType = database.Column(Enum(TypeEnum))
     secondaryType = database.Column(Enum(TypeEnum), nullable=True)
@@ -168,7 +171,8 @@ class Game(database.Model):
     id = database.Column(database.Integer, primary_key=True, nullable=False)
     gameId = database.Column(database.String(10), nullable=False)
     weather = database.Column(database.String(20), nullable=False, default="None")
-
+    shopActive = database.Column(database.Boolean, nullable=False, default=False)
+    activeShopTier = database.Column(database.Enum(ShopTierEnum), default=ShopTierEnum.BASIC, nullable=False)
     # One-to-one foreign key to User
     userId = database.Column(database.Integer, database.ForeignKey('User.id'), nullable=False, unique=True)
     user = relationship("User", back_populates="game")
@@ -215,6 +219,22 @@ class Item(database.Model):
     name = database.Column(database.String(50), nullable=False)
     description = database.Column(database.Text, nullable=True)
     effect = database.Column(database.Text, nullable=True)
+    minShopTier = database.Column(database.Enum(ShopTierEnum), default=ShopTierEnum.BASIC)
+    itemCategory = database.Column(database.Enum(ItemCategoryEnum), default=ItemCategoryEnum.MISC)
+    buyPrice = database.Column(database.Integer, nullable=True, default=0)
+    sellPrice = database.Column(database.Integer, nullable=True, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "effect": self.effect,
+            "minShopTier": self.minShopTier.value,
+            "itemCategory": self.itemCategory.value,
+            "buyPrice": self.buyPrice,
+            "sellPrice": self.sellPrice
+        }
 
 class Garment(database.Model):
     __tablename__ = "Garment"

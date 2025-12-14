@@ -1,0 +1,1074 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokémon — Player View</title>
+
+  <style>
+    :root {
+      --card-scale: 1.25;
+      /* scaled up for player readability */
+      --panel-bg: #363636;
+      --card-border: #333;
+      --muted: #9aa;
+      --accent: hotpink;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: #222121;
+      color: hotpink;
+      user-select: none;
+    }
+
+    header {
+      padding: 14px 20px;
+      background: var(--panel-bg);
+      border-bottom: 2px solid hotpink;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    main {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ---------- CARD ---------- */
+
+    .poke {
+      font-size: calc(1rem * var(--card-scale));
+      background: var(--panel-bg);
+      padding: 1em;
+      border-radius: 14px;
+      background:
+        linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+        linear-gradient(to right, black, hotpink) border-box;
+      border: 3px solid transparent;
+      max-width: 90%;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .head {
+      display: flex;
+      gap: 0.8em;
+      align-items: center;
+    }
+
+    .meta h2 {
+      margin: 0;
+      font-size: 1.4em;
+    }
+
+    .sub {
+      font-size: 0.85em;
+      color: var(--muted);
+    }
+
+    /* ---------- TOOLTIP (same behavior as battle page) ---------- */
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+
+    .tooltip .tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      position: absolute;
+      z-index: 20;
+      background: #111;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.8rem;
+      width: 240px;
+      top: 120%;
+      left: 0;
+    }
+
+    .tooltip:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* ---------- TYPES / BADGES ---------- */
+
+    .types {
+      display: flex;
+      gap: 0.5em;
+      margin-top: 0.6em;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 0.35em 0.6em;
+      font-size: 0.8em;
+      border-radius: 0.5em;
+      background: #222;
+      border: 1px solid #444;
+      color: white;
+    }
+
+    /* ---------- HP BAR (READ-ONLY) ---------- */
+
+    .hp-bar-container {
+      margin-top: 1em;
+    }
+
+    .hp-bar {
+      height: 16px;
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #444;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      background: #28c76f;
+      transition: width 0.2s ease;
+    }
+
+    .hp-text {
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: var(--muted);
+    }
+
+    /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
+
+    .stats {
+      display: flex;
+      gap: 0.6em;
+      margin-top: 1.2em;
+      flex-wrap: nowrap;
+      /* keep all on same line */
+      align-items: center;
+    }
+
+    .stats .stat-group {
+      display: flex;
+      gap: 0.6em;
+    }
+
+    .stats .stat-group.right {
+      margin-left: auto;
+      /* pushes this group to the right */
+    }
+
+    .stat {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0.4em 0.6em;
+      font-size: 0.85em;
+    }
+
+    .stat b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .stat-circles {
+      display: flex;
+      gap: 0.25em;
+    }
+
+    .circle {
+      width: 0.9em;
+      height: 0.9em;
+      border-radius: 50%;
+      background: #333;
+      border: 1px solid #555;
+    }
+
+    .circle.filled {
+      background: var(--accent);
+    }
+
+    .stat-columns {
+      display: flex;
+      gap: 1em;
+      margin-top: 1em;
+    }
+
+    .stat-column {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0.4em 0.6em;
+      font-size: 0.85em;
+      flex: 1;
+    }
+
+    .stat-column b {
+      display: flex;
+      flex-direction: column;
+      /* title on top, circles below */
+      gap: 0.4em;
+      margin-bottom: 4px;
+      align-items: center;
+      /* <-- center title + circles horizontally */
+    }
+
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
+
+    .moves {
+      margin-top: 1.4em;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8em;
+    }
+
+    .move-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 0.7em;
+      color: white;
+    }
+
+    .move-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .move-name {
+      font-size: 1.05em;
+    }
+
+    .move-footer {
+      margin-top: 6px;
+      font-style: italic;
+      opacity: 0.8;
+      font-size: 0.85em;
+      border-top: 1px solid #555;
+      padding-top: 4px;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    li {
+      margin-left: px;
+    }
+
+    a {
+      text-decoration: none;
+      color: hotpink;
+    }
+
+    a:hover {
+      color: lavender;
+      transition: .75s;
+    }
+
+    /* BAG BRUH */
+    .bag {
+      margin-top: 1.5em;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bag-header {
+      font-weight: bold;
+      cursor: pointer;
+      color: hotpink;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: hotpink solid 4px;
+      border-bottom-left-radius: 12.5px;
+      border-bottom-right-radius: 12.5px;
+    }
+
+    .bag-header::after {
+      content: "▼";
+      transition: transform 0.3s ease;
+    }
+
+    .bag.open .bag-header::after {
+      transform: rotate(-180deg);
+    }
+
+    .bag-content {
+      display: none;
+      margin-top: 0.6em;
+      padding-left: 0;
+      flex-direction: column;
+      gap: 0.5em;
+      animation: fadein 0.05s ease-in;
+    }
+
+    .bag.open .bag-content {
+      display: flex;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .bag-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 0.6em 1em;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4em;
+      margin: 1rem;
+      margin-top: 0;
+    }
+
+    .bag-card:first-child {
+      margin-top: 0;
+    }
+
+    .bag-card:hover {
+      background: #333;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-name-category {
+      display: flex;
+      gap: 0.5em;
+      align-items: baseline;
+    }
+
+    .item-category {
+      font-size: 0.85em;
+      color: #aaa;
+    }
+
+    .sell-price {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .effect {
+      font-size: 0.9em;
+    }
+
+    .description {
+      font-style: italic;
+      color: #bbb;
+      font-size: 0.85em;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #555;
+      margin: 0.3em 0;
+    }
+
+    .equip-btn {
+      align-self: flex-start;
+      padding: 0.3em 0.8em;
+      border: none;
+      background: hotpink;
+      color: #222;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 0.5em;
+    }
+
+    .equip-btn:hover {
+      background: #ff69b4;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <header style="display: flex;">
+    <h1 style="width: 8%;">Pokémon Status</h1>
+    <ul style="display: flex;">
+      <li><a href="/ItemShop">Item Shop</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <div id="pokemonCard" class="poke"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+  <script>
+    if (window.innerHeight < 1600)
+      document.body.style.zoom = "80%";
+    let pokemonStatusInterval = null;
+    let pokemonStatusSource = null;
+
+    const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
+    const GAME_ID = '{{ gameId }}'
+    const API_BASE = `http://127.0.0.1:9000/playerData/${GAME_ID}/${POKEMON_GUID}`;
+
+    const statCostRules = {
+      core: v => v * 10,
+      skills: v => v === 0 ? 6 : v * 8,
+      general: v => v === 0 ? 6 : v * 6,
+      will: v => v * 3,
+      static50: () => 50
+    };
+
+    const typeColors = {
+      Fire: "#F08030",
+      Water: "#6890F0",
+      Grass: "#78C850",
+      Electric: "#F8D030",
+      Ice: "#98D8D8",
+      Fighting: "#C03028",
+      Poison: "#A040A0",
+      Ground: "#E0C068",
+      Flying: "#A890F0",
+      Psychic: "#F85888",
+      Bug: "#A8B820",
+      Rock: "#B8A038",
+      Ghost: "#705898",
+      Dragon: "#7038F8",
+      Dark: "#705848",
+      Steel: "#B8B8D0",
+      Fairy: "#EE99AC",
+      Normal: "#A8A878",
+    };
+
+    const statCostType = {
+      Strength: "core",
+      Dexterity: "core",
+      Vitality: "core",
+      Insight: "core",
+      Special: "core",
+
+      Fight: "skills",
+      Survival: "skills",
+      Contest: "skills",
+
+      Brawl: "general",
+      Channel: "general",
+      Clash: "general",
+      Evasion: "general",
+      Alert: "general",
+      Athletic: "general",
+      Nature: "general",
+      Stealth: "general",
+      Allure: "general",
+      Etiquette: "general",
+      Intimidate: "general",
+      Perform: "general",
+
+      Will: "will",
+      Logic: "static50",
+      Instinct: "static50",
+      Primal: "static50"
+    };
+
+    const PRIORITY_LABELS = {
+        n7: "-7",
+        n6: "-6",
+        n5: "-5",
+        n4: "-4",
+        n3: "-3",
+        n2: "-2",
+        n1: "-1",
+        n0: "0",
+        p1: "+1",
+        p2: "+2",
+        p3: "+3",
+        p4: "+4",
+        p5: "+5",
+    };
+
+    function startPokemonStatusStream(pokemonGuid, p) {
+      if (pokemonStatusSource) {
+        pokemonStatusSource.close();
+      }
+
+      pokemonStatusSource = new EventSource(
+        `http://127.0.0.1:9000/pokemonStatusStream/${GAME_ID}/${pokemonGuid}`
+      );
+
+      pokemonStatusSource.onmessage = (event) => {
+        const statusData = JSON.parse(event.data);
+
+        p.Health = statusData.Health;
+        p.Status = statusData.Status;
+        p._updateHpUI?.();
+
+        const maxHp = window.currentPokemonMaxHp ?? 100;
+        const currentHp = Math.max(0, Math.min(maxHp, statusData.Health));
+        const pct = currentHp / maxHp;
+
+        const hpFill = document.querySelector('.hp-bar-fill');
+        const hpText = document.querySelector('.hp-text');
+
+        if (hpFill) {
+          hpFill.style.width = (pct * 100) + '%';
+          hpFill.style.background =
+            pct > 0.5 ? '#28c76f' : pct > 0.25 ? 'orange' : 'red';
+        }
+
+        if (hpText) {
+          hpText.textContent =
+            `${currentHp} / ${maxHp} HP · ${statusData.Status || 'Healthy'}`;
+        }
+      };
+
+      pokemonStatusSource.onerror = (err) => {
+        console.warn("SSE disconnected, browser will retry", err);
+      };
+    }
+
+      // Stop previous interval if any
+    //   if (pokemonStatusInterval) clearInterval(pokemonStatusInterval);
+
+    //   pokemonStatusInterval = setInterval(async () => {
+    //     try {
+    //       const res = await fetch(`http://127.0.0.1:9000/pokemonStatus/${GAME_ID}/${POKEMON_GUID}`); // replace with your endpoint
+    //       if (!res.ok) throw new Error("Failed to fetch status");
+
+    //       const statusData = await res.json();
+
+    //       p.Health = statusData.Health;
+    //       p.Status = statusData.Status;
+
+    //       p._updateHpUI?.();
+
+    //       // Assuming the response contains: { Health: number, Status: string }
+    //       const hpFill = document.querySelector('.hp-bar-fill');
+    //       const hpText = document.querySelector('.hp-text');
+    //       const maxHp = window.currentPokemonMaxHp ?? 100; // fallback if needed
+
+    //       const currentHp = Math.max(0, Math.min(maxHp, statusData.Health));
+    //       const pct = currentHp / maxHp;
+
+    //       if (hpFill) hpFill.style.width = (pct * 100) + '%';
+    //       if (hpFill) {
+    //         if (pct > 0.5) hpFill.style.background = '#28c76f';
+    //         else if (pct > 0.25) hpFill.style.background = 'orange';
+    //         else hpFill.style.background = 'red';
+    //       }
+    //       if (hpText) hpText.textContent = `${currentHp} / ${maxHp} HP · ${statusData.Status || 'Healthy'}`;
+
+    //     } catch (err) {
+    //       console.error("Error fetching Pokémon status:", err);
+    //     }
+    //   }, intervalMs);
+    // }
+
+    async function confirmStatPurchase(statName, currentValue, availableXP) {
+      const rule = statCostType[statName];
+      if (!rule) return;
+
+      const costFn = statCostRules[rule];
+      const cost = costFn(currentValue);
+      if (statName == "Primal") {
+        Swal.fire({
+          toast: true,
+          timer: 4000,
+          timerProgressBar: true,
+          width: 630,
+          position: "top-end",
+          showConfirmButton: false,
+          theme: "dark",
+          icon: "error",
+          title: `${statName} is not buyable`,
+          text: `You cannot buy points in ${statName}, ask your DM on how to get it.`
+        });
+        return;
+      }
+
+      if (availableXP < cost) {
+        Swal.fire({
+          toast: true,
+          timer: 3000,
+          timerProgressBar: true,
+          width: 500,
+          position: "top-end",
+          showConfirmButton: false,
+          theme: "dark",
+          icon: "error",
+          title: "Not enough XP",
+          text: `You need ${cost} XP to increase ${statName}.`
+        });
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: `Increase ${statName}?`,
+        html: `
+            <div>Current Level: <b>${currentValue}</b></div>
+            <div>Cost: <b>${cost} XP</b></div>
+            `,
+        icon: "question",
+        theme: "dark",
+        showCancelButton: true,
+        confirmButtonText: "Buy",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "hotpink"
+      });
+
+      if (!result.isConfirmed) return;
+
+      await buyStat(statName, POKEMON_GUID);
+    }
+
+    async function buyStat(statName, pokemonGuid) {
+      const res = await fetch(`${API_BASE}/buyStat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stat: statName, pokemonGuid: pokemonGuid })
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        Swal.fire("Error", json.message || "Purchase failed", "error");
+        return;
+      }
+
+      Swal.fire({
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        theme: "dark",
+        position: "top-end",
+        icon: "success",
+        title: `${statName} increased!`,
+      });
+
+      loadPokemon(); // re-fetch + re-render
+    }
+
+    function makeTooltip(label, data) {
+      if (!data) return label;
+
+      return `
+        <div class="tooltip">
+            ${label}
+            <div class="tooltip-content">
+            <strong>${data.name}</strong><br><br>
+            ${data.description ? `<div>${data.description}</div><br>` : ''}
+            ${data.effect ? `<div><em>${data.effect}</em></div>` : ''}
+            </div>
+        </div>
+        `;
+    }
+
+    function statCircles(value, max = 5) {
+      let out = '<div class="stat-circles">';
+      for (let i = 1; i <= max; i++) {
+        out += `<div class="circle ${i <= value ? 'filled' : ''}"></div>`;
+      }
+      out += '</div>';
+      return out;
+    }
+
+    function renderStatColumn(title, mainValue, stats, experiencePoints) {
+      return `
+            <div class="stat-column">
+                <b data-stat-name="${title}" data-stat-value="${mainValue ?? 0}" data-xp="${experiencePoints ?? 0}">
+                    ${title} ${statCircles(mainValue ?? 0)}
+                </b>
+                ${stats.map(s => `
+                    <div class="stat-row" data-stat-name="${s.name}" data-stat-value="${s.value ?? 0}" data-xp="${experiencePoints ?? 0}">
+                        <span>${s.name}</span>${statCircles(s.value ?? 0)}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function buildMoveTooltip(move) {
+        const lines = [];
+
+        // --- Enum / basic fields ---
+        if (move.target) {
+            lines.push(`Target: ${move.target}`);
+        }
+
+        if (move.priority != null) {
+            lines.push(`Priority: ${PRIORITY_LABELS[move.priority] ?? move.priority}`);
+        }
+
+        if (move.reducedAccuracy != null) {
+            lines.push(`Reduced Accuracy: ${move.reducedAccuracy}`);
+        }
+
+        lines.push('----------------------');
+
+        const booleanFlags = [
+            ["crit", move.hasCritical],
+            ["lethal", move.hasLethal],
+            ["block", move.hasBlock],
+            ["recoil", move.hasRecoil],
+            ["always hit", move.alwaysHitEffect],
+            ["always fail", move.alwaysFailEffect],
+            ["charge move", move.isChargeMove],
+            ["fist based", move.isFistBased],
+            ["high crit", move.isHighCrit],
+            ["never fail", move.isNeverFail],
+            ["healing move", move.isHealingMove],
+            ["shield move", move.isShieldMove],
+            ["sound based", move.isSoundBased],
+            ["switch move", move.isSwitchMove],
+            ["requires recharge", move.requiresRecharge],
+            ["modified damage", move.hasModifiedDamage]
+        ];
+
+        booleanFlags.forEach(([label, value]) => {
+            if (value === true) {
+                lines.push(`${titleCase(label)}.`);
+            }
+        });
+
+        if (move.isMultiHit) {
+            lines.push(`Multi Hit${move.multiHitCount ? ` (${move.multiHitCount})` : ""}.`);
+        }
+
+        if (move.hasWeatherChange && move.weatherChangeTo) {
+            lines.push(`Weather Change: ${move.weatherChangeTo}`);
+        }
+
+        return lines.join('\n');
+    }
+
+    // Helper to title-case labels
+    function titleCase(str) {
+        return str.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function renderMove(m) {
+      const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
+      const damage = [...(m.damageModifiers || []), m.basePower || null]
+        .filter(mod => mod && mod !== "NONE")
+        .join(" + ") || "-";
+
+      const tooltip = buildMoveTooltip(m)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '&#10;');
+
+      const color = typeColors[m.type] || "#666"; // fallback color
+
+      return `
+        <div class="move-card tooltip" title="${tooltip}">
+          <div class="move-header">
+            <span class="move-name" style="color: ${color}">${m.name}</span>
+            <span class="move-type" style="color: ${color}">${m.type || ''}/${m.damageType}</span>
+          </div>
+          <div>Accuracy: ${accuracy}</div>
+          <div>Damage Pool: ${damage}</div>
+          <div>Target: ${m.target || '-'}</div> <br>
+          <div>Added Effect: ${m.effectText || '-'}</div>
+          <div class="move-footer">${m.flavorText || ''}</div>
+        </div>
+      `;
+    }
+
+    function renderPokemon(p) {
+      const card = document.getElementById('pokemonCard');
+
+      const maxHp = p.BaseHealth + p.Vitality;       // correct max HP
+      const hpPct = Math.max(0, Math.min(1, p.Health / maxHp)); // correct percentage
+
+      card.innerHTML = `
+        <div class="head">
+            <div class="meta" style="flex: 1;">
+                <h2>${p.Name} ${p.Level ? 'Lv ' + p.Level : ''}</h2>
+                <div class="sub">${p.PrimaryType}${p.SecondaryType ? ' / ' + p.SecondaryType : ''}</div>
+            </div>
+            <div class="experience" style="margin-left: auto; text-align: right;">
+                Available Experience: ${p.ExperiencePoints} <br>
+                Current Apples: ${p.Apples}
+            </div>
+        </div>
+
+        <div class="types">
+        ${p.Ability ? `<div class="badge">${makeTooltip(p.Ability.name, p.Ability)}</div>` : ''}
+        ${p.Nature ? `<div class="badge">${makeTooltip(p.Nature.name, p.Nature)}</div>` : ''}
+        ${p.HeldItem ? `<div class="badge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
+        ${p.Garments?.map(g => `<div class="badge">${g}</div>`).join('') || ''}
+        </div>
+
+        <div class="hp-bar-container">
+            <div class="hp-bar">
+            <div class="hp-bar-fill" style="width:${hpPct * 100}%"></div>
+            </div>
+            <div class="hp-text">${p.Health} / ${p.BaseHealth + p.Vitality} HP · ${p.Status || 'Healthy'}</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-group">
+                <div class="stat" data-stat-name="Strength" data-stat-value="${p.Strength}" data-xp="${p.ExperiencePoints}">
+                    Strength${statCircles(p.Strength, 10)}
+                </div>
+                <div class="stat" data-stat-name="Dexterity" data-stat-value="${p.Dexterity}" data-xp="${p.ExperiencePoints}">
+                    Dexterity${statCircles(p.Dexterity, 10)}
+                </div>
+                <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">
+                    Vitality${statCircles(p.Vitality, 10)}
+                </div>
+                <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">
+                    Insight${statCircles(p.Insight, 10)}
+                </div>
+                <div class="stat" data-stat-name="Special" data-stat-value="${p.Special}" data-xp="${p.ExperiencePoints}">
+                    Special${statCircles(p.Special, 10)}
+                </div>
+            </div>
+
+            <div class="stat-group right">
+                <div class="stat" data-stat-name="Will" data-stat-value="${p.Will}" data-xp="${p.ExperiencePoints}">
+                    Will${statCircles(p.Will, 10)}
+                </div>
+                <div class="stat" data-stat-name="Logic" data-stat-value="${p.Logic}" data-xp="${p.ExperiencePoints}">
+                    Logic${statCircles(p.Logic)}
+                </div>
+                <div class="stat" data-stat-name="Instinct" data-stat-value="${p.Instinct}" data-xp="${p.ExperiencePoints}">
+                    Instinct${statCircles(p.Instinct)}
+                </div>
+                <div class="stat" data-stat-name="Primal" data-stat-value="${p.Primal}" data-xp="${p.ExperiencePoints}">
+                    Primal${statCircles(p.Primal)}
+                </div>
+            </div>
+        </div> <br>
+
+        <div class="stat-columns">
+          ${renderStatColumn('Fight', p.Fight, [
+            { name: 'Brawl', value: p.Brawl },
+            { name: 'Channel', value: p.Channel },
+            { name: 'Clash', value: p.Clash },
+            { name: 'Evasion', value: p.Evasion },
+          ], p.ExperiencePoints)}
+
+          ${renderStatColumn('Survival', p.Survival, [
+            { name: 'Alert', value: p.Alert },
+            { name: 'Athletic', value: p.Athletic },
+            { name: 'Nature', value: p.Nature },
+            { name: 'Stealth', value: p.Stealth },
+          ], p.ExperiencePoints)}
+
+          ${renderStatColumn('Contest', p.Contest, [
+            { name: 'Allure', value: p.Allure },
+            { name: 'Etiquette', value: p.Etiquette },
+            { name: 'Intimidate', value: p.Intimidate },
+            { name: 'Perform', value: p.Perform },
+          ], p.ExperiencePoints)}
+        </div>
+
+        <div class="moves">
+            ${p.Moves.map(renderMove).join('')}
+        </div>
+
+        <div class="bag" id="bagContainer">
+          <div class="bag-header">Pokémon Bag (${p.Bag?.items?.length || 0} items)</div>
+          <ul class="bag-content">
+            ${p.Bag?.items?.map(item => `
+              <li class="bag-card">
+                <div class="card-top">
+                  <div class="card-name-category">
+                    <strong>${item.name || "Unnamed Item"}</strong>
+                    ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
+                  </div>
+                  ${item.sellPrice ? `<button onclick="sellItem('${item.id}')" class="sell-price equip-btn">Sell for: ${item.sellPrice}₽</button>` : ""}
+                </div>
+
+                ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
+                ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
+
+                ${item.itemCategory === "Held Item" || (item.name || "").toLowerCase().includes("berry")
+                  ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>` 
+                  : ""}
+              </li>
+            `).join('') || '<li class="bag-card">No items</li>'}
+          </ul>
+        </div>
+        `;
+
+        const hpFill = card.querySelector('.hp-bar-fill');
+        const hpText = card.querySelector('.hp-text');
+
+        // function to update HP bar
+        function updateHpBar() {
+          const currentHp = Math.max(0, Math.min(maxHp, p.Health ?? maxHp));
+          const pct = currentHp / maxHp;
+
+          hpFill.style.width = (pct * 100) + '%';
+
+          if (pct > 0.5) hpFill.style.background = '#28c76f';      // green
+          else if (pct > 0.25) hpFill.style.background = 'orange'; // orange
+          else hpFill.style.background = 'red';                    // red
+
+          hpText.textContent = `${currentHp} / ${maxHp} HP · ${p.Status || 'Healthy'}`;
+        }
+
+        // initial render
+        updateHpBar();
+
+        // Expose updater if you want to modify HP later
+        p._updateHpUI = updateHpBar;
+
+        window.currentPokemonMaxHp = maxHp;
+
+      card.querySelectorAll('.stat, .stat-row, .stat-column > b').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation(); // prevent parent from also triggering
+          const target = el.closest('[data-stat-name]');
+          if (!target) return;
+          const statName = target.dataset.statName;
+          const statValue = Number(target.dataset.statValue);
+          const xp = Number(target.dataset.xp);
+          confirmStatPurchase(statName, statValue, xp);
+        });
+      });
+      startPokemonStatusStream(POKEMON_GUID, p);
+      setupBagToggle();
+    }
+
+    function sellItem(itemId) {
+      if (!itemId) return;
+
+      Swal.fire({
+        title: "Sell item?",
+        text: "This cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sell",
+        confirmButtonColor: "hotpink",
+        theme: "dark"
+      }).then(result => {
+        if (!result.isConfirmed) return;
+
+        fetch(`http://127.0.0.1:9000/sellItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.error) {
+              Swal.fire("Error", data.error, "error");
+              return;
+            }
+
+            Swal.fire({
+              toast: true,
+              theme: "dark",
+              position: "top-end",
+              icon: "success",
+              title: `Sold for ${data.applesGained} ₽`,
+              timer: 3000,
+              timerProgressBar: true,
+              showConfirmButton: false
+            });
+
+            // 🔄 Refresh Pokémon card only
+            loadPokemon();
+          })
+          .catch(err => {
+            Swal.fire("Request failed", err.toString(), "error");
+          });
+      });
+    }
+
+    function equipItem(itemId) {
+      if (!itemId) return;
+
+      fetch(`http://127.0.0.1:9000/equipItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            Swal.fire("Error", data.error, "error");
+            return;
+          }
+
+          Swal.fire({
+            toast: true,
+            timer: 3000,
+            timerProgressBar: true,
+            theme: "dark",
+            position: "top-end",
+            icon: "success",
+            title: "Item equipped!",
+            showConfirmButton: false
+          });
+
+          loadPokemon();
+        })
+        .catch(err => {
+          Swal.fire("Request failed", err.toString(), "error");
+        });
+    }
+
+    // Bag collapsible toggle
+    function setupBagToggle() {
+      const bag = document.getElementById('bagContainer');
+      if (!bag) return;
+
+      const header = bag.querySelector('.bag-header');
+
+      header.addEventListener('click', () => {
+        bag.classList.toggle('open');
+      });
+    }
+
+    // Call after the page renders the bag
+    setupBagToggle();
+
+    async function loadPokemon() {
+      const res = await fetch(`${API_BASE}`);
+      const json = await res.json();
+      renderPokemon(json.data);
+    }
+
+    loadPokemon();
+  </script>
+
+</body>
+
+</html>

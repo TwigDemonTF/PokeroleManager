@@ -5,4 +5,4 @@ class HealMoveTypesEnum(Enum):
     BASIC = "Basic"
     COMPLETE = "Complete"
     FIXED = "Fixed"
-    FIXEDLETHAL = "FixedLethal"
+    FIXEDLETHAL = "Fixed Lethal"

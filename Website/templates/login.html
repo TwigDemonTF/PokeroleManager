@@ -153,15 +153,18 @@
             <h2 class="titleHeader">Login</h2>
         <div class="loginForm">
             <form action="/Login" method="POST">
-                <input class="customButtonColor" name="username" id="username" required placeholder="Username. . ."><br>
+                <input class="customButtonColor" name="usernameOrGameId" id="username" required placeholder="Username/Game id"><br>
 
-                <input class="customButtonColor" type="password" name="password" id="password" required placeholder="Password. . ."><br>
+                <input class="customButtonColor" type="password" name="passwordOrGameColor" id="password" required placeholder="Password/Color"><br>
 
-                <button style="margin-left: 12px;" class="customButtonColor" type="submit">Login</button>
+                <label style="color: white;">Login as Player: </label>
+                <input type="checkbox" name="player" value="0"> <br>
+
+                <button style="margin-left: 12px; margin-top: 12px;" class="customButtonColor" type="submit">Login</button>
             </form>
 
             {% if message %}
-                <p>{{ message }}</p>
+                <p style="color: red;">{{ message }}</p>
             {% endif %}
             </div>
         </div>

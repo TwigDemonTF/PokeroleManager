@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+  <style>
+    :root {
+      --panel-bg: #363636;
+      --muted: #9aa;
+      --accent: hotpink;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: #222121;
+      color: hotpink;
+    }
+
+    header {
+      padding: 14px 20px;
+      background: var(--panel-bg);
+      border-bottom: 2px solid hotpink;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    main {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ---------- SHOP PANEL ---------- */
+
+    .shop {
+      background: var(--panel-bg);
+      padding-left: 1.2em;
+      padding-bottom: 1.2em;
+      border-radius: 14px;
+      width: 90%;
+      box-sizing: border-box;
+      background:
+        linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+        linear-gradient(to right, black, hotpink) border-box;
+      border: 3px solid transparent;
+    }
+
+    .items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1em;
+      margin-top: 1em;
+    }
+
+    /* ---------- ITEM CARD ---------- */
+
+    .item-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 0.9em;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+      color: white;
+    }
+
+    .item-name {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: hotpink;
+    }
+
+    .item-desc {
+      font-size: 0.9em;
+      color: #ddd;
+    }
+
+    .item-effect {
+      font-size: 0.85em;
+      font-style: italic;
+      color: var(--muted);
+      border-top: 1px solid #444;
+      padding-top: 6px;
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .price {
+      font-size: 0.9em;
+      color: var(--muted);
+    }
+
+    button {
+      background: transparent;
+      color: hotpink;
+      border: 1px solid hotpink;
+      border-radius: 6px;
+      padding: 0.35em 0.7em;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+
+    button:hover {
+      background: hotpink;
+      color: black;
+      transition: 0.2s ease;
+    }
+
+    a {
+      text-decoration: none;
+      color: hotpink;
+    }
+
+    a:hover {
+      color: lavender;
+      transition: 0.75s;
+    }
+  </style>
+
+</head>
+
+
+<body>
+    <header style="display:flex; gap:1em;">
+        <h1>Item Shop</h1>
+        <a style="margin-top: 3px;" href="/Player">Back to Pokémon</a>
+        <h1 style="margin-left: auto;">
+          Available Apples: <span id="appleCount">0</span>
+        </h1>
+      </header>
+
+    <main>
+        <div class="shop">
+            <div class="items">
+            {% for item in items %}
+            <div class="item-card">
+                <div class="item-name">{{ item.name }}</div>
+
+                <div class="item-desc">
+                {{ item.effect }}
+                </div>
+
+                {% if item.effect %}
+                <div class="item-effect">
+                {{ item.description }}
+                </div>
+                {% endif %}
+
+                <div class="item-footer">
+                <div class="price">
+                    Cost: {{ item.buyPrice }}
+                </div>
+                <button type="submit" id="{{ item.id }}">Buy</button>
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        </div>
+    </main>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const playerGuid = "{{ playerGuid }}";
+  const gameId = "{{ gameId }}"
+  const API_BASE = "http://127.0.0.1:9000"
+
+  document.addEventListener("DOMContentLoaded", () => {
+    updateApples();
+  });
+
+  function updateApples() {
+    fetch(`${API_BASE}/getApples/${gameId}/${playerGuid}`, {
+      method: "POST"
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("appleCount").textContent = data.apples;
+        }
+      })
+      .catch(err => console.error("Apple fetch failed", err));
+  }
+
+  document.querySelectorAll("button[type='submit']").forEach(button => {
+    button.addEventListener("click", () => {
+      const itemId = button.id;
+
+      fetch(`${API_BASE}/buyItem`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          pokemonGuid: playerGuid,
+          itemId: itemId,
+          gameId: gameId,
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({
+            toast: true,
+            title: "Item bought successfully",
+            text: "Check your bag for the item!",
+            position: "top-end",
+            theme: "dark",
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            icon: "success",
+          })
+          document.getElementById("appleCount").textContent = data.remainingApples;
+        } else {
+          alert(data.error || "Purchase failed");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Network error");
+      });
+    });
+  });
+</script>
+
+
+</html>

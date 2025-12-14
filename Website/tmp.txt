@@ -1,0 +1,1492 @@
+<domain xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0" type="kvm">
+  <name>win11-2</name>
+  <uuid>90f53f7b-4aa4-498d-baff-e0ed1253b86c</uuid>
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="http://microsoft.com/win/11"/>
+    </libosinfo:libosinfo>
+  </metadata>
+  <memory unit="KiB">32768000</memory>
+  <currentMemory unit="KiB">32768000</currentMemory>
+  <vcpu placement="static">30</vcpu>
+  <os firmware="efi">
+    <type arch="x86_64" machine="pc-q35-10.1">hvm</type>
+    <firmware>
+      <feature enabled="no" name="enrolled-keys"/>
+      <feature enabled="yes" name="secure-boot"/>
+    </firmware>
+    <loader readonly="yes" secure="yes" type="pflash" format="raw">/usr/share/edk2/x64/OVMF_CODE.secboot.4m.fd</loader>
+    <nvram template="/usr/share/edk2/x64/OVMF_VARS.4m.fd" templateFormat="raw" format="raw">/var/lib/libvirt/qemu/nvram/win11-2_VARS.fd</nvram>
+    <smbios mode="host"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <hyperv mode="custom">
+      <relaxed state="on"/>
+      <vapic state="on"/>
+      <spinlocks state="on" retries="8191"/>
+      <vpindex state="on"/>
+      <vendor_id state="on" value="GenuineIntel"/>
+    </hyperv>
+    <kvm>
+      <hidden state="on"/>
+    </kvm>
+    <vmport state="off"/>
+    <smm state="on"/>
+  </features>
+  <cpu mode="host-passthrough" check="none">
+  <feature policy="disable" name="hypervisor"/>
+  </cpu>
+  <clock offset="localtime">
+    <timer name="rtc" tickpolicy="catchup"/>
+    <timer name="pit" tickpolicy="delay"/>
+    <timer name="hpet" present="no"/>
+    <timer name="hypervclock" present="yes"/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled="no"/>
+    <suspend-to-disk enabled="no"/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk type="file" device="disk">
+      <driver name="qemu" type="qcow2" discard="unmap"/>
+      <source file="/Origin/Myrkul/WindowsVm/win11-2.qcow2"/>
+      <target dev="vda" bus="virtio"/>
+      <boot order="1"/>
+      <address type="pci" domain="0x0000" bus="0x04" slot="0x00" function="0x0"/>
+    </disk>
+    <controller type="usb" index="0" model="qemu-xhci" ports="15">
+      <address type="pci" domain="0x0000" bus="0x02" slot="0x00" function="0x0"/>
+    </controller>
+    <controller type="pci" index="0" model="pcie-root"/>
+    <controller type="pci" index="1" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="1" port="0x10"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x0" multifunction="on"/>
+    </controller>
+    <controller type="pci" index="2" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="2" port="0x11"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x1"/>
+    </controller>
+    <controller type="pci" index="3" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="3" port="0x12"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x2"/>
+    </controller>
+    <controller type="pci" index="4" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="4" port="0x13"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x3"/>
+    </controller>
+    <controller type="pci" index="5" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="5" port="0x14"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x4"/>
+    </controller>
+    <controller type="pci" index="6" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="6" port="0x15"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x5"/>
+    </controller>
+    <controller type="pci" index="7" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="7" port="0x16"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x6"/>
+    </controller>
+    <controller type="pci" index="8" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="8" port="0x17"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x7"/>
+    </controller>
+    <controller type="pci" index="9" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="9" port="0x18"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x0" multifunction="on"/>
+    </controller>
+    <controller type="pci" index="10" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="10" port="0x19"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x1"/>
+    </controller>
+    <controller type="pci" index="11" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="11" port="0x1a"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x2"/>
+    </controller>
+    <controller type="pci" index="12" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="12" port="0x1b"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x3"/>
+    </controller>
+    <controller type="pci" index="13" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="13" port="0x1c"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x4"/>
+    </controller>
+    <controller type="pci" index="14" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="14" port="0x1d"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x5"/>
+    </controller>
+    <controller type="pci" index="15" model="pcie-root-port">
+      <model name="pcie-root-port"/>
+      <target chassis="15" port="0x1e"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x6"/>
+    </controller>
+    <controller type="pci" index="16" model="pcie-to-pci-bridge">
+      <model name="pcie-pci-bridge"/>
+      <address type="pci" domain="0x0000" bus="0x08" slot="0x00" function="0x0"/>
+    </controller>
+    <controller type="sata" index="0">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x1f" function="0x2"/>
+    </controller>
+    <controller type="virtio-serial" index="0">
+      <address type="pci" domain="0x0000" bus="0x03" slot="0x00" function="0x0"/>
+    </controller>
+    <interface type="network">
+      <mac address="52:54:00:f4:d0:79"/>
+      <source network="default"/>
+      <model type="virtio"/>
+      <boot order="2"/>
+      <address type="pci" domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+    </interface>
+    <serial type="pty">
+      <target type="isa-serial" port="0">
+        <model name="isa-serial"/>
+      </target>
+    </serial>
+    <console type="pty">
+      <target type="serial" port="0"/>
+    </console>
+    <input type="mouse" bus="ps2"/>
+    <input type="keyboard" bus="ps2"/>
+    <graphics type="spice" autoport="yes">
+      <listen type="address"/>
+      <gl enable="no"/>
+    </graphics>
+    <audio id="1" type="none"/>
+    <video>
+      <model type="none" ram="65536" vram="65536" vgamem="16384" heads="1" primary="yes"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x01" function="0x0"/>
+    </video>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x1"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x00" slot="0x14" function="0x0"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x10" slot="0x01" function="0x0"/>
+    </hostdev>
+    <watchdog model="itco" action="reset"/>
+    <memballoon model="virtio">
+      <address type="pci" domain="0x0000" bus="0x05" slot="0x00" function="0x0"/>
+    </memballoon>
+  </devices>
+  <qemu:commandline>
+    <qemu:arg value="-acpitable"/>
+    <qemu:arg value="file=/Origin/Myrkul/WindowsVm/gpupassthrough/SSDT1.dat"/>
+  </qemu:commandline>
+</domain>
+
+
+
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokémon — Player View</title>
+
+  <style>
+  :root {
+    --card-scale: 1.25; /* scaled up for player readability */
+    --panel-bg: #363636;
+    --card-border: #333;
+    --muted: #9aa;
+    --accent: hotpink;
+  }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background: #222121;
+    color: hotpink;
+    user-select: none;
+  }
+
+  header {
+    padding: 14px 20px;
+    background: var(--panel-bg);
+    border-bottom: 2px solid hotpink;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  main {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---------- CARD ---------- */
+
+  .poke {
+    font-size: calc(1rem * var(--card-scale));
+    background: var(--panel-bg);
+    padding: 1em;
+    border-radius: 14px;
+    background:
+      linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+      linear-gradient(to right, black, hotpink) border-box;
+    border: 3px solid transparent;
+    max-width: 80%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .head {
+    display: flex;
+    gap: 0.8em;
+    align-items: center;
+  }
+
+  .meta h2 {
+    margin: 0;
+    font-size: 1.4em;
+  }
+
+  .sub {
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+
+  /* ---------- TOOLTIP (same behavior as battle page) ---------- */
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+  }
+
+  .tooltip .tooltip-content {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    position: absolute;
+    z-index: 20;
+    background: #111;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.8rem;
+    width: 240px;
+    top: 120%;
+    left: 0;
+  }
+
+  .tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* ---------- TYPES / BADGES ---------- */
+
+  .types {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 0.6em;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 0.35em 0.6em;
+    font-size: 0.8em;
+    border-radius: 0.5em;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+  }
+
+  /* ---------- HP BAR (READ-ONLY) ---------- */
+
+  .hp-bar-container {
+    margin-top: 1em;
+  }
+
+  .hp-bar {
+    height: 16px;
+    background: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+
+  .hp-bar-fill {
+    height: 100%;
+    background: #28c76f;
+    transition: width 0.2s ease;
+  }
+
+  .hp-text {
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: var(--muted);
+  }
+
+  /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr)); /* two columns */
+    gap: 0.6em;
+    margin-top: 1.2em;
+}
+
+/* Remove the individual box style for right column */
+.stats .stat-column > .stat {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1.1rem;   /* <-- this is smaller than your default .stat font-size */
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    display: flex;
+}
+
+.stats .stat-column > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    background: #222;
+    /* border: 1px solid #444; */
+    border-radius: 6px;
+    padding: 0.1em 0.1em;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 1em;
+    padding: 0.4em 0.6em;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+}
+
+
+  .stat b {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .stat-circles {
+    display: flex;
+    gap: 0.25em;
+  }
+
+  .circle {
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+  }
+
+  .circle.filled {
+    background: var(--accent);
+  }
+
+  .stat-columns {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.stat-column {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.4em 0.6em;
+  font-size: 0.85em;
+  flex: 1;
+}
+
+.stat-column b {
+    display: flex;
+    flex-direction: column;   /* title on top, circles below */
+    gap: 0.4em;
+    margin-bottom: 4px;
+    align-items: center;      /* <-- center title + circles horizontally */
+}
+
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+  /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
+
+  .moves {
+    margin-top: 1.4em;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8em;
+  }
+
+  .move-card {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 0.7em;
+    color: white;
+  }
+
+  .move-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .move-name {
+    font-size: 1.05em;
+  }
+
+  .move-footer {
+    margin-top: 6px;
+    font-style: italic;
+    opacity: 0.8;
+    font-size: 0.85em;
+    border-top: 1px solid #555;
+    padding-top: 4px;
+  }
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    margin-top: 2px;
+}
+li {
+    margin-left: px;
+}
+a {
+    text-decoration: none;
+    color: hotpink;
+}
+
+a:hover {
+    color: lavender;
+    transition: .75s;
+}
+
+  </style>
+
+</head>
+
+<body>
+  <header style="display: flex;">
+    <h1 style="width: 8%;">Pokémon Status</h1>
+    <ul style="display: flex;">
+        <li><a href="/ItemShop">Item Shop</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <div id="pokemonCard" class="poke"></div>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+    const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
+    const GAME_ID = '{{ gameId }}'
+    const API_BASE = `http://127.0.0.1:9000/playerData/${GAME_ID}/${POKEMON_GUID}`;
+
+    const statCostRules = {
+        core: v => v * 10,
+        combat: v => v === 0 ? 6 : v * 8,
+        general: v => v === 0 ? 6 : v * 6,
+        will: v => v * 3,
+        static50: () => 50
+    };
+
+    const statCostType = {
+        Strength: "core",
+        Dexterity: "core",
+        Vitality: "core",
+        Insight: "core",
+        Special: "core",
+
+        Fight: "combat",
+        Survival: "combat",
+        Contest: "combat",
+
+        Brawl: "general",
+        Channel: "general",
+        Clash: "general",
+        Evasion: "general",
+        Alert: "general",
+        Athletic: "general",
+        Nature: "general",
+        Stealth: "general",
+        Allure: "general",
+        Etiquette: "general",
+        Intimidate: "general",
+        Perform: "general",
+
+        Will: "will",
+        Logic: "static50",
+        Instinct: "static50",
+        Primal: "static50"
+    };
+
+    async function confirmStatPurchase(statName, currentValue, availableXP) {
+        const rule = statCostType[statName];
+        if (!rule) return;
+
+        const costFn = statCostRules[rule];
+        const cost = costFn(currentValue);
+        if (statName == "Primal") {
+            Swal.fire({
+                toast: true,
+                timer: 4000,
+                timerProgressBar: true,
+                width: 630,
+                position: "top-end",
+                showConfirmButton: false,
+                theme: "dark",
+                icon: "error",
+                title: `${statName} is not buyable`,
+                text: `You cannot buy points in ${statName}, ask your DM on how to get it.`
+            });
+            return;
+        }
+
+        if (availableXP < cost) {
+            Swal.fire({
+                toast: true,
+                timer: 3000,
+                timerProgressBar: true,
+                width: 500,
+                position: "top-end",
+                showConfirmButton: false,
+                theme: "dark",
+                icon: "error",
+                title: "Not enough XP",
+                text: `You need ${cost} XP to increase ${statName}.`
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: `Increase ${statName}?`,
+            html: `
+            <div>Current Level: <b>${currentValue}</b></div>
+            <div>Cost: <b>${cost} XP</b></div>
+            `,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Buy",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "hotpink"
+        });
+
+        if (!result.isConfirmed) return;
+
+        await buyStat(statName, POKEMON_GUID);
+    }
+
+    async function buyStat(statName, pokemonGuid) {
+        const res = await fetch(`${API_BASE}/buyStat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stat: statName, pokemonGuid: pokemonGuid })
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            Swal.fire("Error", json.message || "Purchase failed", "error");
+            return;
+        }
+
+        Swal.fire({
+            icon: "success",
+            title: `${statName} increased!`,
+            timer: 900,
+            showConfirmButton: false
+        });
+
+        loadPokemon(); // re-fetch + re-render
+    }
+
+    function makeTooltip(label, data) {
+        if (!data) return label;
+
+        return `
+        <div class="tooltip">
+            ${label}
+            <div class="tooltip-content">
+            <strong>${data.name}</strong><br><br>
+            ${data.description ? `<div>${data.description}</div><br>` : ''}
+            ${data.effect ? `<div><em>${data.effect}</em></div>` : ''}
+            </div>
+        </div>
+        `;
+    }
+
+    function statCircles(value, max = 5) {
+        let out = '<div class="stat-circles">';
+        for (let i = 1; i <= max; i++) {
+            out += `<div class="circle ${i <= value ? 'filled' : ''}"></div>`;
+        }
+        out += '</div>';
+        return out;
+    }
+
+    function renderStatColumn(title, mainValue, stats, experiencePoints) {
+        return `
+            <div class="stat-column">
+                <b data-stat-name="${title}" data-stat-value="${mainValue ?? 0}" data-xp="${experiencePoints ?? 0}">
+                    ${title} ${statCircles(mainValue ?? 0)}
+                </b>
+                ${stats.map(s => `
+                    <div class="stat-row" data-stat-name="${s.name}" data-stat-value="${s.value ?? 0}" data-xp="${experiencePoints ?? 0}">
+                        <span>${s.name}</span>${statCircles(s.value ?? 0)}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function buildMoveTooltip(move) {
+        const fields = [
+        ['Priority', move.priority],
+        ['Target', move.target],
+        ['Reduced Accuracy', move.reducedAccuracy],
+        ['Crit', move.hasCritical],
+        ['Lethal', move.hasLethal],
+        ['Block', move.hasBlock],
+        ['Recoil', move.hasRecoil],
+        move.hasWeatherChange ? ['Weather Change', move.weatherChangeTo] : null,
+        ['Modified Damage', move.hasModifiedDamage],
+        ['Always Hit', move.alwaysHitEffect],
+        ['Always Fail', move.alwaysFailEffect],
+        ['Charge Move', move.isChargeMove],
+        ['Fist Based', move.isFistBased],
+        ['High Crit', move.isHighCrit],
+        ['Never Fail', move.isNeverFail],
+        move.isHealingMove ? ['Healing Move', 'Yes'] : null,
+        move.isShieldMove ? ['Shield Move', 'Yes'] : null,
+        move.isSoundBased ? ['Sound Based', 'Yes'] : null,
+        move.isSwitchMove ? ['Switch Move', 'Yes'] : null,
+        move.requiresRecharge ? ['Requires Recharge', 'Yes'] : null,
+        move.isMultiHit ? ['Multi Hit', move.multiHitCount || 'Yes'] : null,
+        ];
+
+        return fields
+        .filter(f => f && f[1] !== false && f[1] != null && f[1] !== '')
+        .map(f => `${f[0]}: ${f[1]}`)
+        .join('\n');
+    }
+
+    function renderMove(m) {
+        const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
+        const damage = [...(m.damageModifiers || []), m.basePower || null]
+            .filter(mod => mod && mod !== "NONE")
+            .join(" + ") || "-";
+
+        const tooltip = buildMoveTooltip(m)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '&#10;');
+
+        return `
+        <div class="move-card tooltip" title="${tooltip}">
+            <div class="move-header">
+            <span class="move-name">${m.name}</span>
+            <span>${m.type || ''}</span>
+            </div>
+            <div>Accuracy: ${accuracy}</div>
+            <div>Damage Pool: ${damage}</div>
+            <div>Target: ${m.target || '-'}</div>
+            <div class="move-footer">${m.flavorText || ''}</div>
+        </div>
+        `;
+    }
+
+    function renderPokemon(p) {
+        const card = document.getElementById('pokemonCard');
+
+        const maxHp = p.Health;
+        const hpPct = Math.max(0, Math.min(1, p.Health / maxHp));
+
+        card.innerHTML = `
+        <div class="head">
+            <div class="meta" style="flex: 1;">
+                <h2>${p.Name} ${p.Level ? 'Lv ' + p.Level : ''}</h2>
+                <div class="sub">${p.PrimaryType}${p.SecondaryType ? ' / ' + p.SecondaryType : ''}</div>
+            </div>
+            <div class="experience" style="margin-left: auto; text-align: right;">
+                Available Experience: ${p.ExperiencePoints} <br>
+            </div>
+        </div>
+
+        <div class="types">
+        ${p.Ability ? `<div class="badge">${makeTooltip(p.Ability.name, p.Ability)}</div>` : ''}
+        ${p.Nature ? `<div class="badge">${makeTooltip(p.Nature.name, p.Nature)}</div>` : ''}
+        ${p.HeldItem ? `<div class="badge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
+        ${p.Garments?.map(g => `<div class="badge">${g}</div>`).join('') || ''}
+        </div>
+
+        <div class="hp-bar-container">
+            <div class="hp-bar">
+            <div class="hp-bar-fill" style="width:${hpPct * 100}%"></div>
+            </div>
+            <div class="hp-text">${p.Health} / ${maxHp} HP · ${p.Status || 'Healthy'}</div>
+        </div>
+
+        <div class="stats">
+            <!-- Left column -->
+            <div class="stat-column">
+                <div class="stat" onclick="confirmStatPurchase('Strength', ${p.Strength}, ${p.ExperiencePoints})">
+                    Strength${statCircles(p.Strength)}
+                </div>
+                <div class="stat" onclick="confirmStatPurchase('Dexterity', ${p.Dexterity}, ${p.ExperiencePoints})">
+                    Dexterity${statCircles(p.Dexterity)}
+                </div>
+                <div class="stat" onclick="confirmStatPurchase('Vitality', ${p.Vitality}, ${p.ExperiencePoints})">
+                    Vitality${statCircles(p.Vitality)}
+                </div>
+                <div class="stat" onclick="confirmStatPurchase('Insight', ${p.Insight}, ${p.ExperiencePoints})">
+                    Insight${statCircles(p.Insight)}
+                </div>
+                <div class="stat" onclick="confirmStatPurchase('Special', ${p.Special}, ${p.ExperiencePoints})">
+                    Special${statCircles(p.Special)}
+                </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="stat-column">
+                <div onclick="confirmStatPurchase('Will', ${p.Will}, ${p.ExperiencePoints})">
+                    Will${statCircles(p.Will)}
+                </div>
+                <div onclick="confirmStatPurchase('Logic', ${p.Logic}, ${p.ExperiencePoints})">
+                    Logic${statCircles(p.Logic)}
+                </div>
+                <div onclick="confirmStatPurchase('Instinct', ${p.Instinct}, ${p.ExperiencePoints})">
+                    Instinct${statCircles(p.Instinct)}
+                </div>
+                <div onclick="confirmStatPurchase('Primal', ${p.Primal}, ${p.ExperiencePoints})">
+                    Primal${statCircles(p.Primal)}
+                </div>
+            </div>
+        </div> <br>
+
+        <div class="stat-columns">
+            ${renderStatColumn('Fight', p.Fight?.Total, [
+                {name: 'Brawl', value: p.Fight?.Brawl},
+                {name: 'Channel', value: p.Fight?.Channel},
+                {name: 'Clash', value: p.Fight?.Clash},
+                {name: 'Evasion', value: p.Fight?.Evasion},
+            ], p.ExperiencePoints)}
+
+            ${renderStatColumn('Survival', p.Survival?.Total, [
+                {name: 'Alert', value: p.Survival?.Alert},
+                {name: 'Athletic', value: p.Survival?.Athletic},
+                {name: 'Nature', value: p.Survival?.Nature},
+                {name: 'Stealth', value: p.Survival?.Stealth},
+            ], p.ExperiencePoints)}
+
+            ${renderStatColumn('Contest', p.Contest?.Total, [
+                {name: 'Allure', value: p.Contest?.Allure},
+                {name: 'Etiquette', value: p.Contest?.Etiquette},
+                {name: 'Intimidate', value: p.Contest?.Intimidate},
+                {name: 'Perform', value: p.Contest?.Perform},
+            ], p.ExperiencePoints)}
+        </div>
+
+        <div class="moves">
+            ${p.Moves.map(renderMove).join('')}
+        </div>
+        `;
+
+        card.querySelectorAll('.stat-row, .stat-column > b').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation(); // prevent parent from also triggering
+                let target = el.closest('[data-stat-name]'); // find closest element with data-stat-name
+                const statName = target.dataset.statName;
+                const statValue = Number(target.dataset.statValue);
+                const xp = Number(target.dataset.xp);
+                confirmStatPurchase(statName, statValue, xp);
+            });
+        });
+    }
+
+    async function loadPokemon() {
+        const res = await fetch(`${API_BASE}`);
+        const json = await res.json();
+        renderPokemon(json.data);
+    }
+
+    loadPokemon();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokémon — Player View</title>
+
+  <style>
+  :root {
+    --card-scale: 1.25; /* scaled up for player readability */
+    --panel-bg: #363636;
+    --card-border: #333;
+    --muted: #9aa;
+    --accent: hotpink;
+  }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background: #222121;
+    color: hotpink;
+    user-select: none;
+  }
+
+  header {
+    padding: 14px 20px;
+    background: var(--panel-bg);
+    border-bottom: 2px solid hotpink;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  main {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---------- CARD ---------- */
+
+  .poke {
+    font-size: calc(1rem * var(--card-scale));
+    background: var(--panel-bg);
+    padding: 1em;
+    border-radius: 14px;
+    background:
+      linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+      linear-gradient(to right, black, hotpink) border-box;
+    border: 3px solid transparent;
+    max-width: 80%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .head {
+    display: flex;
+    gap: 0.8em;
+    align-items: center;
+  }
+
+  .meta h2 {
+    margin: 0;
+    font-size: 1.4em;
+  }
+
+  .sub {
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+
+  /* ---------- TOOLTIP (same behavior as battle page) ---------- */
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+  }
+
+  .tooltip .tooltip-content {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    position: absolute;
+    z-index: 20;
+    background: #111;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.8rem;
+    width: 240px;
+    top: 120%;
+    left: 0;
+  }
+
+  .tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* ---------- TYPES / BADGES ---------- */
+
+  .types {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 0.6em;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 0.35em 0.6em;
+    font-size: 0.8em;
+    border-radius: 0.5em;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+  }
+
+  /* ---------- HP BAR (READ-ONLY) ---------- */
+
+  .hp-bar-container {
+    margin-top: 1em;
+  }
+
+  .hp-bar {
+    height: 16px;
+    background: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+
+  .hp-bar-fill {
+    height: 100%;
+    background: #28c76f;
+    transition: width 0.2s ease;
+  }
+
+  .hp-text {
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: var(--muted);
+  }
+
+  /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    margin-top: 1.2em;
+}
+
+.stats .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.6em;
+}
+
+
+  .stat {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.4em 0.6em;
+    font-size: 0.85em;
+  }
+
+  .stat b {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .stat-circles {
+    display: flex;
+    gap: 0.25em;
+  }
+
+  .circle {
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+  }
+
+  .circle.filled {
+    background: var(--accent);
+  }
+
+  .stat-columns {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.stat-column {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.4em 0.6em;
+  font-size: 0.85em;
+  flex: 1;
+}
+
+.stat-column b {
+    display: flex;
+    flex-direction: column;   /* title on top, circles below */
+    gap: 0.4em;
+    margin-bottom: 4px;
+    align-items: center;      /* <-- center title + circles horizontally */
+}
+
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+  /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
+
+  .moves {
+    margin-top: 1.4em;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8em;
+  }
+
+  .move-card {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 0.7em;
+    color: white;
+  }
+
+  .move-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .move-name {
+    font-size: 1.05em;
+  }
+
+  .move-footer {
+    margin-top: 6px;
+    font-style: italic;
+    opacity: 0.8;
+    font-size: 0.85em;
+    border-top: 1px solid #555;
+    padding-top: 4px;
+  }
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    margin-top: 2px;
+}
+li {
+    margin-left: px;
+}
+a {
+    text-decoration: none;
+    color: hotpink;
+}
+
+a:hover {
+    color: lavender;
+    transition: .75s;
+}
+
+  </style>
+
+</head>
+
+<body>
+  <header style="display: flex;">
+    <h1 style="width: 8%;">Pokémon Status</h1>
+    <ul style="display: flex;">
+        <li><a href="/ItemShop">Item Shop</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <div id="pokemonCard" class="poke"></div>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+    const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
+    const GAME_ID = '{{ gameId }}'
+    const API_BASE = `http://127.0.0.1:9000/playerData/${GAME_ID}/${POKEMON_GUID}`;
+
+    const statCostRules = {
+        core: v => v * 10,
+        combat: v => v === 0 ? 6 : v * 8,
+        general: v => v === 0 ? 6 : v * 6,
+        will: v => v * 3,
+        static50: () => 50
+    };
+
+    const statCostType = {
+        Strength: "core",
+        Dexterity: "core",
+        Vitality: "core",
+        Insight: "core",
+        Special: "core",
+
+        Fight: "combat",
+        Survival: "combat",
+        Contest: "combat",
+
+        Brawl: "general",
+        Channel: "general",
+        Clash: "general",
+        Evasion: "general",
+        Alert: "general",
+        Athletic: "general",
+        Nature: "general",
+        Stealth: "general",
+        Allure: "general",
+        Etiquette: "general",
+        Intimidate: "general",
+        Perform: "general",
+
+        Will: "will",
+        Logic: "static50",
+        Instinct: "static50",
+        Primal: "static50"
+    };
+
+    async function confirmStatPurchase(statName, currentValue, availableXP) {
+        const rule = statCostType[statName];
+        if (!rule) return;
+
+        const costFn = statCostRules[rule];
+        const cost = costFn(currentValue);
+        if (statName == "Primal") {
+            Swal.fire({
+                toast: true,
+                timer: 4000,
+                timerProgressBar: true,
+                width: 630,
+                position: "top-end",
+                showConfirmButton: false,
+                theme: "dark",
+                icon: "error",
+                title: `${statName} is not buyable`,
+                text: `You cannot buy points in ${statName}, ask your DM on how to get it.`
+            });
+            return;
+        }
+
+        if (availableXP < cost) {
+            Swal.fire({
+                toast: true,
+                timer: 3000,
+                timerProgressBar: true,
+                width: 500,
+                position: "top-end",
+                showConfirmButton: false,
+                theme: "dark",
+                icon: "error",
+                title: "Not enough XP",
+                text: `You need ${cost} XP to increase ${statName}.`
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: `Increase ${statName}?`,
+            html: `
+            <div>Current Level: <b>${currentValue}</b></div>
+            <div>Cost: <b>${cost} XP</b></div>
+            `,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Buy",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "hotpink"
+        });
+
+        if (!result.isConfirmed) return;
+
+        await buyStat(statName, POKEMON_GUID);
+    }
+
+    async function buyStat(statName, pokemonGuid) {
+        const res = await fetch(`${API_BASE}/buyStat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stat: statName, pokemonGuid: pokemonGuid })
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            Swal.fire("Error", json.message || "Purchase failed", "error");
+            return;
+        }
+
+        Swal.fire({
+            icon: "success",
+            title: `${statName} increased!`,
+            timer: 900,
+            showConfirmButton: false
+        });
+
+        loadPokemon(); // re-fetch + re-render
+    }
+
+    function makeTooltip(label, data) {
+        if (!data) return label;
+
+        return `
+        <div class="tooltip">
+            ${label}
+            <div class="tooltip-content">
+            <strong>${data.name}</strong><br><br>
+            ${data.description ? `<div>${data.description}</div><br>` : ''}
+            ${data.effect ? `<div><em>${data.effect}</em></div>` : ''}
+            </div>
+        </div>
+        `;
+    }
+
+    function statCircles(value, max = 5) {
+        let out = '<div class="stat-circles">';
+        for (let i = 1; i <= max; i++) {
+            out += `<div class="circle ${i <= value ? 'filled' : ''}"></div>`;
+        }
+        out += '</div>';
+        return out;
+    }
+
+    function renderStatColumn(title, mainValue, stats, experiencePoints) {
+        return `
+            <div class="stat-column">
+                <b data-stat-name="${title}" data-stat-value="${mainValue ?? 0}" data-xp="${experiencePoints ?? 0}">
+                    ${title} ${statCircles(mainValue ?? 0)}
+                </b>
+                ${stats.map(s => `
+                    <div class="stat-row" data-stat-name="${s.name}" data-stat-value="${s.value ?? 0}" data-xp="${experiencePoints ?? 0}">
+                        <span>${s.name}</span>${statCircles(s.value ?? 0)}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function buildMoveTooltip(move) {
+        const fields = [
+        ['Priority', move.priority],
+        ['Target', move.target],
+        ['Reduced Accuracy', move.reducedAccuracy],
+        ['Crit', move.hasCritical],
+        ['Lethal', move.hasLethal],
+        ['Block', move.hasBlock],
+        ['Recoil', move.hasRecoil],
+        move.hasWeatherChange ? ['Weather Change', move.weatherChangeTo] : null,
+        ['Modified Damage', move.hasModifiedDamage],
+        ['Always Hit', move.alwaysHitEffect],
+        ['Always Fail', move.alwaysFailEffect],
+        ['Charge Move', move.isChargeMove],
+        ['Fist Based', move.isFistBased],
+        ['High Crit', move.isHighCrit],
+        ['Never Fail', move.isNeverFail],
+        move.isHealingMove ? ['Healing Move', 'Yes'] : null,
+        move.isShieldMove ? ['Shield Move', 'Yes'] : null,
+        move.isSoundBased ? ['Sound Based', 'Yes'] : null,
+        move.isSwitchMove ? ['Switch Move', 'Yes'] : null,
+        move.requiresRecharge ? ['Requires Recharge', 'Yes'] : null,
+        move.isMultiHit ? ['Multi Hit', move.multiHitCount || 'Yes'] : null,
+        ];
+
+        return fields
+        .filter(f => f && f[1] !== false && f[1] != null && f[1] !== '')
+        .map(f => `${f[0]}: ${f[1]}`)
+        .join('\n');
+    }
+
+    function renderMove(m) {
+        const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
+        const damage = [...(m.damageModifiers || []), m.basePower || null]
+            .filter(mod => mod && mod !== "NONE")
+            .join(" + ") || "-";
+
+        const tooltip = buildMoveTooltip(m)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '&#10;');
+
+        return `
+        <div class="move-card tooltip" title="${tooltip}">
+            <div class="move-header">
+            <span class="move-name">${m.name}</span>
+            <span>${m.type || ''}</span>
+            </div>
+            <div>Accuracy: ${accuracy}</div>
+            <div>Damage Pool: ${damage}</div>
+            <div>Target: ${m.target || '-'}</div>
+            <div class="move-footer">${m.flavorText || ''}</div>
+        </div>
+        `;
+    }
+
+    function renderPokemon(p) {
+        const card = document.getElementById('pokemonCard');
+
+        const maxHp = p.Health;
+        const hpPct = Math.max(0, Math.min(1, p.Health / maxHp));
+
+        card.innerHTML = `
+        <div class="head">
+            <div class="meta" style="flex: 1;">
+                <h2>${p.Name} ${p.Level ? 'Lv ' + p.Level : ''}</h2>
+                <div class="sub">${p.PrimaryType}${p.SecondaryType ? ' / ' + p.SecondaryType : ''}</div>
+            </div>
+            <div class="experience" style="margin-left: auto; text-align: right;">
+                Available Experience: ${p.ExperiencePoints} <br>
+            </div>
+        </div>
+
+        <div class="types">
+        ${p.Ability ? `<div class="badge">${makeTooltip(p.Ability.name, p.Ability)}</div>` : ''}
+        ${p.Nature ? `<div class="badge">${makeTooltip(p.Nature.name, p.Nature)}</div>` : ''}
+        ${p.HeldItem ? `<div class="badge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
+        ${p.Garments?.map(g => `<div class="badge">${g}</div>`).join('') || ''}
+        </div>
+
+        <div class="hp-bar-container">
+            <div class="hp-bar">
+            <div class="hp-bar-fill" style="width:${hpPct * 100}%"></div>
+            </div>
+            <div class="hp-text">${p.Health} / ${maxHp} HP · ${p.Status || 'Healthy'}</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-row">
+                <div class="stat" data-stat-name="Strength" data-stat-value="${p.Strength}" data-xp="${p.ExperiencePoints}">Strength${statCircles(p.Strength, 10)}</div>
+                <div class="stat" data-stat-name="Dexterity" data-stat-value="${p.Dexterity}" data-xp="${p.ExperiencePoints}">Dexterity${statCircles(p.Dexterity, 10)}</div>
+                <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">Vitality${statCircles(p.Vitality, 10)}</div>
+                <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">Insight${statCircles(p.Insight, 10)}</div>
+                <div class="stat" data-stat-name="Special" data-stat-value="${p.Special}" data-xp="${p.ExperiencePoints}">Special${statCircles(p.Special, 10)}</div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat" data-stat-name="Will" data-stat-value="${p.Will}" data-xp="${p.ExperiencePoints}">Will${statCircles(p.Will, 10)}</div>
+                <div class="stat" data-stat-name="Logic" data-stat-value="${p.Logic}" data-xp="${p.ExperiencePoints}">Logic${statCircles(p.Logic)}</div>
+                <div class="stat" data-stat-name="Instinct" data-stat-value="${p.Instinct}" data-xp="${p.ExperiencePoints}">Instinct${statCircles(p.Instinct)}</div>
+                <div class="stat" data-stat-name="Primal" data-stat-value="${p.Primal}" data-xp="${p.ExperiencePoints}">Primal${statCircles(p.Primal)}</div>
+            </div>
+        </div> <br>
+
+        <div class="stat-columns">
+            ${renderStatColumn('Fight', p.Fight?.Total, [
+                {name: 'Brawl', value: p.Fight?.Brawl},
+                {name: 'Channel', value: p.Fight?.Channel},
+                {name: 'Clash', value: p.Fight?.Clash},
+                {name: 'Evasion', value: p.Fight?.Evasion},
+            ], p.ExperiencePoints)}
+
+            ${renderStatColumn('Survival', p.Survival?.Total, [
+                {name: 'Alert', value: p.Survival?.Alert},
+                {name: 'Athletic', value: p.Survival?.Athletic},
+                {name: 'Nature', value: p.Survival?.Nature},
+                {name: 'Stealth', value: p.Survival?.Stealth},
+            ], p.ExperiencePoints)}
+
+            ${renderStatColumn('Contest', p.Contest?.Total, [
+                {name: 'Allure', value: p.Contest?.Allure},
+                {name: 'Etiquette', value: p.Contest?.Etiquette},
+                {name: 'Intimidate', value: p.Contest?.Intimidate},
+                {name: 'Perform', value: p.Contest?.Perform},
+            ], p.ExperiencePoints)}
+        </div>
+
+        <div class="moves">
+            ${p.Moves.map(renderMove).join('')}
+        </div>
+        `;
+
+        card.querySelectorAll('[data-stat-name]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const statName = el.dataset.statName;
+                const statValue = Number(el.dataset.statValue);
+                const xp = Number(el.dataset.xp);
+                confirmStatPurchase(statName, statValue, xp);
+            });
+        });
+    }
+
+    async function loadPokemon() {
+        const res = await fetch(`${API_BASE}`);
+        const json = await res.json();
+        renderPokemon(json.data);
+    }
+
+    loadPokemon();
+</script>
+
+</body>
+</html>

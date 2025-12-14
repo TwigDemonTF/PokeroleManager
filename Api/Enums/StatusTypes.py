@@ -2,6 +2,7 @@ from enum import Enum
 
 class StatusTypes(Enum):
     HEALTHY = "Healthy"
+    FAINTED = "Fainted"
     BURN1 = "Burn1"
     BURN2 = "Burn2"
     BURN3 = "Burn3"

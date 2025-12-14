@@ -14,27 +14,54 @@ def contextExample():
 @app.route('/Login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        usernameOrGameId = request.form.get('usernameOrGameId')
+        passwordOrGameColor = request.form.get('passwordOrGameColor')
+        if not request.form.get("player"):
+            data = {
+                "username": usernameOrGameId,
+                "password": passwordOrGameColor
+            }
 
-        data = {
-            "username": username,
-            "password": password
-        }
+            res = requests.post(f"{url}/masterLogin", json=data)
+            res = res.json()
 
-        res = requests.post("http://127.0.0.1:9000/login", json=data)
-        res = res.json()
+            if res["status"] == 401:
+                return render_template('login.html', message=res.get("message", "No Message Recieved"))
 
-        # If login was successful, store user_id in session
-        if "userId" in res:
-            session["userId"] = res["userId"]
-        if "gameId" in res:
-            session["gameId"] = res["gameId"]
-        print(session.get("userId"))
-        print(session.get("gameId"))
+            # If login was successful, store user_id in session
+            if "userId" in res:
+                session["userId"] = res["userId"]
+            if "gameId" in res:
+                session["gameId"] = res["gameId"]
+            print(session.get("userId"))
+            print(session.get("gameId"))
 
-        return redirect('/Game')
-        return render_template('login.html', message=res.get("message", "No Message Recieved"))
+            return redirect('/Game')
+        else:
+            passwordOrGameColor = passwordOrGameColor.title()
+            data = {
+                "gameId": usernameOrGameId,
+                "gameColor": passwordOrGameColor,
+            }
+
+            res = requests.post(f"{url}playerLogin", json=data)
+            res = res.json()
+            print(res["message"])
+            if res["status"] == 401:
+                return render_template('login.html', message=res.get("message", "No Message Recieved"))
+            
+            if "gameId" in res:
+                session["gameId"] = res["gameId"]
+            if "gameColor" in res:
+                session["gameColor"] = res["gameColor"]
+            if "playerGuid" in res:
+                session["playerGuid"] = res["playerGuid"]
+            if "ExperiencePoints" in res:
+                session["ExperiencePoints"] = res["ExperiencePoints"]
+            if "Apples" in res:
+                session["Apples"] = res["Apples"]
+
+            return redirect("/Player")
 
     # GET request
     return render_template('login.html')
@@ -55,13 +82,17 @@ def register():
         return redirect('/Login')
     return render_template('register.html')
 
+@app.route("/Logout")
+def logout():
+    session.clear()
+    return redirect("/Login")
+
 @app.route('/')
 def addPokemon():
     context = {
         "gameId": session.get("gameId"),
     }
     return render_template('add_pokemon.html', **context)
-
 
 @app.route('/Game')
 def game():
@@ -70,10 +101,46 @@ def game():
     }
     return render_template('game.html', **context)
 
+@app.route("/Player")
+def player():
+    if session.get("playerGuid"):
+        return render_template("player.html", gameId=session.get("gameId"), pokemonGuid=session.get("playerGuid"))
+
+@app.route("/ItemShop")
+def itemShop():
+    res = requests.get(f"{url}/item")
+    items = [
+        item for item in res.json()
+        if item["id"] is not None
+    ]
+
+    context = {
+         "items": items, 
+         "playerGuid": session.get("playerGuid"), 
+         "gameId": session.get("gameId"),
+    }
+
+    return render_template("item_shop.html", **context)
+
 @app.route("/Battle")
 def battle():
+    res = requests.get(f"{url}/item")
+    items = [
+        item for item in res.json()
+        if item["id"] is not None
+    ]
+
+    res = requests.get(f"{url}/itemEnums")
+    enums = res.json()
+
+    item_categories = enums.get("ItemCategoryEnum", {})
+    shop_tiers = enums.get("ShopTierEnum", {})
+
     context = {
-        "gameId": session.get("gameId")
+        "gameId": session.get("gameId"),
+        "items": items,
+        "item_categories": item_categories,
+        "shop_tiers": shop_tiers,
     }
     return render_template("battle.html", **context)
 
@@ -91,6 +158,21 @@ def move():
         "data": res.json()
     }
     return render_template("add_move.html", **context)
+
+@app.route("/Item", methods=["GET"])
+def item():
+    res = requests.get(f"{url}/itemEnums")
+    enums = res.json()
+
+    item_categories = enums.get("ItemCategoryEnum", {})
+    shop_tiers = enums.get("ShopTierEnum", {})
+
+    context = {
+        "item_categories": item_categories,
+        "shop_tiers": shop_tiers,
+    }
+
+    return render_template("item.html", **context)
 
 if __name__ == "__main__":
     with app.app_context():

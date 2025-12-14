@@ -5,15 +5,13 @@
    GLOBAL SCALING
 --------------------------------------------------------- */
 :root {
-  --card-scale: 1;
-
-  --gap: 12px;
-  --card-bg: #111;
-  --card-border: #333;
+  --card-scale: 0.85; /* player is 1.25 */
   --panel-bg: #363636;
+  --card-border: #333;
   --muted: #9aa;
   --accent: hotpink;
 }
+
 
 body {
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
@@ -21,6 +19,7 @@ body {
   background: #222121;
   color: hotpink;
   overflow-x: hidden;
+  user-select: none;
 }
 
 /* ---------------------------------------------------------
@@ -128,22 +127,20 @@ button.ghost {
 --------------------------------------------------------- */
 
 .poke {
-    /* controls internal scaling */
-    font-size: calc(1rem * var(--card-scale));
-    background: var(--panel-bg);
-    padding: 0.75em;
-    background:
+  font-size: calc(1rem * var(--card-scale));
+  background: var(--panel-bg);
+  padding: 0.7em; /* tighter than player */
+  border-radius: 14px;
+
+  background:
     linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
     linear-gradient(to right, black, hotpink) border-box;
-    border: 3px solid transparent;
-    border-radius: 12.5px;
-    color: #9aa !important;
 
-    /* flex behaviour */
-    flex: 1 1 240px;   /* grow | shrink | base-width */
-    min-width: 100%;  /* prevents extreme squishing */
-    max-width: 100%;    /* ignored by flex but keeps intent clear */
-    box-sizing: border-box;
+  border: 3px solid transparent;
+  box-sizing: border-box;
+
+  flex: 1 1 320px; /* two-column friendly */
+  max-width: 100%;
 }
 
 .poke--narrow {
@@ -154,6 +151,23 @@ button.ghost {
   display: flex;
   gap: 0.6em;
   align-items: center;
+}
+
+.poke.collapsed .collapsible {
+  display: none;
+}
+
+.collapse-toggle {
+  background: transparent;
+  border: none;
+  color: hotpink;
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0 6px;
+}
+
+.collapse-toggle:hover {
+  color: #ff69b4;
 }
 
 /* ---------------------------------------------------------
@@ -179,8 +193,9 @@ button.ghost {
 }
 .meta h3 {
   margin: 0;
-  font-size: 1em;
+  font-size: 1.15em; /* down from player 1.4 */
 }
+
 .meta .sub {
   font-size: 0.78em;
   color: var(--muted);
@@ -191,17 +206,22 @@ button.ghost {
 --------------------------------------------------------- */
 
 .types {
-  margin-top: 0.4em;
   display: flex;
   gap: 0.4em;
+  margin-top: 0.5em;
+  flex-wrap: wrap;
 }
 
 .type,
 .badge {
-  padding: 0.25em 0.5em;
+  padding: 0.3em 0.55em;
   font-size: 0.75em;
-  border-radius: 0.4em;
+  border-radius: 0.5em;
+  background: #222;
+  border: 1px solid #444;
+  color: white;
 }
+
 
 /* ---------------------------------------------------------
    STATS AREA
@@ -216,12 +236,16 @@ button.ghost {
 }
 
 .stat {
-  display: flex;
-  gap: 0.5em;
-  align-items: center;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.35em 0.55em;
+  font-size: 0.8em;
 }
+
 .stat b {
-    width: 4.1em; /* tighten label width */
+  display: block;
+  margin-bottom: 4px;
 }
 
 .stat .val {
@@ -239,8 +263,8 @@ button.ghost {
 }
 
 .stat-circles .circle {
-  width: 1em;
-  height: 1em;
+  width: 0.85em;
+  height: 0.85em;
   border-radius: 50%;
   background-color: #333;
   border: 1px solid #555;
@@ -251,18 +275,53 @@ button.ghost {
   background-color: var(--accent);
 }
 
+.stat-columns {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.stat-column {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.4em 0.6em;
+  font-size: 0.85em;
+  flex: 1;
+}
+
+.stat-column b {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  margin-bottom: 4px;
+  align-items: center; /* 🔑 centers circles under title */
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 1em;
+}
+
 /* ---------------------------------------------------------
    MOVES
 --------------------------------------------------------- */
 
 .move-card {
-    background: #222;
-    border: 1px solid #444;
-    color: white;
-    font-size: 12px;
-    padding: 8px;
-    margin: 0;
-    min-width: 190px;
+  background: #222;
+  border: 1px solid #444 !important;
+  border-radius: 8px;
+  padding: 0.7em;
+  color: white;
+}
+
+.move-slot {
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #222;
+  min-width: 0;
 }
 
 .move-card:hover {
@@ -270,30 +329,35 @@ button.ghost {
 }
 
 .move-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.move-name {
-    font-size: 18px;
-}
-
-.move-footer {
-    font-style: italic;
-    opacity: 0.8;
-    margin-top: 8px;
-    border-top: 1px solid #555;
-    padding-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
 
 .move-card .move-name {
     font-size: 14px;
 }
 
+.move-footer {
+  margin-top: 6px;
+  font-style: italic;
+  opacity: 0.8;
+  font-size: 0.75em;
+  border-top: 1px solid #555;
+  padding-top: 4px;
+}
+
 .move-card .move-right {
     font-size: 12px;
+}
+
+.move-name {
+  font-size: 0.95em;
+}
+
+.move-slot .move-header {
+  color: inherit;
 }
 
 /* ---------------------------------------------------------
@@ -304,6 +368,7 @@ button.ghost {
     position: relative;
     display: inline-block;
     cursor: help;
+    max-width: 100%;
 }
 
 .tooltip .tooltip-content {
@@ -371,6 +436,16 @@ button.ghost {
     transition: width 0.2s ease;
 }
 
+/* ---------------------------------------------------------
+   SWAL
+--------------------------------------------------------- */
+
+.swal2-select {
+  height: auto !important;
+  min-height: unset !important;
+  width: auto !important;
+  min-width: unset !important;
+}
 
 /* ---------------------------------------------------------
    MISC
@@ -401,6 +476,245 @@ footer {
     order: 2;
   }
 }
+
+/* BOOTSTRAP GARBO */
+/* ===== Container ===== */
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* ===== Headings ===== */
+h1, h2, h3 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-bottom: 1rem;
+}
+
+/* ===== Form Groups ===== */
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+/* ===== Labels ===== */
+label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+/* ===== Inputs ===== */
+input[type="text"],
+input[type="number"],
+input[type="select"],
+select {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 0.5rem; /* slightly smaller padding */
+    font-size: 0.9rem;        /* smaller font size to reduce height */
+    line-height: 1.3;
+    color: #212529;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input:focus,
+select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+
+/* ===== Buttons ===== */
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+    background-color: hotpink;
+    border: 1px solid lightgray;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* ===== Form Select ===== */
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 0.5rem; /* smaller height */
+    font-size: 0.9rem;
+    line-height: 1.3;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23343a40' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 0.8rem 0.8rem;
+}
+
+/* ===== Alerts ===== */
+.alert {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+}
+
+.alert-success {
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+}
+
+.alert-danger {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+.alert-warning {
+    color: #664d03;
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+}
+
+/* ===== SweetAlert Overrides ===== */
+.swal2-popup {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    width: 600px !important;
+}
+
+.swal2-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Inputs and selects inside Swal */
+.swal2-html-container input,
+.swal2-html-container select {
+    margin-bottom: 0.5rem;
+}
+
+/* Buttons inside Swal */
+.swal2-html-container .btn {
+    margin-top: 0.5rem;
+    width: 30%;
+}
+
+/* Horizontal spacing for multiple buttons */
+.swal2-actions .btn {
+    width: auto;
+    margin: 0 0.25rem;
+}
+
+/* Make selects slightly less tall */
+.swal2-html-container select {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    border-radius: 0.25rem;
+}
+
+/* Optional: make cancel and confirm buttons look distinct */
+.swal2-cancel {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.swal2-confirm {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.swal2-input {
+    color: #aaa !important;
+}
+
+.core-stats {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.9em;
+  flex-wrap: nowrap;
+}
+
+.core-stat {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.35em 0.55em;
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.core-stat b {
+  font-size: 0.75em;
+  color: var(--muted);
+}
+
+.core-stat .stat-circles {
+  justify-content: center;
+}
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.skill-panel {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.skill-header {
+  text-align: center;
+  font-weight: bold;
+  color: hotpink;
+  margin-bottom: 6px;
+  font-size: 0.85em;
+}
+
+.skill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75em;
+  margin-bottom: 4px;
+}
+
 </style>
 
 <head>
@@ -483,8 +797,9 @@ footer {
       <li><code>POST /api/pokemon/batch</code> — accepts JSON <code>{ guids: ["GUID1","GUID2", ...] }</code> and returns full GamePokemon objects for the requested GUIDs (used to render detailed cards).</li>
     </ul>
   </footer>
-
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
+    window.GameEvents = new EventTarget();
     // Configuration — edit to match your back-end and auth method
     const API_BASE = 'http://127.0.0.1:9000';
     // If you use cookies/session auth (Flask login), keep credentials: 'include'
@@ -497,10 +812,324 @@ footer {
     const stageGrid = document.getElementById('stageGrid');
     const countEl = document.getElementById('count');
 
+    const TYPE_COLORS = {
+        Fire: "#F08030",
+        Water: "#6890F0",
+        Grass: "#78C850",
+        Electric: "#F8D030",
+        Ice: "#98D8D8",
+        Fighting: "#C03028",
+        Poison: "#A040A0",
+        Ground: "#E0C068",
+        Flying: "#A890F0",
+        Psychic: "#F85888",
+        Bug: "#A8B820",
+        Rock: "#B8A038",
+        Ghost: "#705898",
+        Dragon: "#7038F8",
+        Dark: "#705848",
+        Steel: "#B8B8D0",
+        Fairy: "#EE99AC",
+        Normal: "#A8A878",
+    };
+
+    const TYPE_CHART = {
+      NORMAL:   { ROCK: 0.5, GHOST: 0, STEEL: 0.5 },
+      FIRE:     { FIRE: 0.5, WATER: 0.5, GRASS: 2, ICE: 2, BUG: 2, ROCK: 0.5, DRAGON: 0.5, STEEL: 2 },
+      WATER:    { FIRE: 2, WATER: 0.5, GRASS: 0.5, GROUND: 2, ROCK: 2, DRAGON: 0.5 },
+      ELECTRIC: { WATER: 2, ELECTRIC: 0.5, GRASS: 0.5, GROUND: 0, FLYING: 2, DRAGON: 0.5 },
+      GRASS:    { FIRE: 0.5, WATER: 2, GRASS: 0.5, POISON: 0.5, GROUND: 2, FLYING: 0.5, BUG: 0.5, ROCK: 2, DRAGON: 0.5, STEEL: 0.5 },
+      ICE:      { FIRE: 0.5, WATER: 0.5, GRASS: 2, GROUND: 2, FLYING: 2, DRAGON: 2, STEEL: 0.5 },
+      FIGHTING: { NORMAL: 2, ICE: 2, ROCK: 2, DARK: 2, STEEL: 2, POISON: 0.5, FLYING: 0.5, PSYCHIC: 0.5, BUG: 0.5, GHOST: 0, FAIRY: 0.5 },
+      POISON:   { GRASS: 2, FAIRY: 2, POISON: 0.5, GROUND: 0.5, ROCK: 0.5, GHOST: 0.5, STEEL: 0 },
+      GROUND:   { FIRE: 2, ELECTRIC: 2, POISON: 2, ROCK: 2, STEEL: 2, GRASS: 0.5, BUG: 0.5, FLYING: 0 },
+      FLYING:   { GRASS: 2, FIGHTING: 2, BUG: 2, ELECTRIC: 0.5, ROCK: 0.5, STEEL: 0.5 },
+      PSYCHIC:  { FIGHTING: 2, POISON: 2, PSYCHIC: 0.5, STEEL: 0.5, DARK: 0 },
+      BUG:      { GRASS: 2, PSYCHIC: 2, DARK: 2, FIRE: 0.5, FIGHTING: 0.5, POISON: 0.5, FLYING: 0.5, GHOST: 0.5, STEEL: 0.5, FAIRY: 0.5 },
+      ROCK:     { FIRE: 2, ICE: 2, FLYING: 2, BUG: 2, FIGHTING: 0.5, GROUND: 0.5, STEEL: 0.5 },
+      GHOST:    { PSYCHIC: 2, GHOST: 2, DARK: 0.5, NORMAL: 0 },
+      DRAGON:   { DRAGON: 2, STEEL: 0.5, FAIRY: 0 },
+      DARK:     { PSYCHIC: 2, GHOST: 2, FIGHTING: 0.5, DARK: 0.5, FAIRY: 0.5 },
+      STEEL:    { ICE: 2, ROCK: 2, FAIRY: 2, FIRE: 0.5, WATER: 0.5, ELECTRIC: 0.5, STEEL: 0.5 },
+      FAIRY:    { FIGHTING: 2, DRAGON: 2, DARK: 2, FIRE: 0.5, POISON: 0.5, STEEL: 0.5 },
+    };
+
+    const PRIORITY_LABELS = {
+        n7: "-7",
+        n6: "-6",
+        n5: "-5",
+        n4: "-4",
+        n3: "-3",
+        n2: "-2",
+        n1: "-1",
+        n0: "0",
+        p1: "+1",
+        p2: "+2",
+        p3: "+3",
+        p4: "+4",
+        p5: "+5",
+    };
+
+    const TARGET_LABELS = {
+        User: "User",
+        SingleTeam: "Single Team",
+        UserAndAllTeamInRange: "User and Team in Range",
+        SingleEnemy: "Single Enemy",
+        RandomEnemy: "Random Enemy",
+        AllEnemyInRange: "All Enemies in Range",
+        Area: "Area",
+        Battlefield: "Battlefield",
+    };
+
     let allPokemonCache = []; // cached list from GET /api/game/pokemons
     let zoom = 1;
     let initiativeMap = {}; // guid → initiative number
     let allMoves = [];
+    let activeMove = null;
+    // eslint-disable-next-line
+    let items = JSON.parse('{{ items | tojson }}');
+
+    function createEffectivenessBadge(multiplier, moveType, target) {
+        const badge = document.createElement("div");
+        badge.style.fontWeight = "bold";
+        badge.style.padding = "2px 6px";
+        badge.style.borderRadius = "6px";
+        badge.style.background = "#111";
+        badge.style.border = "1px solid #444";
+        badge.style.width = "fit-content";
+        badge.style.alignSelf = "center";
+
+        let label = `${multiplier}×`;
+        if (multiplier === 0) label = "0×";
+        else if (multiplier < 1) label = "½×";
+
+        badge.innerHTML = `
+            <div class="tooltip">
+                ${label}
+                <div class="tooltip-content">
+                    <strong>${moveType}</strong><br>
+                    vs ${target.name}<br><br>
+                    <strong>${multiplier}× effective</strong>
+                </div>
+            </div>
+        `;
+
+        // color hint
+        if (multiplier === 0) badge.style.color = "#999";
+        else if (multiplier < 1) badge.style.color = "#f5c04f";
+        else if (multiplier > 1) badge.style.color = "#28c76f";
+
+        return badge;
+    }
+
+    function clearEffectivenessBadges() {
+        document.querySelectorAll(".poke").forEach(card => {
+            if (card._effectivenessShown) {
+                card._effectivenessShown.remove();
+                card._effectivenessShown = null;
+            }
+        });
+    }
+
+    function titleCase(str) {
+        return str
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, s => s.toUpperCase())
+            .trim();
+    }
+
+    function getTypeMultiplier(moveType, targetTypes) {
+        let multiplier = 1;
+
+        targetTypes.forEach(t => {
+            const chart = TYPE_CHART[moveType];
+            if (chart && chart[t] !== undefined) {
+                multiplier *= chart[t];
+            }
+        });
+
+        return multiplier;
+    }
+
+    async function handleMoveDrop(move, target) {
+        const targetTypes = [
+            target.primaryType,
+            target.secondaryType
+        ].filter(Boolean);
+
+        const multiplier = getTypeMultiplier(move.type, targetTypes);
+
+        const { value: accuracy } = await Swal.fire({
+            title: "Accuracy Rolls",
+            input: "number",
+            inputLabel: "Successful accuracy rolls",
+            inputAttributes: { min: 0 },
+            showCancelButton: true
+        });
+
+        if (!accuracy || accuracy < 1) {
+          Swal.fire({
+            toast: true,
+            theme: "dark",
+            title: "Attack missed",
+            position: "top-end",
+            icon: "error",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          return
+        }
+
+
+        const critThreshold = move.isHighCrit ? 4 : 5;
+        const isCrit = accuracy >= critThreshold;
+
+        const { value: damageRolls } = await Swal.fire({
+            title: "Damage Rolls",
+            input: "number",
+            inputLabel: "Successful damage rolls",
+            inputAttributes: { min: 0 },
+            showCancelButton: true
+        });
+
+        if (!damageRolls) return;
+
+        applyDamage(target, damageRolls, multiplier, isCrit);
+    }
+
+    function updateHealthOnServer(target) {
+        fetch('http://127.0.0.1:9000/updateHealth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                gameId: GAME_ID,
+                guid: target.guid,
+                health: target.health
+            })
+        })
+        .then(response => response.json())
+        .then(data => console.log('Health update successful:', data))
+        .catch(error => console.error('Error updating health:', error));
+    }
+
+    function applyDamage(target, rolls, multiplier, isCrit) {
+        let damage = rolls;
+
+        if (multiplier === 0) damage = 0;
+        else if (multiplier === 0.25) damage -= 2;
+        else if (multiplier === 0.5) damage -= 1;
+        else if (multiplier === 2) damage += 1;
+        else if (multiplier === 4) damage += 2;
+
+        if (isCrit) damage += 1;
+
+        damage = Math.max(0, damage);
+
+        // Apply damage locally
+        target.applyDamage(damage);
+
+        // Update backend
+        updateHealthOnServer(target);
+
+        Swal.fire({
+            toast: true,
+            theme: "dark",
+            position: "top-end",
+            title: "Damage Applied",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            text: `${target.name} took ${damage} damage`,
+            icon: damage > 0 ? "success" : "info"
+        });
+    }
+
+    async function loadAllMoves() {
+        const res = await fetch(`${API_BASE}/moveManipulation`);
+        const data = await res.json();
+        allMoves = data.moves; // [{id, name, type}]
+    }
+
+    function createMoveSlot(pokemon, move, slotIndex) {
+        const card = document.createElement("div");
+        card.className = "move-card";
+
+        if (move) {
+            const typeColor = TYPE_COLORS[move.type] || "#aaa";
+            card.style.borderColor = typeColor;
+            // card.style.boxShadow = `0 0 0 1px ${typeColor} inset`;
+            
+            card.innerHTML = renderMoveCard(move);
+            card.draggable = true;
+
+            card.addEventListener("dragstart", e => {
+                activeMove = move;
+
+                e.dataTransfer.setData("moveData", JSON.stringify({
+                    sourceGuid: pokemon.guid,
+                    move: move
+                }));
+            });
+
+        } else {
+            card.innerHTML = `
+                <div class="empty-move-placeholder">
+                    Empty Move Slot
+                </div>
+            `;
+        }
+
+        // Clicking still edits the move
+        card.onclick = () => openMovePicker(pokemon, slotIndex);
+
+        return card;
+    }
+
+    function openMovePicker(pokemon, replaceIndex) {
+        const options = {};
+        allMoves.forEach(m => {
+            options[m.id] = `${m.name} (${m.type})`;
+        });
+
+        Swal.fire({
+            title: `Select move for ${pokemon.name}`,
+            theme: "dark",
+            input: "select",
+            inputOptions: options,
+            inputPlaceholder: "Choose a move",
+            showCancelButton: true,
+            confirmButtonText: "Assign Move",
+        }).then(async result => {
+            if (!result.isConfirmed) return;
+
+            const moveId = result.value;
+
+            const res = await fetch(`${API_BASE}/moveManipulation`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Guid: pokemon.guid,
+                    MoveId: moveId,
+                    ReplaceIndex: replaceIndex
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                Swal.fire("Error", data.error || "Failed to assign move", "error");
+                return;
+            }
+
+            // Update local state
+            const selectedMove = allMoves.find(m => m.id == moveId);
+            pokemon.Moves[data.slot] = data.move;
+
+            // Re-render stage
+            renderStage(currentPokesOnField);
+        });
+    }
 
     function makeTooltip(label, data) {
         if (!data) return label;
@@ -540,7 +1169,6 @@ footer {
             row.style.padding = "4px 8px";
             row.style.background = "rgba(255,255,255,0.02)";
             row.style.borderRadius = "6px";
-            row.style.fontSize = "0.88rem";
 
             // Determine name color
             let nameColor = "inherit";
@@ -577,7 +1205,6 @@ footer {
             row.style.background = "rgba(255,255,255,0.02)";
             row.style.display = "flex";
             row.style.justifyContent = "space-between";
-            row.style.fontSize = "0.88rem";
 
             row.innerHTML = `
                 <div><strong>${index+1}.</strong> ${p.name}</div>
@@ -681,6 +1308,7 @@ footer {
 
     async function loadAll(){
       try{
+          loadAllMoves();
           const res = await fetch(`${API_BASE}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
           if(!res.ok) throw new Error('Failed to load pokemons');
 
@@ -772,11 +1400,11 @@ footer {
             // create card container
             const card = document.createElement('div'); 
             card.className = 'poke';
+            card.draggable = true;
 
             // head (+ meta)
             const head = document.createElement('div'); 
             head.className='head'; 
-            head.style.fontSize = "22px"; 
             head.style.marginLeft = "1%";
 
             const meta = document.createElement('div'); 
@@ -793,6 +1421,25 @@ footer {
             titleRow.appendChild(title);
             meta.appendChild(titleRow);
 
+            const collapseBtn = document.createElement("button");
+            collapseBtn.className = "collapse-toggle";
+            collapseBtn.textContent = "▼";
+
+            collapseBtn.onclick = (e) => {
+                e.stopPropagation();
+                card.classList.toggle("collapsed");
+                collapseBtn.textContent = card.classList.contains("collapsed") ? "▶" : "▼";
+            };
+
+            titleRow.appendChild(collapseBtn);
+
+            head.style.cursor = "pointer";
+            head.onclick = (e) => {
+                if (e.target.closest("button")) return; // don't double-trigger
+                collapseBtn.click();
+            };
+
+
             const sub = document.createElement('div');
             sub.className='sub';
             sub.innerHTML = `GUID: ${p.guid || p.Guid} · ${p.status || 'Healthy'}`;
@@ -803,12 +1450,14 @@ footer {
             // types and item
             const tline = document.createElement('div'); 
             tline.className='types';
+            tline.style.display = "flex";
+            tline.style.alignItems = "center";
+            tline.style.gap = "6px";
 
             if(p.primaryType) { 
                 const t = document.createElement('div'); 
                 t.className='type'; 
                 t.textContent = p.primaryType; 
-                t.style.fontSize = "20px"; 
                 tline.appendChild(t); 
             }
 
@@ -819,11 +1468,19 @@ footer {
                 tline.appendChild(t); 
             }
 
+            const effectivenessSlot = document.createElement("div");
+            effectivenessSlot.className = "effectiveness-slot";
+            effectivenessSlot.style.marginLeft = "6px";
+            effectivenessSlot.style.width = "33.2px"
+            tline.appendChild(effectivenessSlot);
+
+            // store reference for later
+            card._effectivenessSlot = effectivenessSlot;
+
             if (p.heldItem) {
                 const it = document.createElement('div');
                 it.className = 'badge';
                 it.innerHTML = makeTooltip("Item: " + p.heldItem.name, p.heldItem);
-                it.style.fontSize = "17px";
                 tline.appendChild(it);
             }
 
@@ -831,7 +1488,6 @@ footer {
                 const ab = document.createElement('div');
                 ab.className = "badge";
                 ab.innerHTML = makeTooltip("Ability: " + p.ability.name, p.ability);
-                ab.style.fontSize = "17px";
                 tline.appendChild(ab);
             }
 
@@ -839,7 +1495,6 @@ footer {
                 const nt = document.createElement('div');
                 nt.className = "badge";
                 nt.innerHTML = makeTooltip("Nature: " + p.nature.name, p.nature);
-                nt.style.fontSize = "17px";
                 tline.appendChild(nt);
             }
 
@@ -873,10 +1528,11 @@ footer {
             const hpText = document.createElement('span');
             hpText.style.marginLeft = "0.5em";
             hpText.style.color = "var(--muted)";
-            hpText.style.fontSize = "0.9em";
 
             function updateHpBar() {
-                const pct = Math.max(0, Math.min(1, currentHp / maxHp));
+                currentHp = Math.max(0, Math.min(maxHp, p.health ?? maxHp));
+
+                const pct = currentHp / maxHp;
                 fill.style.width = (pct * 100) + "%";
 
                 if (pct > 0.5) fill.style.background = "#28c76f";
@@ -885,17 +1541,26 @@ footer {
 
                 hpText.textContent = ` ${currentHp}/${maxHp} · ${p.status || 'Healthy'}`;
             }
+            
+            // * set refernce to pokemon's own ui updater
+            p._updateHpUI = updateHpBar;
+
+            p.applyDamage = (amount) => {
+                p.health = Math.max(0, (p.health ?? maxHp) - amount);
+                updateHpBar();
+                updateHealthOnServer(p)
+            };
 
             minusBtn.onclick = () => {
-                currentHp = Math.max(0, currentHp - 1);
-                p.health = currentHp;
+                p.health = Math.max(0, (p.health ?? maxHp) - 1);
                 updateHpBar();
+                updateHealthOnServer(p)
             };
 
             plusBtn.onclick = () => {
-                currentHp = Math.min(maxHp, currentHp + 1);
-                p.health = currentHp;
+                p.health = Math.min(maxHp, (p.health ?? maxHp) + 1);
                 updateHpBar();
+                updateHealthOnServer(p)
             };
 
             // Initial render
@@ -914,7 +1579,6 @@ footer {
             const lethalToggle = document.createElement("button");
             lethalToggle.textContent = "Show Lethal HP";
             lethalToggle.style.marginTop = "4px";
-            lethalToggle.style.fontSize = "0.75rem";
             lethalToggle.style.padding = "3px 6px";
 
             // Lethal bar container
@@ -944,7 +1608,6 @@ footer {
             const lethalText = document.createElement("span");
             lethalText.style.marginLeft = "0.5em";
             lethalText.style.color = "var(--muted)";
-            lethalText.style.fontSize = "0.9em";
 
             function updateLethalBar() {
                 const pct = Math.max(0, Math.min(1, currentLethal / maxHp));
@@ -959,6 +1622,7 @@ footer {
 
                 lethalText.textContent = `${currentLethal}/${maxHp} lethal`;
             }
+            p._updateLethalUI = updateLethalBar;
 
             // Lethal button logic
             lethalMinus.onclick = () => {
@@ -995,78 +1659,83 @@ footer {
             card.appendChild(lethalToggle); 
             card.appendChild(lethalContainer);
 
-            // === STATS + MOVES SIDE-BY-SIDE WRAPPER ===
-            const statsAndMoves = document.createElement("div");
-            statsAndMoves.style.display = "flex";
-            statsAndMoves.style.gap = "1rem";
-            statsAndMoves.style.marginTop = "10px";
-            statsAndMoves.style.alignItems = "flex-start";
+            const collapsible = document.createElement("div");
+            collapsible.className = "collapsible";
 
-            // -------- STATS COLUMN --------
-            const bars = document.createElement("div");
-            bars.className = "bars";   // your existing CSS still applies
-            bars.style.flex = "0 0 auto"; // prevent stretching
+            const coreStats = document.createElement("div");
+            coreStats.className = "core-stats";
 
-            const baseStats = [
-                { key: 'strength', potentialKey: 'strengthPotential' },
-                { key: 'dexterity', potentialKey: 'dexterityPotential' },
-                { key: 'vitality', potentialKey: 'vitalityPotential' },
-                { key: 'special', potentialKey: 'specialPotential' },
-                { key: 'insight', potentialKey: 'insightPotential' }
+            const stats = [
+            ["STR", p.strength, p.strengthPotential],
+            ["DEX", p.dexterity, p.dexterityPotential],
+            ["VIT", p.vitality, p.vitalityPotential],
+            ["INS", p.insight, p.insightPotential],
+            ["SPE", p.special, p.specialPotential],
             ];
 
-            baseStats.forEach(s => {
-                const st = document.createElement('div'); 
-                st.className='stat';
-                const label = document.createElement('b'); 
-                label.textContent = s.key;
-                const val = createStatCircles(s.key, p[s.key] ?? 0, p[s.potentialKey] ?? 0);
-                st.appendChild(label);
-                st.appendChild(val);
-                bars.appendChild(st);
+            stats.forEach(([label, value, potential]) => {
+            const stat = document.createElement("div");
+            stat.className = "core-stat";
+
+            const title = document.createElement("b");
+            title.textContent = label;
+
+            stat.appendChild(title);
+            stat.appendChild(createStatCircles(label, value ?? 0, potential ?? 0));
+
+            coreStats.appendChild(stat);
             });
 
-            const skills = [
-                'fight','survival','contest','brawl','evasion',
-                'channel','clash','alert','athletic','nature',
-                'stealth','perform'
-            ];
+            collapsible.appendChild(coreStats);
 
-            skills.forEach(k => {
-                const st = document.createElement('div'); 
-                st.className='stat';
-                const label = document.createElement('b'); 
-                label.textContent = k;
-                const val = createStatCircles(k, p[k] ?? 0, 5);
-                st.appendChild(label);
-                st.appendChild(val);
-                bars.appendChild(st);
-            });
+            const statColumns = document.createElement("div");
+            statColumns.className = "stat-columns";
 
-            // Add stats column to wrapper
-            statsAndMoves.appendChild(bars);
+            statColumns.appendChild(
+                renderStatColumnBattle("Fight", p.fight, [
+                    { name: "Brawl", value: p.brawl },
+                    { name: "Channel", value: p.channel },
+                    { name: "Clash", value: p.clash },
+                    { name: "Evasion", value: p.evasion },
+                ])
+            );
 
-            // -------- MOVES COLUMN --------
+            statColumns.appendChild(
+                renderStatColumnBattle("Survival", p.survival, [
+                    { name: "Alert", value: p.alert },
+                    { name: "Athletic", value: p.athletic },
+                    { name: "Nature", value: p.nature },
+                    { name: "Stealth", value: p.stealth },
+                ])
+            );
+
+            statColumns.appendChild(
+                renderStatColumnBattle("Contest", p.contest, [
+                    { name: "Allure", value: p.allure },
+                    { name: "Etiquette", value: p.etiquette },
+                    { name: "Intimidate", value: p.intimidate },
+                    { name: "Perform", value: p.perform },
+                ])
+            );
+
+            collapsible.appendChild(statColumns);
+
+            // -------- MOVES --------
             if (p.Moves && Array.isArray(p.Moves)) {
                 const movesWrapper = document.createElement("div");
                 movesWrapper.style.display = "grid";
                 movesWrapper.style.gridTemplateColumns = "1fr 1fr";
-                movesWrapper.style.columnGap = "10px";
-                movesWrapper.style.rowGap = "10px";
-                movesWrapper.style.minWidth = "300px";
-                movesWrapper.style.flex = "0 0 0 0";
+                movesWrapper.style.gap = "10px";
+                movesWrapper.style.marginTop = "10px";
 
-                p.Moves.forEach(m => {
-                    const moveCardContainer = document.createElement("div");
-                    moveCardContainer.innerHTML = renderMoveCard(m);
-                    movesWrapper.appendChild(moveCardContainer.firstElementChild);
-                });
+                for (let slot = 0; slot < 4; slot++) {
+                    const move = p.Moves[slot] || null;
+                    const moveCard = createMoveSlot(p, move, slot);
+                    movesWrapper.appendChild(moveCard);
+                }
 
-                statsAndMoves.appendChild(movesWrapper);
+            collapsible.appendChild(movesWrapper);
             }
-
-            // Add whole block to card
-            card.appendChild(statsAndMoves);
 
             // INITIATIVE INPUT AREA (players + NPCs)
             const initBox = document.createElement('div');
@@ -1091,8 +1760,41 @@ footer {
                 updateInitiativePanel(pokes);
             });
 
-            card.appendChild(initBox);
+            card.addEventListener("dragover", e => {
+                e.preventDefault();
 
+                if (!activeMove) return;
+
+                const targetTypes = [p.primaryType, p.secondaryType].filter(Boolean);
+                const multiplier = getTypeMultiplier(activeMove.type, targetTypes);
+
+                if (card._effectivenessShown) return;
+
+                const badge = createEffectivenessBadge(multiplier, activeMove.type, p);
+                card._effectivenessSlot.appendChild(badge);
+                card._effectivenessShown = badge;
+            });
+
+            card.addEventListener("dragleave", () => {
+                if (card._effectivenessShown) {
+                    card._effectivenessShown.remove();
+                    card._effectivenessShown = null;
+                }
+            });
+
+            card.addEventListener("drop", e => {
+                e.preventDefault();
+                activeMove = null;
+                clearEffectivenessBadges();
+
+                const data = JSON.parse(e.dataTransfer.getData("moveData"));
+                handleMoveDrop(data.move, p);
+            });
+
+
+            collapsible.appendChild(initBox);
+
+            card.appendChild(collapsible);
             if (p.isNpc) npcsGrid.appendChild(card);
             else playersGrid.appendChild(card);
 
@@ -1103,97 +1805,143 @@ footer {
         document.documentElement.style.setProperty('--scale', zoom);
     }
 
+    function renderStatColumnBattle(title, statValue, skills, max = 5) {
+        const col = document.createElement("div");
+        col.className = "stat-column";
+
+        const header = document.createElement("b");
+        header.textContent = title;
+
+        // main stat circles (CENTERED UNDER TITLE)
+        const mainCircles = createStatCircles(title.toLowerCase(), statValue ?? 0, max);
+        mainCircles.style.justifyContent = "center";
+
+        header.appendChild(mainCircles);
+        col.appendChild(header);
+
+        skills.forEach(skill => {
+            const row = document.createElement("div");
+            row.className = "stat-row";
+
+            const label = document.createElement("span");
+            label.textContent = skill.name;
+
+            const circles = createStatCircles(
+                skill.name.toLowerCase(),
+                skill.value ?? 0,
+                max
+            );
+
+            row.appendChild(label);
+            row.appendChild(circles);
+            col.appendChild(row);
+        });
+
+        return col;
+    }
 
     function renderMoveCard(move) {
-        const accuracyMods = []
+        const accuracyMods =
+            move.accuracyModifiers?.filter(m => m && m !== "NONE").join(" + ") || "-";
 
         const damageMods = [];
 
         if (move.damageModifiers?.length) {
             damageMods.push(
-                move.damageModifiers
-                    .filter(m => m != null && m !== "NONE")
-                    .join(" + ")
+                move.damageModifiers.filter(m => m && m !== "NONE").join(" + ")
             );
         }
 
-        if (move.accuracyModifiers?.length) {
-            accuracyMods.push(
-              move.accuracyModifiers
-                .filter(m => m != null && m !== "NONE")
-                .join(" + ")
-            )
-        }
-
-        if (move.basePower && move.basePower !== 0) {
+        if (move.basePower) {
             damageMods.push(move.basePower);
         }
 
         const damagePool = damageMods.join(" + ") || "-";
 
-        const tooltip = buildTooltip(move)
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '&#10;');
-        
+        const typeKey = move.type
+            ? move.type.charAt(0).toUpperCase() + move.type.slice(1).toLowerCase()
+            : null;
+
+        const color = TYPE_COLORS[typeKey] || "#aaa";
+
         return `
-        <div class="move-card" title="${tooltip}">
-            <div class="move-header">
-                <span class="move-name">${move.name}</span>
-                <span class="move-right">
-                    Base Power: ${move.basePower ?? "-"} (${move.damageType})
-                </span>
+            <div class="tooltip">
+                <div class="move-header">
+                    <span class="move-name" style="color:${color}">
+                        ${move.name}
+                    </span>
+                    <span class="move-right" style="color:${color}">
+                        ${typeKey}/${move.damageType}
+                    </span>
+                </div>
+
+                <div>Accuracy: ${accuracyMods}</div>
+                <div>Damage Pool: ${damagePool}</div> <br>
+                <div>Added Effect: ${move.effectText || "-"}</div>
+
+                <div class="move-footer">${move.flavorText || ""}</div>
+
+                <div class="tooltip-content">
+                    ${buildTooltip(move).replace(/\n/g, "<br>")}
+                </div>
             </div>
-
-            <div>Type: ${move.type}</div>
-            <div>Accuracy: ${accuracyMods}</div>
-            <div>Damage Pool: ${damagePool}</div>
-            <div>Added Effect: ${move.effectText || "-"}</div>
-
-            <div class="move-footer">${move.flavorText || ""}</div>
-        </div>`;
+        `;
     }
 
     function buildTooltip(move) {
-        const fields = [
-            ["Priority", move.priority],
-            ["Target", move.target],
-            ["Reduced Accuracy", move.reducedAccuracy],
-            ["Crit", move.hasCritical],
-            ["Lethal", move.hasLethal],
-            ["Block", move.hasBlock],
-            ["Recoil", move.hasRecoil],
-            move.hasWeatherChange ? ["Weather Change", move.weatherChangeTo] : null,
-            ["Modified Damage", move.hasModifiedDamage],
-            ["Always Hit", move.alwaysHitEffect],
-            ["Always Fail", move.alwaysFailEffect],
-            ["Charge Move", move.isChargeMove],
-            ["Fist Based", move.isFistBased],
-            ["High Crit", move.isHighCrit],
-            ["Never Fail", move.isNeverFail],
-            move.isHealingMove ? ["Healing Move", "Yes"] : null,
-            move.isShieldMove ? ["Shield Move", "Yes"] : null,
-            move.isSoundBased ? ["Sound Based", "Yes"] : null,
-            move.isSwitchMove ? ["Switch Move", "Yes"] : null,
-            move.requiresRecharge ? ["Requires Recharge", "Yes"] : null,
-            move.isMultiHit ? ["Multi Hit", move.multiHitCount || "Yes"] : null,
+        const lines = [];
+
+        // --- Enum fields ---
+        if (move.target) {
+            lines.push(`Target: ${TARGET_LABELS[move.target] ?? move.target}`);
+        }
+
+        if (move.priority != null) {
+            lines.push(`Priority: ${PRIORITY_LABELS[move.priority] ?? move.priority}`);
+        }
+
+        lines.push(`----------------------`)
+
+        // --- Boolean flags (title-style, no "true") ---
+        const booleanFlags = [
+            ["crit", move.hasCritical],
+            ["lethal", move.hasLethal],
+            ["block", move.hasBlock],
+            ["recoil", move.hasRecoil],
+            ["always hit", move.alwaysHitEffect],
+            ["always fail", move.alwaysFailEffect],
+            ["charge move", move.isChargeMove],
+            ["fist based", move.isFistBased],
+            ["high crit", move.isHighCrit],
+            ["never fail", move.isNeverFail],
+            ["healing move", move.isHealingMove],
+            ["shield move", move.isShieldMove],
+            ["sound based", move.isSoundBased],
+            ["switch move", move.isSwitchMove],
+            ["requires recharge", move.requiresRecharge],
         ];
 
-        const filtered = fields
-            .filter(f =>
-                f &&
-                f[1] !== false &&
-                f[1] !== null &&
-                f[1] !== undefined &&
-                f[1] !== ""
-            )
-            .map(f => `${f[0]}: ${f[1]}`);
+        booleanFlags.forEach(([label, value]) => {
+            if (value === true) {
+                lines.push(`${titleCase(label)}.`);
+            }
+        });
 
-        return filtered.join("\n");
+        // --- Special cases ---
+        if (move.isMultiHit) {
+            lines.push(`Multi Hit${move.multiHitCount ? ` (${move.multiHitCount})` : ""}.`);
+        }
+
+        if (move.hasWeatherChange && move.weatherChangeTo) {
+            lines.push(`Weather Change: ${move.weatherChangeTo}`);
+        }
+
+        if (move.hasModifiedDamage) {
+            lines.push("Modified Damage.");
+        }
+
+        return lines.join("\n");
     }
-
 
     // UI wired actions
     document.getElementById('refresh').addEventListener('click', loadAll);
@@ -1214,7 +1962,7 @@ footer {
         document.querySelectorAll('.selectors').forEach(el => {
             el.style.display = 'none';
         });
-
+        globalAddResourceBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         fetchSelectedAndRender();
@@ -1249,6 +1997,213 @@ footer {
         document.getElementById("clearStage").style.display = "none";
     });
 
+    function openGiveResourcesModal() {
+        // Step 1: choose action
+        Swal.fire({
+            title: "Choose an action",
+            showCancelButton: true,
+            showConfirmButton: false,
+            theme: "dark",
+            html: `
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button id="giveItemBtn" class="swal2-confirm swal2-styled">Give Item</button>
+                    <button id="giveXpBtn" class="swal2-confirm swal2-styled">Give XP</button>
+                    <button id="giveMoneyBtn" class="swal2-confirm swal2-styled">Give Money</button>
+                </div>
+            `,
+            didOpen: () => {
+                const popup = Swal.getPopup();
+                
+                popup.querySelector("#giveItemBtn").addEventListener('click', () => {
+                    Swal.close();
+                    selectPokemonForItem();
+                });
+                popup.querySelector("#giveXpBtn").addEventListener('click', () => {
+                    Swal.close();
+                    selectTargetsForValue("XP");
+                });
+                popup.querySelector("#giveMoneyBtn").addEventListener('click', () => {
+                    Swal.close();
+                    selectTargetsForValue("Money");
+                });
+            }
+        });
+    }
+
+    // Step 2a: select Pokémon for item
+    function selectPokemonForItem() {
+        const playerOptions = currentPokesOnField
+            .filter(p => !p.isNpc)
+            .map(p => `<option value="${p.guid}">${p.name}</option>`)
+            .join('');
+
+        const itemOptions = items.map(it => `<option value="${it.id}">${it.name}</option>`).join('');
+
+        Swal.fire({
+            title: "Give Item",
+            theme: "dark",
+            html: `
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <label>Choose Pokémon:</label>
+                    <select id="selectPokemon" class="swal2-select">
+                        ${playerOptions}
+                    </select>
+
+                    <label>Choose Item:</label>
+                    <select id="selectItem" class="swal2-select">
+                        ${itemOptions}
+                    </select>
+
+                    <button id="newItemBtn" class="btn btn-primary" style="margin-top:5px;">Add New Item</button>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Assign Item",
+            didOpen: () => {
+                document.getElementById('newItemBtn').addEventListener('click', () => {
+                    // Open new item modal (your existing add-item logic)
+                    openAddItemModal(null); // pass null or handle differently for creating item
+                });
+            },
+            preConfirm: () => {
+                const selectedPokemon = document.getElementById('selectPokemon').value;
+                const selectedItem = document.getElementById('selectItem').value;
+                if (!selectedPokemon || !selectedItem) {
+                    Swal.showValidationMessage("Please select both Pokémon and item");
+                    return false;
+                }
+                return { pokemonGuid: selectedPokemon, itemId: selectedItem };
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                const { pokemonGuid, itemId } = result.value;
+                const pokemon = currentPokesOnField.find(p => p.guid === pokemonGuid);
+
+                // assign item to Pokémon via API
+                fetch(`${API_BASE}/addItemToBag/${GAME_ID}/${pokemon.guid}/${itemId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire({
+                        theme: "dark",
+                        title: "Item Assigned",
+                        text: `Item assigned to ${pokemon.name}!`,
+                        toast: true,
+                        position: "top-end",
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        theme: "dark"
+                    });
+                    pokemon.heldItem = items.find(i => i.id == itemId); // Update card UI
+                    renderStage(currentPokesOnField);
+                })
+                .catch(err => Swal.fire('Error', 'Failed to assign item', 'error'));
+            }
+        });
+    }
+
+    // Step 2b: select target(s) for XP or Money
+    function selectTargetsForValue(type) {
+        Swal.fire({
+            title: `Give ${type} to`,
+            theme: "dark",
+            showCancelButton: true,
+            showConfirmButton: false,
+            html: `
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button id="singleBtn" class="swal2-confirm swal2-styled">Single Pokémon</button>
+                    <button id="allBtn" class="swal2-confirm swal2-styled">All non-NPC Pokémon</button>
+                </div>
+            `,
+            didOpen: () => {
+                const popup = Swal.getPopup();
+                popup.querySelector("#singleBtn").addEventListener('click', () => {
+                    Swal.close();
+                    chooseSinglePokemon(type);
+                });
+                popup.querySelector("#allBtn").addEventListener('click', () => {
+                    Swal.close();
+                    enterValueForTargets(type, currentPokesOnField.filter(p => !p.isNPC));
+                });
+            }
+        });
+    }
+
+    // Step 3a: choose a single Pokémon for XP or Money
+    function chooseSinglePokemon(type) {
+        const options = currentPokesOnField
+            .filter(p => !p.isNPC)
+            .map(p => `<option value="${p.guid}">${p.name}</option>`)
+            .join('');
+
+        Swal.fire({
+            title: `Select Pokémon to give ${type}`,
+            theme: "dark",
+            html: `<select id="selectSinglePokemon" class="swal2-select">${options}</select>`,
+            showCancelButton: true,
+            confirmButtonText: "Next",
+            preConfirm: () => document.getElementById('selectSinglePokemon').value
+        }).then(result => {
+            if (result.isConfirmed) {
+                const target = currentPokesOnField.find(p => p.guid === result.value);
+                enterValueForTargets(type, [target]);
+            }
+        });
+    }
+
+    // Step 3b: enter the amount of XP or Money
+    function enterValueForTargets(type, targets) {
+        Swal.fire({
+            title: `Enter amount of ${type}`,
+            theme: "dark",
+            input: 'number',
+            inputAttributes: { min: 0 },
+            showCancelButton: true,
+            confirmButtonText: 'Give',
+            preConfirm: (value) => {
+                if (!value || value < 0) Swal.showValidationMessage(`Please enter a valid ${type}`);
+                return value;
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                const amount = parseInt(result.value);
+                targets.forEach(p => {
+                    if (type === "XP") {
+                        p.ExperiencePoints = (p.ExperiencePoints || 0) + amount;
+                        // optionally update backend
+                        fetch(`${API_BASE}/addXp/${GAME_ID}/${p.guid}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ xp: amount })
+                        });
+                    } else if (type === "Money") {
+                        p.Money = (p.Money || 0) + amount;
+                        // optionally update backend
+                        fetch(`${API_BASE}/addMoney/${GAME_ID}/${p.guid}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ money: amount })
+                        });
+                    }
+                });
+
+                Swal.fire({
+                    toast: true,
+                    theme: "dark",
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `${type} successfully given!`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        });
+    }
+
+
     // quick search filtering
     let searchTimer = null;
     searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderSelects(allPokemonCache), 250) });
@@ -1261,6 +2216,70 @@ footer {
     // - POST /api/pokemon/batch accepts { guids: [...] } and returns { pokemons: [ ...full objects... ] }
     // - If your backend uses different field names, adapt the script to map them (e.g. Guid vs guid)
     // - You may want to enable CORS on port 9000 or serve frontend from the same origin.
+
+    const addItemFormHtml = `
+<form id="addItemForm" style="text-align:left;">
+    <div class="mb-3">
+        <label>Name</label>
+        <input type="text" name="Name" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Description</label>
+        <input type="text" name="Description" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Effect</label>
+        <input type="text" name="Effect" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Item Category</label>
+        <select name="ItemCategory" class="form-select" required>
+            {% for key, value in item_categories %}
+                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Minimum Shop Tier</label>
+        <select name="MinShopTier" class="form-select" required>
+            {% for key, value in shop_tiers %}
+                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Buy Price</label>
+        <input type="number" name="BuyPrice" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Sell Price</label>
+        <input type="number" name="SellPrice" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Add Item</button>
+</form>
+`;
+
+    let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
+
+    if (!globalAddResourceBtn) {
+        globalAddResourceBtn = document.createElement("button");
+        globalAddResourceBtn.id = "globalAddResourceBtn";
+        globalAddResourceBtn.textContent = "Add Resource";
+        globalAddResourceBtn.className = "btn btn-success";
+        globalAddResourceBtn.style.marginTop = "10px";
+        globalAddResourceBtn.style.display = "none"
+
+        // Example: open modal for selected player(s)
+        globalAddResourceBtn.onclick = () => {
+            const selectedPlayers = currentPokesOnField.filter(p => !p.isNpc);
+            openGiveResourcesModal(selectedPlayers);
+        };
+
+        const initiativePanel = document.getElementById("initiativePanel");
+        initiativePanel.insertAdjacentElement("afterend", globalAddResourceBtn);
+    }
+
+
   </script>
 </body>
 </html>

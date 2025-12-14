@@ -1,14 +1,18 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response, stream_with_context
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import SQLAlchemyError
 
 from .database import database
-from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment, AccuracyModifierGroup, DamageModifierGroup, HealMove, MoveEffect, MoveEffectConnection, Move, MoveConnection
-from .utils import generate_game_id, enum_to_dict_list, getBooleanFields, extract_modifiers_from_group
+from .models import BasePokemon, GamePokemon, User, Game, GameEntities, Nature, Ability, Item, Garment, AccuracyModifierGroup, DamageModifierGroup, HealMove, MoveEffect, MoveEffectConnection, Move, MoveConnection, BagItem, PokemonBag
+from .utils import generate_game_id, enum_to_dict_list, getBooleanFields, extract_modifiers_from_group, serialize_move, enum_from_string, STAT_COST_RULES, STAT_TYPE
 
 from .Enums.Types import Types as TypeEnum
+from .Enums.StatusTypes import StatusTypes
+from .Enums.BagSize import BagSizeEnum
 from .Enums.Move.DamageType import DamageTypeEnum
 from .Enums.Move.EffectLevel import EffectLevelEnum
 from .Enums.Move.HealMoveTypes import HealMoveTypesEnum
@@ -17,13 +21,20 @@ from .Enums.Move.Modifier import ModifierEnum
 from .Enums.Move.MoveEffectType import MoveEffectTypeEnum
 from .Enums.Move.Priority import PriorityEnum
 from .Enums.Move.Target import TargetEnum
+from .Enums.Items.ItemCategory import ItemCategoryEnum
+from .Enums.Items.ShopTiers import ShopTierEnum
 
 import secrets
+import time
+import queue
+import json
 
 # Set app
 app = Flask(__name__)
-CORS(app, origins=["*"])
+CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
+
+clients = {}  # { pokemonGuid: Queue() }
 
 # Database Config
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
@@ -105,7 +116,6 @@ class GamePokemonApi(Resource):
 
         if raw is None:
             return {"error": "No JSON received"}, 400
-
         try:
             # 1. Fetch Game using gameId (lowercase from form)
             game = Game.query.filter_by(gameId=raw.get("gameId")).first()
@@ -140,10 +150,10 @@ class GamePokemonApi(Resource):
                 # Base stats
                 baseHealth=base.baseHealth,
                 health=base.baseHealth + base.vitality,
-                will=base.will,
-                logic=base.logic,
-                instinct=base.instinct,
-                primal=base.primal,
+                will=raw.get("will"),
+                logic=raw.get("logic"),
+                instinct=raw.get("instinct"),
+                primal=raw.get("primal"),
 
                 primaryType=base.primaryType,
                 secondaryType=base.secondaryType,
@@ -186,6 +196,15 @@ class GamePokemonApi(Resource):
                 if garment:
                     gamePokemon.garments.append(garment)
 
+            database.session.commit()
+
+            # 4.5 Create and Attach Bag to Pokemon
+            pokemonBag = PokemonBag(
+                pokemonId=gamePokemon.id,
+                bagSize=BagSizeEnum.size5
+            )
+
+            database.session.add(pokemonBag)
             database.session.commit()
 
             # 5. Link Pokémon into gameEntities table
@@ -249,7 +268,7 @@ class Register(Resource):
 
         return {"message": "User registered successfully"}, 201
 
-class Login(Resource):
+class MasterLogin(Resource):
     def get(self):
         return render_template_string(login_template)
 
@@ -260,8 +279,9 @@ class Login(Resource):
         password = data.get("password")
 
         user = User.query.filter_by(username=username).first()
+        print(user)
         if not user:
-            return {"message": "Invalid username or password"}, 401
+            return {"status": 401, "message": "Invalid username or password"}, 401
 
         # Recreate salted hash input
         salted_input = user.passwordSalt + password
@@ -270,7 +290,241 @@ class Login(Resource):
             return {"message": "Invalid username or password"}, 401
 
         game_Id = Game.query.filter_by(userId=user.id).first().gameId
-        return {"message": f"Welcome, {username}!", "userId": user.id, "gameId": game_Id}, 200
+        return {"status": 200, "message": f"Welcome, {username}!", "userId": user.id, "gameId": game_Id}, 200
+
+class PlayerData(Resource):
+    def get(self, gameId, playerGuid):
+        pokemon = (
+            database.session.query(GamePokemon)
+            .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
+            .join(Game, GameEntities.gameId == Game.id)
+            .filter(Game.gameId == gameId)
+            .filter(GamePokemon.Guid == playerGuid)
+            .first()
+        )
+
+        if not pokemon:
+            return {
+                "message": "Pokémon not found for given GUID in this game"
+            }, 404
+
+        base = pokemon.basePokemon
+        nature = Nature.query.get(pokemon.natureId) if pokemon.natureId else None
+        ability = Ability.query.get(pokemon.abilityId) if pokemon.abilityId else None
+        item = Item.query.get(pokemon.itemId) if pokemon.itemId else None
+
+        # ---------- POKÉMON BAG ----------
+        bag_data = None
+        if pokemon.bag:
+            bag_data = {
+                "id": pokemon.bag.id,
+                "bagSize": pokemon.bag.bagSize.name if pokemon.bag.bagSize else None,
+                "items": [
+                    {
+                        "id": bag_item.id,
+                        "itemId": bag_item.itemId,
+                        "name": bag_item.item.name if bag_item.item else None,
+                        "itemCategory": bag_item.item.itemCategory if bag_item.item else None,
+                        "itemCategory": bag_item.item.itemCategory.value if bag_item.item else None,
+                        "minShopTier": bag_item.item.minShopTier.value if bag_item.item else None,
+                        "effect": bag_item.item.effect if bag_item.item else None,
+                        "description": bag_item.item.description or "",
+                        "buyPrice": bag_item.item.buyPrice if bag_item.item else None,
+                        "sellPrice": bag_item.item.sellPrice if bag_item.item else None,
+                    }
+                    for bag_item in pokemon.bag.items
+                ]
+            }
+
+        # ---------- MOVE PROCESSING ----------
+        moves_data = []
+
+        for mc in pokemon.move_connections:
+            move = mc.move
+
+            acc_mods = extract_modifiers_from_group(
+                move.accuracy_modifier_group,
+                "accuracyModifier"
+            )
+
+            dmg_mods = extract_modifiers_from_group(
+                move.damage_modifier_group,
+                "damageModifier"
+            )
+
+            heal_data = None
+            if move.heal_move:
+                heal_data = {
+                    "healType": move.heal_move.healType.name
+                        if move.heal_move.healType else None,
+                    "healAmount": move.heal_move.healAmount
+                }
+
+            effects = [
+                {
+                    "effect": conn.move_effect.effect.name,
+                    "effectLevel": conn.move_effect.effectLevel.name,
+                    "effectLevelDice": conn.move_effect.effectLevelDice
+                }
+                for conn in move.effect_connections
+            ]
+
+            moves_data.append({
+                "id": move.id,
+                "name": move.name,
+                "type": move.type.value if move.type else None,
+                "damageType": move.damageType.name if move.damageType else None,
+                "basePower": move.basePower,
+                "target": move.target.value if move.target else None,
+                "priority": move.priority.name if move.priority else None,
+                "accuracyModifiers": acc_mods,
+                "damageModifiers": dmg_mods,
+                "reducedAccuracy": move.reducedAccuracy,
+                "hasCritical": move.hasCritical,
+                "hasLethal": move.hasLethal,
+                "hasBlock": move.hasBlock,
+                "hasRecoil": move.hasRecoil,
+                "hasWeatherChange": move.hasWeatherChange,
+                "weatherChangeTo": move.weatherChangeTo.name
+                    if move.weatherChangeTo else None,
+                "hasModifiedDamage": move.hasModifiedDamage,
+                "alwaysHitEffect": move.alwaysHitEffect,
+                "alwaysFailEffect": move.alwaysFailEffect,
+                "isChargeMove": move.isChargeMove,
+                "isFistBased": move.isFistBased,
+                "isHighCrit": move.isHighCrit,
+                "isNeverFail": move.isNeverFail,
+                "isHealingMove": move.isHealingMove,
+                "isShieldMove": move.isShieldMove,
+                "isSoundBased": move.isSoundBased,
+                "isMultiHit": move.isMultiHit,
+                "multiHitCount": move.multiHitCount.name
+                    if move.multiHitCount else None,
+                "isSwitchMove": move.isSwitchMove,
+                "requiresRecharge": move.requiresRecharge,
+                "healMove": heal_data,
+                "effects": effects,
+                "effectText": move.effectText,
+                "flavorText": move.flavorText,
+            })
+
+        # ---------- SINGLE POKÉMON RESPONSE ----------
+        pokemon_data = {
+            "GameId": gameId,
+            "Guid": pokemon.Guid,
+            "Name": pokemon.name,
+            "Level": pokemon.level,
+            "Gender": pokemon.gender,
+            "Age": pokemon.age,
+            "Apples": pokemon.apples,
+
+            "Nature": {
+                "name": nature.name,
+                "description": nature.description,
+            } if nature else None,
+
+            "Ability": {
+                "name": ability.name,
+                "flavorText": ability.flavorText,
+                "effect": ability.effect,
+            } if ability else None,
+
+            "HeldItem": {
+                "name": item.name,
+                "description": item.description,
+                "effect": item.effect,
+                "itemCategory": item.itemCategory.value,
+                "minShopTier": item.minShopTier.value
+            } if item else None,
+
+            "Garments": [g.name for g in pokemon.garments],
+            "Status": pokemon.status,
+
+            "BaseHealth": pokemon.baseHealth or base.baseHealth,
+            "Health": pokemon.health,
+
+            "Will": pokemon.will or base.will,
+            "Logic": pokemon.logic or base.logic,
+            "Instinct": pokemon.instinct or base.instinct,
+            "Primal": pokemon.primal or base.primal,
+
+            "PrimaryType": pokemon.primaryType.value if pokemon.primaryType else base.primaryType.value,
+            "SecondaryType": (
+                pokemon.secondaryType.value if pokemon.secondaryType
+                else base.secondaryType.value if base.secondaryType else None
+            ),
+
+            # Stats
+            "Strength": pokemon.strength if pokemon.strength is not None else base.strength,
+            "StrengthPotential": pokemon.strengthPotential if pokemon.strengthPotential is not None else base.strengthPotential,
+            "Dexterity": pokemon.dexterity if pokemon.dexterity is not None else base.dexterity,
+            "DexterityPotential": pokemon.dexterityPotential if pokemon.dexterityPotential is not None else base.dexterityPotential,
+            "Vitality": pokemon.vitality if pokemon.vitality is not None else base.vitality,
+            "VitalityPotential": pokemon.vitalityPotential if pokemon.vitalityPotential is not None else base.vitalityPotential,
+            "Special": pokemon.special if pokemon.special is not None else base.special,
+            "SpecialPotential": pokemon.specialPotential if pokemon.specialPotential is not None else base.specialPotential,
+            "Insight": pokemon.insight if pokemon.insight is not None else base.insight,
+            "InsightPotential": pokemon.insightPotential if pokemon.insightPotential is not None else base.insightPotential,
+
+            # Skills
+            "Fight": pokemon.fight if pokemon.fight is not None else base.fight,
+            "Survival": pokemon.survival if pokemon.survival is not None else base.survival,
+            "Contest": pokemon.contest if pokemon.contest is not None else base.contest,
+            "Brawl": pokemon.brawl if pokemon.brawl is not None else base.brawl,
+            "Channel": pokemon.channel if pokemon.channel is not None else base.channel,
+            "Clash": pokemon.clash if pokemon.clash is not None else base.clash,
+            "Evasion": pokemon.evasion if pokemon.evasion is not None else base.evasion,
+            "Alert": pokemon.alert if pokemon.alert is not None else base.alert,
+            "Athletic": pokemon.athletic if pokemon.athletic is not None else base.athletic,
+            "NatureStat": pokemon.natureStat if pokemon.natureStat is not None else base.natureStat,
+            "Stealth": pokemon.stealth if pokemon.stealth is not None else base.stealth,
+            "Allure": pokemon.allure if pokemon.allure is not None else base.allure,
+            "Etiquette": pokemon.etiquette if pokemon.etiquette is not None else base.etiquette,
+            "Intimidate": pokemon.intimidate if pokemon.intimidate is not None else base.intimidate,
+            "Perform": pokemon.perform if pokemon.perform is not None else base.perform,
+
+            "ExperiencePoints": pokemon.experiencePoints,
+            "IsNpc": pokemon.isNpc,
+            "PlayerColor": pokemon.playerColor,
+
+            "Moves": moves_data,
+            "MoveIds": [mc.move.id for mc in pokemon.move_connections],
+
+            "Bag": bag_data
+        }
+
+        return {"data": pokemon_data}, 200
+
+class PlayerLogin(Resource):
+    def post(self):
+        data = request.form if request.form else request.json
+
+        gameId = data.get("gameId")
+        gameColor = data.get("gameColor")
+
+        player = (
+            database.session.query(GamePokemon)
+            .join(GameEntities, GameEntities.pokemonId == GamePokemon.id)
+            .join(Game, Game.id == GameEntities.gameId)
+            .filter(Game.gameId == gameId)
+            .filter(GamePokemon.playerColor == gameColor)
+            .filter(GamePokemon.isNpc == False)
+            .first()
+        )
+
+        if not player:
+            return {
+                "status": 404,
+                "message": f"Player with color {gameColor} not found within game: {gameId}"
+            }   
+        return {
+            "gameId": gameId,
+            "playerGuid": player.Guid,
+            "ExperiencePoints": player.experiencePoints,
+            "Apples": player.apples,
+            "status": 200,
+            "message": "Successfully logged in as player"
+        }
 
 class PullCharacterData(Resource):
     def get(self, gameId, guid):
@@ -786,31 +1040,6 @@ class AbilityApi(Resource):
 
         return jsonify(data)
 
-class ItemApi(Resource):
-    def post(self):
-        data = request.get_json()
-
-        newItem = Item(
-            name=data.get("Name"),
-            description=data.get("Description"),
-            effect=data.get("Effect")
-        )
-        database.session.add(newItem)
-        database.session.commit()
-    
-    def get(self):
-        items = Item.query.all()
-
-        data = [{"id": None, "name": "None"}]
-
-        for i in items:
-            data.append({
-                "id": i.id,
-                "name": i.name
-            })
-
-        return jsonify(data)
-
 class GarmentApi(Resource):
     def get(self):
         garments = Garment.query.all()
@@ -986,7 +1215,7 @@ class MoveManipulation(Resource):
         move_count = len(current_moves)
 
         # ------------------------------------------------------------
-        # REPLACE MOVE
+        # REPLACE OR ADD MOVE
         # ------------------------------------------------------------
         if replace_index is not None:
             replace_index = int(replace_index)
@@ -994,20 +1223,36 @@ class MoveManipulation(Resource):
             if replace_index < 0 or replace_index >= 4:
                 return {"error": "ReplaceIndex must be 0-3"}, 400
 
-            if replace_index >= move_count:
-                return {"error": f"No move exists at index {replace_index}"}, 400
-
             if any(mc.moveId == move_id for mc in current_moves):
                 return {"error": "Pokémon already knows this move"}, 400
 
-            mc = current_moves[replace_index]
-            mc.moveId = move_id
+            # CASE 1: Replace existing move
+            if replace_index < move_count:
+                mc = current_moves[replace_index]
+                mc.moveId = move_id
+                database.session.commit()
+
+                return {
+                    "message": "Move replaced",
+                    "slot": replace_index,
+                    "move": serialize_move(move)
+                }, 200
+
+            # CASE 2: Slot empty → add to next free slot
+            if move_count >= 4:
+                return {"error": "Already has 4 moves"}, 400
+
+            new_mc = MoveConnection(
+                pokemonId=pokemon.id,
+                moveId=move_id
+            )
+            database.session.add(new_mc)
             database.session.commit()
 
             return {
-                "message": "Move replaced",
-                "slot": replace_index,
-                "move": move.name
+                "message": "Move added",
+                "slot": move_count,
+                "move": serialize_move(move)
             }, 200
 
         # ------------------------------------------------------------
@@ -1025,8 +1270,563 @@ class MoveManipulation(Resource):
 
         return {"message": "Move added", "move": move.name}, 200
 
+class ItemApi(Resource):
+    def post(self):
+        data = request.get_json()
+
+        newItem = Item(
+            name=data.get("Name"),
+            description=data.get("Description"),
+            effect=data.get("Effect"),
+            itemCategory=enum_from_string(ItemCategoryEnum, data.get("ItemCategory")),
+            minShopTier=enum_from_string(ShopTierEnum, data.get("MinShopTier")),
+            buyPrice=data.get("BuyPrice"),
+            sellPrice=data.get("SellPrice")
+        )
+
+        database.session.add(newItem)
+        database.session.commit()
+    
+    def get(self):
+        items = Item.query.all()
+
+        data = [{
+            "id": None,
+            "name": "None",
+            "description": None,
+            "effect": None,
+            "itemCategory": None,
+            "minShopTier": None,
+            "buyPrice": None,
+            "sellPrice": None
+        }]
+
+        data.extend(item.to_dict() for item in items)
+
+        return jsonify(data)
+
+class BuyItem(Resource):
+    def post(self):
+        raw = request.get_json()
+
+        if raw is None:
+            return {"error": "No JSON received"}, 400
+
+        try:
+            gameId = raw.get("gameId")
+            pokemonGuid = raw.get("pokemonGuid")
+            itemId = raw.get("itemId")
+            print(gameId, pokemonGuid, itemId)
+            # 1. Fetch game
+            game = Game.query.filter_by(gameId=gameId).first()
+            if not game:
+                return {"error": "Game not found"}, 404
+
+            # 2. Fetch Pokémon via GameEntities + Guid
+            gameEntity = (
+                GameEntities.query
+                .join(GamePokemon)
+                .filter(
+                    GameEntities.gameId == game.id,
+                    GamePokemon.Guid == pokemonGuid
+                )
+                .first()
+            )
+
+            if not gameEntity:
+                return {"error": "Pokémon not found in this game"}, 404
+
+            pokemon = GamePokemon.query.get(gameEntity.pokemonId)
+
+            # 3. Ensure Pokémon has a bag
+            if not pokemon.bag:
+                return {"error": "Pokémon has no bag"}, 400
+
+            bag = pokemon.bag
+
+            # 4. Fetch item
+            item = Item.query.get(itemId)
+            if not item:
+                return {"error": "Item not found"}, 404
+
+            # 5. Check bag capacity
+            current_items = len(bag.items)
+            max_capacity = bag.bagSize.value
+
+            if current_items >= max_capacity:
+                return {"error": "Bag is full"}, 400
+
+            # 6. Check apples (currency)
+            if pokemon.apples < item.buyPrice:
+                return {
+                    "error": "Not enough apples",
+                    "required": item.buyPrice,
+                    "current": pokemon.apples
+                }, 400
+
+            # 7. Deduct apples
+            pokemon.apples -= item.buyPrice
+
+            # 8. Add item to bag
+            bag_item = BagItem(
+                itemId=item.id,
+                bagId=bag.id
+            )
+
+            database.session.add(bag_item)
+            database.session.commit()
+
+            return {
+                "success": True,
+                "message": f"{pokemon.name} bought {item.name}",
+                "item": item.to_dict(),
+                "remainingApples": pokemon.apples,
+                "bagUsage": f"{current_items + 1}/{max_capacity}"
+            }, 200
+
+        except Exception as e:
+            database.session.rollback()
+            print("BUY ITEM ERROR:", e)
+            return jsonify({"error": str(e)}), 500
+
+@app.route('/updateHealth', methods=['POST'])
+def UpdateHealth():
+    data = request.get_json()
+    game_id = data.get('gameId')
+    guid = data.get('guid')
+    new_health = data.get('health')
+
+    if not game_id or not guid or new_health is None:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    # Find the game (optional, ensures game exists)
+    game = Game.query.filter_by(gameId=game_id).first()
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+
+    # Find the Pokémon by GUID
+    pokemon = GamePokemon.query.filter_by(Guid=guid).first()
+    if not pokemon:
+        return jsonify({"error": "Pokemon not found"}), 404
+
+    # Update health
+    pokemon.health = new_health
+
+    # Set status to FAINTED if health is zero
+    if pokemon.health <= 0:
+        pokemon.status = StatusTypes.FAINTED.value
+    elif pokemon.status == StatusTypes.FAINTED.value and pokemon.health > 0:
+        # Optional: revive if health goes above 0
+        pokemon.status = StatusTypes.HEALTHY.value
+
+    database.session.commit()
+
+    subscribers = clients.get(guid, set())
+
+    for q in list(subscribers):
+        q.put({
+            "Health": pokemon.health,
+            "Status": pokemon.status
+        })
+
+    return jsonify({
+        "success": True,
+        "pokemon": {
+            "name": pokemon.name,
+            "guid": pokemon.Guid,
+            "health": pokemon.health,
+            "status": pokemon.status
+        }
+    }), 200
+
+@app.route("/playerData/<string:gameId>/<string:pokemonGuid>/buyStat", methods=["POST"])
+def BuyStat(gameId, pokemonGuid):
+    raw = request.get_json()
+    if not raw:
+        return {"error": "No JSON received"}, 400
+
+    stat_name = raw.get("stat")
+    if not stat_name:
+        return {"error": "Stat name is required"}, 400
+
+    # 1. Fetch Pokémon (same pattern you already use)
+    pokemon = (
+        GamePokemon.query
+        .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
+        .join(Game, GameEntities.gameId == Game.id)
+        .filter(
+            Game.gameId == gameId,
+            GamePokemon.Guid == pokemonGuid
+        )
+        .first()
+    )
+
+    if not pokemon:
+        return {"error": "Pokémon not found"}, 404
+
+    # 2. Validate stat
+    stat_type = STAT_TYPE.get(stat_name)
+    if stat_type is None:
+        return {"error": f"{stat_name} cannot be purchased"}, 400
+
+    cost_fn = STAT_COST_RULES.get(stat_type)
+    if not cost_fn:
+        return {"error": "Invalid stat configuration"}, 500
+
+    # 3. Get current stat value dynamically
+    if not hasattr(pokemon, stat_name.lower()):
+        return {"error": f"Unknown stat: {stat_name}"}, 400
+
+    current_value = getattr(pokemon, stat_name.lower())
+
+    # 4. Compute cost
+    cost = cost_fn(current_value)
+
+    if pokemon.experiencePoints < cost:
+        return {
+            "error": "Not enough XP",
+            "required": cost,
+            "current": pokemon.experiencePoints
+        }, 400
+
+    # 5. Apply stat + XP deduction
+    setattr(pokemon, stat_name.lower(), current_value + 1)
+    pokemon.experiencePoints -= cost
+
+    database.session.commit()
+
+    return {
+        "success": True,
+        "stat": stat_name,
+        "newValue": current_value + 1,
+        "xpSpent": cost,
+        "remainingXP": pokemon.experiencePoints
+    }, 200
+
+@app.route("/itemEnums", methods=["GET"])
+def GetItemEnums():
+    # Return enums as lists of tuples [(name, value), ...] to preserve order
+    item_categories = [(e.name, e.value) for e in ItemCategoryEnum]
+    shop_tiers = [(e.name, e.value) for e in ShopTierEnum]
+    
+    return {
+        "ItemCategoryEnum": item_categories,
+        "ShopTierEnum": shop_tiers
+    }
+
+@app.route("/addItemToBag/<string:gameId>/<string:pokemonGuid>/<string:itemId>", methods=["POST"])
+def AddItemToBag(gameId, pokemonGuid, itemId):
+    print(gameId, pokemonGuid, itemId)
+    try:
+        # 1. Find the game
+        game = Game.query.filter_by(gameId=gameId).first()
+        if not game:
+            return jsonify({"success": False, "message": "Game not found"}), 404
+
+        # 2. Find the Pokémon in that game
+        game_entity = GameEntities.query.join(GamePokemon).filter(
+            GameEntities.gameId == game.id,
+            GamePokemon.Guid == pokemonGuid
+        ).first()
+
+        if not game_entity:
+            return jsonify({"success": False, "message": "Pokémon not found in this game"}), 404
+
+        pokemon = game_entity.pokemon
+
+        # 3. Find the item
+        item = Item.query.filter_by(id=int(itemId)).first()
+        if not item:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+
+        # 4. Ensure the Pokémon has a bag
+        if not pokemon.bag:
+            new_bag = PokemonBag(bagSize=BagSizeEnum.size5, pokemon=pokemon)
+            database.session.add(new_bag)
+            database.session.commit()
+
+        # 5. Check bag capacity
+        current_items_count = len(pokemon.bag.items)
+        try:
+            max_items = int(pokemon.bag.bagSize.value.replace('size', ''))
+        except Exception:
+            max_items = 5  # default fallback
+
+        if current_items_count >= max_items:
+            return jsonify({"success": False, "message": "Bag is full"}), 400
+
+        # 6. Add the item to the bag
+        bag_item = BagItem(itemId=item.id, bagId=pokemon.bag.id)
+        database.session.add(bag_item)
+        database.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"{item.name} added to {pokemon.name}'s bag",
+            "item": item.to_dict()
+        })
+
+    except Exception as e:
+        database.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route("/equipItem/<string:gameId>/<string:pokemonGuid>/<int:itemId>", methods=["POST"])
+def EquipItem(gameId, pokemonGuid, itemId):
+    try:
+        # ---- Find Pokémon ----
+        pokemon = (
+            database.session.query(GamePokemon)
+            .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
+            .join(Game, GameEntities.gameId == Game.id)
+            .filter(Game.gameId == gameId)
+            .filter(GamePokemon.Guid == pokemonGuid)
+            .first()
+        )
+
+        if not pokemon:
+            return {"error": "Pokémon not found"}, 404
+
+        if not pokemon.bag:
+            return {"error": "Pokémon has no bag"}, 400
+
+        # ---- Find BagItem ----
+        bag_item = BagItem.query.filter_by(
+            id=itemId,
+            bagId=pokemon.bag.id
+        ).first()
+
+        if not bag_item:
+            return {"error": "Item not found in Pokémon bag"}, 404
+
+        item = bag_item.item
+
+        # ---- Validate Held Item ----
+        if item.itemCategory != ItemCategoryEnum.HELD_ITEM:
+            return {"error": "Only Held Items can be equipped"}, 400
+
+        bag = pokemon.bag
+        bag_limit = int(bag.bagSize.name.replace("size", ""))  # size5 → 5
+
+        # ---- Transaction starts ----
+        # If Pokémon already has an item equipped, we will swap
+        currently_equipped_item = pokemon.heldItem
+
+        # If swapping, bag must have space AFTER removal
+        if currently_equipped_item:
+            # removing one, adding one → net 0
+            pass
+        else:
+            # removing one → always safe
+            pass
+
+        # ---- Remove new item from bag ----
+        database.session.delete(bag_item)
+
+        # ---- If Pokémon had an item, put it back in the bag ----
+        if currently_equipped_item:
+            # Check capacity (safety check)
+            if len(bag.items) >= bag_limit:
+                database.session.rollback()
+                return {"error": "Bag is full"}, 400
+
+            returned_item = BagItem(
+                itemId=currently_equipped_item.id,
+                bagId=bag.id
+            )
+            database.session.add(returned_item)
+
+        # ---- Equip new item ----
+        pokemon.itemId = item.id
+
+        database.session.commit()
+
+        return {
+            "success": True,
+            "equippedItem": item.to_dict()
+        }, 200
+
+    except Exception as e:
+        database.session.rollback()
+        return {"error": str(e)}, 500
+
+@app.route("/sellItem/<string:gameId>/<string:pokemonGuid>/<int:bagItemId>", methods=["POST"])
+def SellItem(gameId, pokemonGuid, bagItemId):
+    try:
+        pokemon = GamePokemon.query.filter_by(Guid=pokemonGuid).first()
+        if not pokemon or not pokemon.bag:
+            return jsonify(error="Pokémon or bag not found"), 404
+
+        bag_item = BagItem.query.filter_by(
+            id=bagItemId,
+            bagId=pokemon.bag.id
+        ).first()
+
+        if not bag_item:
+            return jsonify(error="Item not found in bag"), 404
+
+        item = bag_item.item
+        sell_price = item.sellPrice or 0
+
+        if sell_price <= 0:
+            return jsonify(error="Item cannot be sold"), 400
+
+        pokemon.apples += sell_price
+        database.session.delete(bag_item)
+        database.session.commit()
+
+        return jsonify({
+            "success": True,
+            "applesGained": sell_price,
+            "totalApples": pokemon.apples
+        })
+
+    except Exception as e:
+        database.session.rollback()
+        return jsonify(error=str(e)), 500
+
+@app.route("/getApples/<string:gameId>/<string:playerGuid>", methods=["POST"])
+def GetApples(gameId, playerGuid):
+    game = Game.query.filter_by(gameId=gameId).first()
+    if not game:
+        return jsonify({"success": False, "error": "Game not found"}), 404
+
+    entity = GameEntities.query.filter_by(gameId=game.id).join(GamePokemon).filter(GamePokemon.Guid == playerGuid).first()
+    if not entity:
+        return jsonify({"success": False, "error": "Player not found in this game"}), 404
+
+    player = entity.pokemon
+
+    return jsonify({"success": True, "apples": player.apples})
+
+@app.route("/addXp/<game_id>/<pokemon_guid>", methods=["POST"])
+def AddXp(game_id, pokemon_guid):
+    data = request.get_json()
+    xp = data.get("xp", 0)
+
+    if xp < 0:
+        return jsonify({"error": "XP cannot be negative"}), 400
+
+    pokemon = GamePokemon.query.filter_by(Guid=pokemon_guid).first()
+    if not pokemon:
+        return jsonify({"error": "Pokémon not found"}), 404
+
+    pokemon.experiencePoints = (pokemon.experiencePoints or 0) + xp
+    database.session.commit()
+
+    return jsonify({
+        "guid": pokemon.Guid,
+        "new_xp": pokemon.experiencePoints
+    })
+
+@app.route("/addMoney/<game_id>/<pokemon_guid>", methods=["POST"])
+def AddMoney(game_id, pokemon_guid):
+    data = request.get_json()
+    money = data.get("money", 0)
+
+    if money < 0:
+        return jsonify({"error": "Money cannot be negative"}), 400
+
+    pokemon = GamePokemon.query.filter_by(Guid=pokemon_guid).first()
+    if not pokemon:
+        return jsonify({"error": "Pokémon not found"}), 404
+
+    pokemon.apples = (pokemon.apples or 0) + money
+    database.session.commit()
+
+    return jsonify({
+        "guid": pokemon.Guid,
+        "new_money": pokemon.apples
+    })
+
+@app.route("/addXpBatch/<game_id>", methods=["POST"])
+def AddXpBatch(game_id):
+    data = request.get_json()
+    guids = data.get("guids", [])
+    xp = data.get("xp", 0)
+
+    if xp < 0:
+        return jsonify({"error": "XP cannot be negative"}), 400
+
+    pokes = GamePokemon.query.filter(GamePokemon.Guid.in_(guids)).all()
+    for p in pokes:
+        p.experiencePoints = (p.experiencePoints or 0) + xp
+    database.session.commit()
+
+    return jsonify({"updated": [p.Guid for p in pokes]})
+
+@app.route("/addMoneyBatch/<game_id>", methods=["POST"])
+def AddMoneyBatch(game_id):
+    data = request.get_json()
+    guids = data.get("guids", [])
+    money = data.get("money", 0)
+
+    if money < 0:
+        return jsonify({"error": "Money cannot be negative"}), 400
+
+    pokes = GamePokemon.query.filter(GamePokemon.Guid.in_(guids)).all()
+    for p in pokes:
+        p.apples = (p.apples or 0) + money
+    database.session.commit()
+
+    return jsonify({"updated": [p.Guid for p in pokes]})
+
+@app.route("/pokemonStatus/<string:gameId>/<string:pokemonGuid>")
+def PokemonmStatus(gameId, pokemonGuid):
+    game = Game.query.filter_by(gameId=gameId).first()
+    if not game:
+        return jsonify({"success": False, "message": "Game not found"}), 404
+
+    # 2. Find the Pokémon in that game
+    game_entity = GameEntities.query.join(GamePokemon).filter(
+        GameEntities.gameId == game.id,
+        GamePokemon.Guid == pokemonGuid
+    ).first()
+
+    if not game_entity:
+        return jsonify({"success": False, "message": "Pokémon not found in this game"}), 404
+
+    pokemon = game_entity.pokemon
+
+    return {
+        "Status": pokemon.status,
+        "Health": pokemon.health
+    }, 200 
+
+@app.route("/pokemonStatusStream/<string:gameId>/<string:pokemonGuid>")
+def pokemonStatusStream(gameId, pokemonGuid):
+    q = queue.Queue()
+
+    subscribers = clients.setdefault(pokemonGuid, set())
+    subscribers.add(q)
+
+    def event_stream():
+        try:
+            pokemon = GamePokemon.query.filter_by(Guid=pokemonGuid).first()
+            if pokemon:
+                yield f"data: {json.dumps({
+                    'Health': pokemon.health,
+                    'Status': pokemon.status
+                })}\n\n"
+            while True:
+                data = q.get()
+                yield f"data: {json.dumps(data)}\n\n"
+        finally:
+            subscribers.remove(q)
+
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
 api.add_resource(Register, "/register")
-api.add_resource(Login, "/login")
+api.add_resource(MasterLogin, "/masterLogin")
+api.add_resource(PlayerLogin, "/playerLogin")
+api.add_resource(PlayerData, "/playerData/<string:gameId>/<string:playerGuid>")
 api.add_resource(PullCharacterData, "/PullCharacterData/<string:gameId>/<string:guid>")
 api.add_resource(BasePokemonApi, "/basePokemon")
 api.add_resource(GamePokemonApi, '/gamePokemon')
@@ -1037,6 +1837,8 @@ api.add_resource(AbilityApi, "/ability")
 api.add_resource(ItemApi, "/item")
 api.add_resource(GarmentApi, "/garment")
 api.add_resource(MoveManipulation, "/moveManipulation")
+
+api.add_resource(BuyItem, "/buyItem")
 
 api.add_resource(AddMove, "/addMove")
 
