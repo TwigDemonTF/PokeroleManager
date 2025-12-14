@@ -3,7 +3,7 @@
 def test_login_success(client):
     client.post("/register", json={"username": "misty", "password": "togepi"})
     
-    response = client.post("/login", json={
+    response = client.post("/masterLogin", json={
         "username": "misty",
         "password": "togepi"
     })
@@ -15,7 +15,7 @@ def test_login_success(client):
 def test_login_wrong_password(client):
     client.post("/register", json={"username": "misty", "password": "togepi"})
 
-    response = client.post("/login", json={
+    response = client.post("/masterLogin", json={
         "username": "misty",
         "password": "wrongpass"
     })
