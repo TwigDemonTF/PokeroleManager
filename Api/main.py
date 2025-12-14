@@ -1846,7 +1846,7 @@ def pokemonStatusStream(gameId, pokemonGuid):
             "X-Accel-Buffering": "no"
         }
     )
-
+#edit
 @app.route("/playerStateStream/<gameId>/<pokemonGuid>")
 def player_state_stream(gameId, pokemonGuid):
     q = queue.Queue()
