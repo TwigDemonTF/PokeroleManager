@@ -152,13 +152,13 @@ function loadEnum(selectId, values) {
 }
 
 async function loadAllFKs() {
-    const tmp1 = loadSelect("BasePokemonId", "http://127.0.0.1:9000/basePokemon");
-    const tmp2 = loadSelect("NatureId", "http://127.0.0.1:9000/nature");
-    const tmp3 = loadSelect("AbilityId", "http://127.0.0.1:9000/ability");
-    const tmp4 = loadSelect("ItemId", "http://127.0.0.1:9000/item");
-    const tmp5 = loadSelect("Garment1", "http://127.0.0.1:9000/garment");
-    const tmp6 = loadSelect("Garment2", "http://127.0.0.1:9000/garment");
-    const tmp7 = loadSelect("Garment3", "http://127.0.0.1:9000/garment");
+    const tmp1 = loadSelect("BasePokemonId", "http://192.168.2.11:9000/basePokemon");
+    const tmp2 = loadSelect("NatureId", "http://192.168.2.11:9000/nature");
+    const tmp3 = loadSelect("AbilityId", "http://192.168.2.11:9000/ability");
+    const tmp4 = loadSelect("ItemId", "http://192.168.2.11:9000/item");
+    const tmp5 = loadSelect("Garment1", "http://192.168.2.11:9000/garment");
+    const tmp6 = loadSelect("Garment2", "http://192.168.2.11:9000/garment");
+    const tmp7 = loadSelect("Garment3", "http://192.168.2.11:9000/garment");
 
     await Promise.all([tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7])
 
@@ -195,7 +195,7 @@ document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
     json["garments"] = [form.get("Garment1"), form.get("Garment2"), form.get("Garment3")]
         .filter(v => v !== "");
 
-    const res = await fetch("http://127.0.0.1:9000/gamePokemon", {
+    const res = await fetch("http://192.168.2.11:9000/gamePokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json)

@@ -151,7 +151,7 @@ body {
 <div id="pokemon-container"></div>
 
 <script>
-const apiUrl = "http://127.0.0.1:9000/PullAllPokemon/{{ gameId }}";
+const apiUrl = "http://192.168.2.11:9000/PullAllPokemon/{{ gameId }}";
 let allMoves = [];
 
 // Utility to render circles
@@ -320,7 +320,7 @@ async function applyMove(guid) {
         return;
     }
 
-    const res = await fetch("http://127.0.0.1:9000/moveManipulation", {
+    const res = await fetch("http://192.168.2.11:9000/moveManipulation", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -399,7 +399,7 @@ function buildTooltip(move) {
 }
 
 async function fetchMoves() {
-    const res = await fetch("http://127.0.0.1:9000/moveManipulation");
+    const res = await fetch("http://192.168.2.11:9000/moveManipulation");
     const json = await res.json();
     allMoves = json.moves;
 }
