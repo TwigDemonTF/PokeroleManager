@@ -1828,10 +1828,12 @@ def pokemonStatusStream(gameId, pokemonGuid):
         try:
             pokemon = GamePokemon.query.filter_by(Guid=pokemonGuid).first()
             if pokemon:
-                yield f"data: {json.dumps({
-                    'Health': pokemon.health,
-                    'Status': pokemon.status
-                })}\n\n"
+                payload = {
+                    "Health": pokemon.health,
+                    "Status": pokemon.status,
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+
             while True:
                 data = q.get()
                 yield f"data: {json.dumps(data)}\n\n"
@@ -1846,7 +1848,7 @@ def pokemonStatusStream(gameId, pokemonGuid):
             "X-Accel-Buffering": "no"
         }
     )
-#edit
+
 @app.route("/playerStateStream/<gameId>/<pokemonGuid>")
 def player_state_stream(gameId, pokemonGuid):
     q = queue.Queue()
