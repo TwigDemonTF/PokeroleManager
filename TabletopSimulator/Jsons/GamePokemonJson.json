@@ -1,0 +1,23 @@
+{
+    "GameId": "ixcgr496te",
+    "BasePokemonId": 1,
+    "Name": "Airalin",
+    "Level": 1,
+    "Gender": "Female",
+    "Age": 21,
+    "Nature": "Quiet",
+    "Ability": "Synchronize",
+    "Status": "Healthy",
+    "Will": 6,
+    "Logic": 1,
+    "Instinct": 2,
+    "Primal": 0,
+    "HeldItem": "",
+    "Garment1": "",
+    "Garment2": "",
+    "Garment3": "",
+    "IsNpc": 0,
+    "ExperiencePoints": 23,
+    "PlayerColor": "Black",
+    "Guid": "09c38c"
+}

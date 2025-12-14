@@ -1,9 +1,11 @@
 local url = "http://127.0.0.1:9000/PullCharacterData/"
 local polling = false
 local activeCharacters = {}
+local gameId = ""
 
 function onLoad()
     self.addContextMenuItem("Toggle Polling", TogglePolling)
+    print(gameId)
 end
 
 -- Main polling loop
@@ -11,14 +13,15 @@ function PollLoop()
     if not polling then return end
 
     for _, guid in ipairs(activeCharacters) do
-        print(guid)
-        print(url .. guid)
-        WebRequest.get(url .. guid, function(request)
+        print("Polling GUID:", guid)
+        local fullUrl = url .. gameId .. "/" .. guid
+        print(fullUrl)
+
+        WebRequest.get(fullUrl, function(request)
             if request.is_error then
                 print("Error:", request.error)
             else
-                print("Response for", guid, ":", request.text)
-                -- Process response here
+                -- Decode the JSON into a Lua table
                 local response = JSON.decode(request.text)
 
                 if not response.data then
@@ -28,19 +31,19 @@ function PollLoop()
 
                 local data = response.data
 
+                -- Send it to UpdateSelf
                 local obj = getObjectFromGUID(guid)
                 if obj then
                     obj.call("UpdateSelf", { data = data })
                 end
 
-                print(data.name, data.gender, data.level)
             end
         end)
     end
 
-    -- Repeat every 5 seconds
     Wait.time(PollLoop, 5)
 end
+
 
 function TogglePolling()
     if polling then
@@ -48,6 +51,8 @@ function TogglePolling()
         polling = false
     else
         print("Starting polling.")
+        gameId = Global.getVar("gameId")
+
         activeCharacters = getObjectsWithTag("Pokemon")
         polling = true
         PollLoop()  -- begin loop

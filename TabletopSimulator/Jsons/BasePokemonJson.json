@@ -1,20 +1,6 @@
 {
-    "Name": "Airalin",
-    "Age": 0,
-    "Level": 1,
-    "Gender": "Female",
-    "Nature": "Quiet",
-    "Ability": "Synchronize",
-    "BaseHealth": 3,
-    "Will": 5,
-    "Logic": 1,
-    "Instinct": 2,
-    "Primal": 0,
-    "HeldItem": "Shiny Stone",
-    "Garment1": "",
-    "Garment2": "",
-    "Garment3": "",
-    "Status": "Healthy",
+    "Name": "Ralts",
+    "BaseHealth": "3",
     "PrimaryType": "Psychic",
     "SecondaryType": "None",
     "Strength": 1,
@@ -38,6 +24,8 @@
     "Athletic": 0,
     "NatureStat": 0,
     "Stealth": 0,
-    "ExperiencePoints": 23,
-    "IsNpc": false
+    "Allure": 0,
+    "Etiquette": 0,
+    "Intimidate": 0,
+    "Perform": 0
 }

@@ -1,15 +1,420 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Stats Viewer - Collapsible Stat Tree</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: #f5f5f5;
+}
+.pokemon-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+.header h2 {
+    margin: 0;
+}
+.main-stats {
+    margin-left: 22px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center; /* center above the column */
+}
+.stat-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    text-align: center;
+}
+.circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #999;
+    display: inline-block;
+    background: white;
+}
+.circle.active {
+    background: gray;
+}
+.groups-container {
+    display: flex;
+    margin-top: 20px;
+    gap: 20px;
+}
+.groups-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.group {
+    display: flex;
+    flex-direction: column;
+}
+.substats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-left: 30px;
+}
+.collapsible-content {
+    display: none;
+}
+.pokemon-card.expanded .collapsible-content {
+    display: block;
+    animation: fadein 0.05s ease-in;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.collapsible-content .content-row {
+    display: flex;
+    gap: 20px;
+}
+
+.content-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+.left-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center main stats above column */
+}
+.future-data {
+    flex-grow: 1;
+    height: 100%;
+    background: #eee;
+    border: 1px dashed #999;
+}
+
+.move-card {
+    background: #222;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: white;
+    font-size: 14px;
+    position: relative;
+}
+
+.move-card:hover {
+    background: #2c2c2c;
+}
+
+.move-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.move-name {
+    font-size: 18px;
+}
+
+.move-footer {
+    font-style: italic;
+    opacity: 0.8;
+    margin-top: 8px;
+    border-top: 1px solid #555;
+    padding-top: 6px;
+}
+
+</style>
 </head>
 <body>
-    <p>{{ Pokemon }}</p>
 
-    {% for item in Pokemon %}
-        {{ item }}
-    {% endfor %}
-</body>
-</html>
+<h1>All Pokémon in Game</h1>
+<div id="pokemon-container"></div>
+
+<script>
+const apiUrl = "http://127.0.0.1:9000/PullAllPokemon/{{ gameId }}";
+let allMoves = [];
+
+// Utility to render circles
+function renderCircles(value, potential) {
+    let html = "";
+    for (let i = 0; i < potential; i++) {
+        html += `<span class="circle ${i < value ? "active" : ""}"></span>`;
+    }
+    return html;
+}
+
+function createPokemonCard(pokemon) {
+    const hp = (pokemon.BaseHealth || 0) + (pokemon.Vitality || 0);
+
+    const mainStats = ["Strength", "Dexterity", "Vitality", "Special", "Insight"];
+    const groups = {
+        "Fight": ["Brawl", "Channel", "Clash", "Evasion"],
+        "Survival": ["Alert", "Athletic", "NatureStat", "Stealth"],
+        "Contest": ["Allure", "Etiquette", "Intimidate", "Perform"]
+    };
+
+    // Main stats
+    let mainStatsHtml = mainStats.map(stat => {
+        const value = pokemon[stat] || 0;
+        const potential = pokemon[stat + "Potential"] || value;
+        return `<div class="stat-circle">
+            <div style="font-size: 16px; font-weight: bold;">${stat}</div>
+            <div>${renderCircles(value, potential)}</div>
+        </div>`;
+    }).join("");
+
+    // Groups
+    let groupsHtml = Object.entries(groups).map(([groupName, substats]) => {
+        const groupValue = pokemon[groupName] || 0;
+        let substatsHtml = substats.map(sub => {
+            const value = pokemon[sub] || 0;
+            return `<div class="stat-circle">
+                <div>${sub}</div>
+                <div>${renderCircles(value, 5)}</div>
+            </div>`;
+        }).join("");
+
+        return `
+        <div class="group">
+            <div class="stat-circle">
+                <div style="font-size: 16px; font-weight: bold;">${groupName}</div>
+                <div>${renderCircles(groupValue, 5)}</div>
+            </div>
+            <div class="substats">${substatsHtml}</div>
+        </div>`;
+    }).join("");
+
+    // Moves (4 slots)
+    let moveSlots = [0,1,2,3].map(slot => {
+        const moveName = pokemon.Moves[slot] || "(empty)";
+        return `<li>Slot ${slot}: ${moveName}</li>`;
+    }).join("");
+
+    return `
+    <div class="pokemon-card">
+        <div class="header" onclick="this.parentNode.classList.toggle('expanded')">
+            <h2>${pokemon.Name} (Lvl ${pokemon.Level})</h2>
+            <div>HP: ${hp}</div>
+        </div>
+        <div>
+            Ability: ${pokemon.Ability} |
+            Type: ${pokemon.PrimaryType}${pokemon.SecondaryType && pokemon.SecondaryType !== "None" ? "/" + pokemon.SecondaryType : ""}
+        </div>
+
+        <div class="collapsible-content">
+            <div class="content-row">
+                <div class="left-column">
+                    <div class="main-stats">${mainStatsHtml}</div>
+                    <div class="groups-column">${groupsHtml}</div>
+                </div>
+
+                <div class="future-data">
+                    <h3>Moves</h3>
+                    <div class="move-list" id="moves-${pokemon.Guid}">
+                        ${pokemon.Moves && pokemon.Moves.length > 0
+                            ? pokemon.Moves.map(m => renderMoveCard(m)).join("")
+                            : "<div>No moves</div>"
+                        }
+                    </div>
+
+                    <h4>Add / Replace Move</h4>
+
+                    <select id="move-select-${pokemon.Guid}">
+                        <option value="">Select a move</option>
+                        ${allMoves.map(m => `
+                            <option value="${m.id}">${m.name} (${m.type})</option>
+                        `).join("")}
+                    </select>
+
+                    <select id="slot-select-${pokemon.Guid}">
+                        <option value="">Add to empty slot</option>
+                        <option value="0">Replace Slot 0</option>
+                        <option value="1">Replace Slot 1</option>
+                        <option value="2">Replace Slot 2</option>
+                        <option value="3">Replace Slot 3</option>
+                    </select>
+
+                    <button onclick="applyMove('${pokemon.Guid}')">Apply Move</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderMoveCard(move) {
+    const accuracyMods = move.accuracyModifiers?.length
+        ? move.accuracyModifiers.join(" + ")
+        : "-";
+
+    const damageMods = [];
+
+    if (move.damageModifiers?.length) {
+        damageMods.push(
+            move.damageModifiers
+                .filter(m => m != null && m !== "NONE")  // remove None/NONE
+                .join(" + ")
+        );
+    }
+
+    if (move.basePower && move.basePower !== 0) {
+        damageMods.push(move.basePower);
+    }
+
+    const damagePool = damageMods
+        .join(" + ")
+        .replace(/\s+\+\s+$/, "") || "-";
+
+    const tooltip = buildTooltip(move)
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, '&#10;');   // HTML-safe newline
+
+    return `
+    <div class="move-card" title="${tooltip}">
+        <div class="move-header">
+            <span class="move-name">${move.name}</span>
+            <span class="move-right">
+                Base Power: ${move.basePower ?? "-"} 
+                (${move.damageType})
+            </span>
+        </div>
+
+        <div>Type: ${move.type}</div>
+        <div>Accuracy: ${accuracyMods}</div>
+        <div>Damage Pool: ${damagePool}</div>
+        <div>Added Effect: ${move.effectText || "-"}</div>
+
+        <div class="move-footer">${move.flavorText || ""}</div>
+    </div>`;
+}
+
+async function applyMove(guid) {
+    const moveSelect = document.getElementById(`move-select-${guid}`);
+    const slotSelect = document.getElementById(`slot-select-${guid}`);
+
+    const moveId = parseInt(moveSelect.value);
+    const replaceRaw = slotSelect.value;
+    const replaceIndex = replaceRaw === "" ? null : parseInt(replaceRaw);
+
+    if (!moveId) {
+        alert("Select a move first!");
+        return;
+    }
+
+    const res = await fetch("http://127.0.0.1:9000/moveManipulation", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            Guid: guid,
+            MoveId: moveId,
+            ReplaceIndex: replaceIndex
+        })
+    });
+
+    const json = await res.json();
+
+    if (json.error) {
+        alert(json.error);
+        return;
+    }
+
+    // Update UI without reload
+    //const move = allMoves.find(m => m.id === moveId);
+    //const list = document.getElementById(`moves-${guid}`);
+
+    //if (list.innerHTML.includes("No moves"))
+        //list.innerHTML = "";
+
+    //list.innerHTML += renderMoveCard(move);
+
+    //moveSelect.value = "";
+    //slotSelect.value = "";
+}
+
+function buildTooltip(move) {
+    const fields = [
+        ["Priority", move.priority],
+        ["Target", move.target],
+        ["Reduced Accuracy", move.reducedAccuracy],
+        ["Crit", move.hasCritical],
+        ["Lethal", move.hasLethal],
+        ["Block", move.hasBlock],
+        ["Recoil", move.hasRecoil],
+
+        move.hasWeatherChange ? ["Weather Change", move.weatherChangeTo] : null,
+
+        ["Modified Damage", move.hasModifiedDamage],
+        ["Always Hit", move.alwaysHitEffect],
+        ["Always Fail", move.alwaysFailEffect],
+        ["Charge Move", move.isChargeMove],
+        ["Fist Based", move.isFistBased],
+        ["High Crit", move.isHighCrit],
+        ["Never Fail", move.isNeverFail],
+
+        move.isHealingMove ? ["Healing Move", "Yes"] : null,
+        move.isShieldMove ? ["Shield Move", "Yes"] : null,
+        move.isSoundBased ? ["Sound Based", "Yes"] : null,
+        move.isSwitchMove ? ["Switch Move", "Yes"] : null,
+        move.requiresRecharge ? ["Requires Recharge", "Yes"] : null,
+
+        move.isMultiHit
+            ? ["Multi Hit", move.multiHitCount || "Yes"]
+            : null,
+    ];
+
+    // Filter out:
+    //  • null fields
+    //  • false booleans
+    //  • undefined / empty values
+    const filtered = fields
+        .filter(f =>
+            f &&
+            f[1] !== false &&
+            f[1] !== null &&
+            f[1] !== undefined &&
+            f[1] !== ""
+        )
+        .map(f => `${f[0]}: ${f[1]}`);
+
+    return filtered.join("\n");
+}
+
+async function fetchMoves() {
+    const res = await fetch("http://127.0.0.1:9000/moveManipulation");
+    const json = await res.json();
+    allMoves = json.moves;
+}
+
+async function fetchPokemon() {
+    await fetchMoves();
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+
+    const container = document.getElementById("pokemon-container");
+    container.innerHTML = "";
+
+    data.data.forEach(p => container.innerHTML += createPokemonCard(p));
+}
+
+// INITIAL LOAD
+fetchPokemon();
+</script>

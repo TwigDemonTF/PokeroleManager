@@ -3,21 +3,171 @@
 <head>
     <title>Login</title>
 </head>
+
+<style>
+    body {
+        padding: 0;
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        background-color: #1c1c1c;
+        overflow-y: hidden;
+        overflow-x: hidden;
+    }
+    .container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+    }
+    .halfscreen {
+        width: 40%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+    .halfscreen:nth-child(1) {
+        width: 59%;
+        background-image: url("../static/images/LoginRegisterBackground.png");
+        background-repeat: no-repeat;
+        background-size: 95vh;
+        border-right: solid hotpink 2px
+        /* background-position-y: 80px; */
+    }
+    .nav {
+        width: 100%;
+        height: 56px;
+        border-bottom: solid hotpink 2px;
+        background-color: #363636;
+    }
+    .loginForm {
+        height: 350px;
+        border: solid hotpink 2px;
+        border-radius: 12.5px;
+        align-items: center;
+        background-color: #2f2f2f;
+        width: 300px;
+        padding-left: 4%;
+        padding-top: 5%;
+    }
+
+        .customButtonColor {
+        width: 80%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: white;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: #2b3035;
+        background-clip: padding-box;
+        border: 1px solid hotpink;
+        border-radius: 12.5px;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        margin-bottom: 20px;
+
+        &:hover {
+            color: hotpink;
+            background-color: #2b3035;
+            border-color: hotpink;
+            outline: 0;
+            box-shadow: 0 0 0 0.1rem #b19cd9;
+        }
+    }
+
+    .titleHeader {
+        margin-top: 25%;
+        color: hotpink;
+        font-size: calc(3.4rem + 2rem);
+        text-align: center;
+        border-bottom: hotpink 2px solid;
+    }
+
+        .navbar {
+        box-sizing: border-box;
+        color: hotpink;
+        font-weight: 530;
+        font-size: 1rem;
+        align-items: center;
+        display: flex;
+        width: 100%;
+        height: 56px;
+        max-height: 56px;
+        background-color: #2b3035;
+        border-bottom: 2px solid hotpink;
+    }
+
+    ul {
+        display: flex;
+        gap: 10px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .navBarUl {
+        color: hotpink;
+        width: 240px;
+
+        a {
+            display: block;
+            width: max-content;
+        }
+    }
+
+    .firstNavElement {
+        margin-left: 5%;
+    }
+
+    a,
+    a:active,
+    a:visited {
+        margin-top: 13px;
+        margin-right: 5px;
+        transition: 1s;
+        text-decoration: none;
+        color: hotpink;
+
+        &:hover {
+            color: #b19cd9;
+        }
+
+        font-size: 20px;
+    }
+</style>
+
 <body>
-    <h2>Login</h2>
+    <div class="nav">
+        <ul class="navBarUl">
+            <li class="firstNavElement" style=" font-size:20px; margin-top: 12px; margin-right: 8px;">Pokerole<span style="color: #b19cd9;">Manager</span></li>
+            <li><a href="/Register">Register</a></li>
+            <li><a href="/Login">Login</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="halfscreen">
 
-    <form action="/Login" method="POST">
-        <label>Username:</label>
-        <input name="username" id="username" required><br>
+        </div>
+        <div class="halfscreen">
+            <h2 class="titleHeader">Login</h2>
+        <div class="loginForm">
+            <form action="/Login" method="POST">
+                <input class="customButtonColor" name="usernameOrGameId" id="username" required placeholder="Username/Game id"><br>
 
-        <label>Password:</label>
-        <input type="password" name="password" id="password" required><br>
+                <input class="customButtonColor" type="password" name="passwordOrGameColor" id="password" required placeholder="Password/Color"><br>
 
-        <button type="submit">Login</button>
-    </form>
+                <label style="color: white;">Login as Player: </label>
+                <input type="checkbox" name="player" value="0"> <br>
 
-    {% if message %}
-        <p>{{ message }}</p>
-    {% endif %}
+                <button style="margin-left: 12px; margin-top: 12px;" class="customButtonColor" type="submit">Login</button>
+            </form>
+
+            {% if message %}
+                <p style="color: red;">{{ message }}</p>
+            {% endif %}
+            </div>
+        </div>
+    </div>
 </body>
 </html>

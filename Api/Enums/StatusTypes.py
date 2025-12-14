@@ -1,16 +1,17 @@
 from enum import Enum
 
 class StatusTypes(Enum):
-    HEALTHY = 1
-    BURN1 = 2
-    BURN2 = 3
-    BURN3 = 4
-    POISONED = 5
-    BADLYPOISONED = 6
-    FROZEN = 7
-    ASLEEP = 8
-    PARALYZED = 9
-    CONFUSED = 10
-    DISABLED = 11
-    FLINCHED = 12
-    INLOVE = 13
+    HEALTHY = "Healthy"
+    FAINTED = "Fainted"
+    BURN1 = "Burn1"
+    BURN2 = "Burn2"
+    BURN3 = "Burn3"
+    POISONED = "Poisoned"
+    BADLYPOISONED = "Badly Poisoned"
+    FROZEN = "Frozen"
+    ASLEEP = "Asleep"
+    PARALYZED = "Paralyzed"
+    CONFUSED = "Confused"
+    DISABLED = "Disabled"
+    FLINCHED = "Flinched"
+    INLOVE = "In Love"

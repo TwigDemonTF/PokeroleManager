@@ -17,6 +17,8 @@ function UpdateSelf(params)
 
     -- Also expose to other scripts if needed
     self.setVar("characterData", characterData)
+
+    print("Name: " .. tostring(characterData.Name) .. " Level: " .. tostring(characterData.Level) .. " Type: " .. tostring(characterData.PrimaryType))
 end
 
 function GetSelf()

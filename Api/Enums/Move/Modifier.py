@@ -1,0 +1,25 @@
+from enum import Enum
+
+class ModifierEnum(Enum):
+    NONE = None
+    Strength = "Strength"
+    Special = "Special"
+    Insight = "Insight"
+    Dexterity = "Dexterity"
+    Fight = "Fight"
+    Brawl = "Brawl"
+    Contest = "Contest"
+    Perform = "Perform"
+    Channel = "Channel"
+    Tough = "Tough"
+    Intimidate = "Intimidate"
+    Cute = "Cute"
+    Allure = "Allure"
+    Nature = "Nature"
+    Survival = "Survival"
+    Will = "Will"
+    Smart = "Smart"
+    Beauty = "Beauty"
+    Cool = "Cool"
+    Evasion = "Evasion"
+    Tough_Cute = "Tough/Cute"
