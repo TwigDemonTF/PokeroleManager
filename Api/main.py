@@ -1232,6 +1232,11 @@ class MoveManipulation(Resource):
                 mc.moveId = move_id
                 database.session.commit()
 
+                broadcast_player_update(
+                    pokemon.Guid,
+                    Moves=[serialize_move(mc.move) for mc in pokemon.move_connections]
+                )
+
                 return {
                     "message": "Move replaced",
                     "slot": replace_index,
@@ -1248,6 +1253,16 @@ class MoveManipulation(Resource):
             )
             database.session.add(new_mc)
             database.session.commit()
+
+            broadcast_player_update(
+                pokemon.Guid,
+                Moves=[serialize_move(mc.move) for mc in pokemon.move_connections]
+            )
+
+            broadcast_player_update(
+                pokemon.Guid,
+                Moves=[serialize_move(mc.move) for mc in pokemon.move_connections]
+            )
 
             return {
                 "message": "Move added",
@@ -1423,11 +1438,11 @@ def UpdateHealth():
 
     subscribers = clients.get(guid, set())
 
-    for q in list(subscribers):
-        q.put({
-            "Health": pokemon.health,
-            "Status": pokemon.status
-        })
+    broadcast_player_update(
+        pokemon.Guid,
+        Health=pokemon.health,
+        Status=pokemon.status
+    )
 
     return jsonify({
         "success": True,
@@ -1713,6 +1728,11 @@ def AddXp(game_id, pokemon_guid):
     pokemon.experiencePoints = (pokemon.experiencePoints or 0) + xp
     database.session.commit()
 
+    broadcast_player_update(
+        pokemon.Guid,
+        ExperiencePoints=pokemon.experiencePoints
+    )
+
     return jsonify({
         "guid": pokemon.Guid,
         "new_xp": pokemon.experiencePoints
@@ -1732,6 +1752,11 @@ def AddMoney(game_id, pokemon_guid):
 
     pokemon.apples = (pokemon.apples or 0) + money
     database.session.commit()
+
+    broadcast_player_update(
+        pokemon.Guid,
+        Apples=pokemon.apples
+    )
 
     return jsonify({
         "guid": pokemon.Guid,
@@ -1822,6 +1847,30 @@ def pokemonStatusStream(gameId, pokemonGuid):
         }
     )
 
+@app.route("/playerStateStream/<gameId>/<pokemonGuid>")
+def player_state_stream(gameId, pokemonGuid):
+    q = queue.Queue()
+
+    clients.setdefault(pokemonGuid, set()).add(q)
+
+    def stream():
+        try:
+            while True:
+                data = q.get()
+                yield f"data: {json.dumps(data)}\n\n"
+        except GeneratorExit:
+            clients[pokemonGuid].discard(q)
+
+    return Response(stream(), mimetype="text/event-stream")
+
+def broadcast_player_update(pokemonGuid, **fields):
+    payload = {
+        "type": "update",
+        "payload": fields
+    }
+
+    for q in clients.get(pokemonGuid, []):
+        q.put(payload)
 
 api.add_resource(Register, "/register")
 api.add_resource(MasterLogin, "/masterLogin")

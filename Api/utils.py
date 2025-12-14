@@ -94,25 +94,6 @@ def extract_modifiers_from_group(group, prefix):
 
     return mods
 
-def serialize_move(m):
-    return {
-        "id": m.id,
-        "name": m.name,
-        "type": m.type.name,
-        "basePower": m.basePower,
-        "damageType": m.damageType.name if m.damageType else None,
-        "priority": m.priority.name if m.priority else None,
-        "target": m.target.name if m.target else None,
-        "flavorText": m.flavorText,
-        "effectText": m.effectText,
-        "hasCritical": m.hasCritical,
-        "hasLethal": m.hasLethal,
-        "hasBlock": m.hasBlock,
-        "hasRecoil": m.hasRecoil,
-        "isMultiHit": m.isMultiHit,
-        "multiHitCount": m.multiHitCount.name if m.multiHitCount else None,
-    }
-
 def updatePokemonHealth(game_id, guid, new_health):
     # Find the game (optional, ensures game exists)
     game = Game.query.filter_by(gameId=game_id).first()
@@ -135,3 +116,74 @@ def updatePokemonHealth(game_id, guid, new_health):
         pokemon.status = StatusTypes.HEALTHY.value
 
     database.session.commit()
+
+def serialize_move(move):
+    # ---- Accuracy & Damage Modifiers ----
+    accuracy_mods = extract_modifiers_from_group(
+        move.accuracy_modifier_group,
+        "accuracyModifier"
+    )
+
+    damage_mods = extract_modifiers_from_group(
+        move.damage_modifier_group,
+        "damageModifier"
+    )
+
+    # ---- Heal Move ----
+    heal_data = None
+    if move.heal_move:
+        heal_data = {
+            "healType": move.heal_move.healType.name
+                if move.heal_move.healType else None,
+            "healAmount": move.heal_move.healAmount
+        }
+
+    # ---- Effects ----
+    effects = [
+        {
+            "effect": conn.move_effect.effect.name,
+            "effectLevel": conn.move_effect.effectLevel.name,
+            "effectLevelDice": conn.move_effect.effectLevelDice
+        }
+        for conn in move.effect_connections
+    ]
+
+    # ---- Final Serialized Move ----
+    return {
+        "id": move.id,
+        "name": move.name,
+        "type": move.type.value if move.type else None,
+        "damageType": move.damageType.name if move.damageType else None,
+        "basePower": move.basePower,
+        "target": move.target.value if move.target else None,
+        "priority": move.priority.name if move.priority else None,
+        "accuracyModifiers": accuracy_mods,
+        "damageModifiers": damage_mods,
+        "reducedAccuracy": move.reducedAccuracy,
+        "hasCritical": move.hasCritical,
+        "hasLethal": move.hasLethal,
+        "hasBlock": move.hasBlock,
+        "hasRecoil": move.hasRecoil,
+        "hasWeatherChange": move.hasWeatherChange,
+        "weatherChangeTo": move.weatherChangeTo.name
+            if move.weatherChangeTo else None,
+        "hasModifiedDamage": move.hasModifiedDamage,
+        "alwaysHitEffect": move.alwaysHitEffect,
+        "alwaysFailEffect": move.alwaysFailEffect,
+        "isChargeMove": move.isChargeMove,
+        "isFistBased": move.isFistBased,
+        "isHighCrit": move.isHighCrit,
+        "isNeverFail": move.isNeverFail,
+        "isHealingMove": move.isHealingMove,
+        "isShieldMove": move.isShieldMove,
+        "isSoundBased": move.isSoundBased,
+        "isMultiHit": move.isMultiHit,
+        "multiHitCount": move.multiHitCount.name
+            if move.multiHitCount else None,
+        "isSwitchMove": move.isSwitchMove,
+        "requiresRecharge": move.requiresRecharge,
+        "healMove": heal_data,
+        "effects": effects,
+        "effectText": move.effectText or "",
+        "flavorText": move.flavorText or "",
+    }

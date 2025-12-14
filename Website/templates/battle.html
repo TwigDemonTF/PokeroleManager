@@ -436,6 +436,12 @@ button.ghost {
     transition: width 0.2s ease;
 }
 
+.hp-bar-container span {
+    flex: 0 0 120px;   /* ← pick a width that fits both texts */
+    white-space: nowrap;
+    text-align: left;
+}
+
 /* ---------------------------------------------------------
    SWAL
 --------------------------------------------------------- */
@@ -1413,12 +1419,23 @@ select:focus {
             const titleRow = document.createElement('div');
             titleRow.style.display = "flex";
             titleRow.style.alignItems = "center";
-            titleRow.style.justifyContent = "space-between";
+            titleRow.style.justifyContent = "flex-start";
 
             const title = document.createElement('h3');
             title.style.margin = "0";
             title.textContent = `${p.name} ${p.level ? 'Lv ' + p.level : ''}`;
             titleRow.appendChild(title);
+
+            // spacer pushes everything after it to the right
+            const spacer = document.createElement("div");
+            spacer.style.flex = "1";
+            titleRow.appendChild(spacer);
+
+            // right-side controls
+            const titleControls = document.createElement("div");
+            titleControls.style.display = "flex";
+            titleControls.style.alignItems = "center";
+            titleControls.style.gap = "4px";
             meta.appendChild(titleRow);
 
             const collapseBtn = document.createElement("button");
@@ -1431,7 +1448,17 @@ select:focus {
                 collapseBtn.textContent = card.classList.contains("collapsed") ? "▶" : "▼";
             };
 
-            titleRow.appendChild(collapseBtn);
+            // Toggle button
+            const lethalToggle = document.createElement("button");
+            lethalToggle.textContent = "Show Lethal HP";
+            lethalToggle.style.marginTop = "4px";
+            lethalToggle.style.padding = "3px 6px";
+            lethalToggle.classList.add("btn")
+            lethalToggle.classList.add("btn-submit")
+
+            titleControls.appendChild(lethalToggle);
+            titleControls.appendChild(collapseBtn);
+            titleRow.appendChild(titleControls);
 
             head.style.cursor = "pointer";
             head.onclick = (e) => {
@@ -1575,12 +1602,6 @@ select:focus {
 
             // ========== LETHAL HP ========== //
 
-            // Toggle button
-            const lethalToggle = document.createElement("button");
-            lethalToggle.textContent = "Show Lethal HP";
-            lethalToggle.style.marginTop = "4px";
-            lethalToggle.style.padding = "3px 6px";
-
             // Lethal bar container
             const lethalContainer = document.createElement("div");
             lethalContainer.className = "hp-bar-container";
@@ -1620,7 +1641,7 @@ select:focus {
                     lethalFill.style.background = "#8e44ad"; // purple
                 }
 
-                lethalText.textContent = `${currentLethal}/${maxHp} lethal`;
+                lethalText.textContent = `${currentLethal}/${maxHp} · Lethal`;
             }
             p._updateLethalUI = updateLethalBar;
 
@@ -1656,7 +1677,6 @@ select:focus {
                 }
             };
 
-            card.appendChild(lethalToggle); 
             card.appendChild(lethalContainer);
 
             const collapsible = document.createElement("div");

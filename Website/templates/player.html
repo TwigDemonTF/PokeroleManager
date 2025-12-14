@@ -519,82 +519,77 @@
         p5: "+5",
     };
 
-    function startPokemonStatusStream(pokemonGuid, p) {
-      if (pokemonStatusSource) {
-        pokemonStatusSource.close();
-      }
+    function startPlayerStateStream(pokemonGuid, p) {
+      if (pokemonStatusSource) pokemonStatusSource.close();
 
       pokemonStatusSource = new EventSource(
-        `http://127.0.0.1:9000/pokemonStatusStream/${GAME_ID}/${pokemonGuid}`
+        `http://127.0.0.1:9000/playerStateStream/${GAME_ID}/${pokemonGuid}`
       );
 
       pokemonStatusSource.onmessage = (event) => {
-        const statusData = JSON.parse(event.data);
+        const msg = JSON.parse(event.data);
+        if (msg.type !== "update") return;
 
-        p.Health = statusData.Health;
-        p.Status = statusData.Status;
-        p._updateHpUI?.();
-
-        const maxHp = window.currentPokemonMaxHp ?? 100;
-        const currentHp = Math.max(0, Math.min(maxHp, statusData.Health));
-        const pct = currentHp / maxHp;
-
-        const hpFill = document.querySelector('.hp-bar-fill');
-        const hpText = document.querySelector('.hp-text');
-
-        if (hpFill) {
-          hpFill.style.width = (pct * 100) + '%';
-          hpFill.style.background =
-            pct > 0.5 ? '#28c76f' : pct > 0.25 ? 'orange' : 'red';
-        }
-
-        if (hpText) {
-          hpText.textContent =
-            `${currentHp} / ${maxHp} HP · ${statusData.Status || 'Healthy'}`;
-        }
+        applyPlayerUpdate(msg.payload, p);
       };
 
-      pokemonStatusSource.onerror = (err) => {
-        console.warn("SSE disconnected, browser will retry", err);
+      pokemonStatusSource.onerror = () => {
+        console.warn("SSE disconnected, retrying automatically");
       };
     }
 
-      // Stop previous interval if any
-    //   if (pokemonStatusInterval) clearInterval(pokemonStatusInterval);
+    function applyPlayerUpdate(update, p) {
+      if ("Health" in update) {
+        p.Health = update.Health;
+        p._updateHpUI(update.Health, p);
+      }
 
-    //   pokemonStatusInterval = setInterval(async () => {
-    //     try {
-    //       const res = await fetch(`http://127.0.0.1:9000/pokemonStatus/${GAME_ID}/${POKEMON_GUID}`); // replace with your endpoint
-    //       if (!res.ok) throw new Error("Failed to fetch status");
+      if ("Status" in update) {
+        p.Status = update.Status;
+      }
 
-    //       const statusData = await res.json();
+      if ("ExperiencePoints" in update) {
+        p.ExperiencePoints = update.ExperiencePoints;
+        updateXpUI(update.ExperiencePoints);
+      }
 
-    //       p.Health = statusData.Health;
-    //       p.Status = statusData.Status;
+      if ("Apples" in update) {
+        p.Apples = update.Apples;
+        updateMoneyUI(update.Apples);
+      }
 
-    //       p._updateHpUI?.();
+      if ("Moves" in update) {
+        p.Moves = update.Moves;
+        updateMovesUI(update.Moves);
+      }
+    }
 
-    //       // Assuming the response contains: { Health: number, Status: string }
-    //       const hpFill = document.querySelector('.hp-bar-fill');
-    //       const hpText = document.querySelector('.hp-text');
-    //       const maxHp = window.currentPokemonMaxHp ?? 100; // fallback if needed
+    function updateXpUI(xp) {
+        const el = document.querySelector(".experience");
+        if (!el) return;
 
-    //       const currentHp = Math.max(0, Math.min(maxHp, statusData.Health));
-    //       const pct = currentHp / maxHp;
+        el.innerHTML = `
+          Available Experience: ${xp}<br>
+          Current Apples: ${window.currentPokemon?.Apples ?? 0}
+        `;
+    }
 
-    //       if (hpFill) hpFill.style.width = (pct * 100) + '%';
-    //       if (hpFill) {
-    //         if (pct > 0.5) hpFill.style.background = '#28c76f';
-    //         else if (pct > 0.25) hpFill.style.background = 'orange';
-    //         else hpFill.style.background = 'red';
-    //       }
-    //       if (hpText) hpText.textContent = `${currentHp} / ${maxHp} HP · ${statusData.Status || 'Healthy'}`;
+    function updateMoneyUI(apples) {
+        const el = document.querySelector(".experience");
+        if (!el) return;
 
-    //     } catch (err) {
-    //       console.error("Error fetching Pokémon status:", err);
-    //     }
-    //   }, intervalMs);
-    // }
+        el.innerHTML = `
+          Available Experience: ${window.currentPokemon?.ExperiencePoints ?? 0}<br>
+          Current Apples: ${apples}
+        `;
+    }
+
+    function updateMovesUI(moves) {
+        const container = document.querySelector(".moves");
+        if (!container) return;
+
+        container.innerHTML = moves.map(renderMove).join("");
+    }
 
     async function confirmStatPurchase(statName, currentValue, availableXP) {
       const rule = statCostType[statName];
@@ -780,6 +775,7 @@
     }
 
     function renderMove(m) {
+      console.log(m)
       const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
       const damage = [...(m.damageModifiers || []), m.basePower || null]
         .filter(mod => mod && mod !== "NONE")
@@ -952,6 +948,7 @@
         p._updateHpUI = updateHpBar;
 
         window.currentPokemonMaxHp = maxHp;
+        window.currentPokemon = p;
 
       card.querySelectorAll('.stat, .stat-row, .stat-column > b').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -964,7 +961,7 @@
           confirmStatPurchase(statName, statValue, xp);
         });
       });
-      startPokemonStatusStream(POKEMON_GUID, p);
+      startPlayerStateStream(POKEMON_GUID, p);
       setupBagToggle();
     }
 
