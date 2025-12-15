@@ -1,0 +1,78 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f Api/requirements.txt ]; then pip install -r Api/requirements.txt; fi
+          if [ -f Website/requirements.txt ]; then pip install -r Website/requirements.txt; fi
+
+      - name: Lint backend
+        run: pylint Api --exit-zero
+
+      - name: Lint frontend
+        run: pylint Website --exit-zero
+
+  backend-tests:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Api/requirements.txt
+          pip install pytest
+
+      - name: Add project root to PYTHONPATH
+        run: echo "PYTHONPATH=${PYTHONPATH}:$(pwd)" >> $GITHUB_ENV
+
+      - name: Run backend tests
+        run: pytest Api/tests -q
+
+  deploy:
+    needs: backend-tests
+    runs-on: self-hosted
+
+    # Optional: only deploy from main branch
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy project to stable folder
+        run: |
+          mkdir -p ~/PokeroleManager
+          rsync -a --delete ./ ~/PokeroleManager/
+
+      - name: Deploy backend
+        run: |
+          cd ~/PokeroleManager/Api
+          python3 -m venv venv
+          ~/PokeroleManager/Api/venv/bin/pip install --upgrade pip
+          ~/PokeroleManager/Api/venv/bin/pip install -r requirements.txt
+          sudo systemctl daemon-reload
+          sudo systemctl restart pokerole.service
