@@ -1,8 +1,18 @@
+from flask import jsonify
+from sqlalchemy import Boolean
+
+from .models.Moves import Move
+from .models.User import Game
+from .models.Pokemon import GamePokemon
+
+from .Enums.StatusTypes import StatusTypes
+
+from Api.extensions import database
+
 import random
 import string
 
-from sqlalchemy import Boolean
-from .models import Move 
+clients = {}
 
 STAT_COST_RULES = {
     "core": lambda v: v * 10,
@@ -11,7 +21,6 @@ STAT_COST_RULES = {
     "will": lambda v: v * 3,
     "static50": lambda _: 50
 }
-
 
 STAT_TYPE = {
     # Core
@@ -48,6 +57,16 @@ STAT_TYPE = {
     "Instinct": "static50",
     "Primal": None,  # not buyable
 }
+
+
+def broadcast_player_update(pokemonGuid, **fields):
+    payload = {
+        "type": "update",
+        "payload": fields
+    }
+
+    for q in clients.get(pokemonGuid, []):
+        q.put(payload)
 
 def generate_game_id(length=10):
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(length))
@@ -187,3 +206,6 @@ def serialize_move(move):
         "effectText": move.effectText or "",
         "flavorText": move.flavorText or "",
     }
+
+
+

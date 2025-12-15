@@ -1,20 +1,27 @@
-# Test client + database
-
 import pytest
-from Api import app, database
+from Api.main import create_app
+from Api.database import database as db
 
-import sys
-import os
-
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, root_dir)
-
-@pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+@pytest.fixture(scope="session")
+def app():
+    app, _ = create_app()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+    })
 
     with app.app_context():
-        database.create_all()
-        yield app.test_client()
-        database.drop_all()
+        db.create_all()
+        yield app
+        db.drop_all()
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+@pytest.fixture(autouse=True)
+def db_session(app):
+    with app.app_context():
+        yield
+        db.session.rollback()

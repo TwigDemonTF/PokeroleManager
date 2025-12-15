@@ -262,7 +262,7 @@ INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''
 INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'p5','User',7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
 INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'n0','SingleEnemy',8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
 INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'n0','AllEnemyInRange',9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-CREATE TABLE pokemon_garments (
+CREATE TABLE IF NOT EXISTS pokemon_garments (
 	pokemon_id INTEGER NOT NULL, 
 	garment_id INTEGER NOT NULL, 
 	PRIMARY KEY (pokemon_id, garment_id), 

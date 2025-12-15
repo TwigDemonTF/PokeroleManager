@@ -106,6 +106,7 @@ def game():
 
 @app.route("/Player")
 def player():
+    print(session.get("playerGuid"))
     if session.get("playerGuid"):
         return render_template("player.html", gameId=session.get("gameId"), pokemonGuid=session.get("playerGuid"), baseUrl=app.config["BASE_URL"])
 
