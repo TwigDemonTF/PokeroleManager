@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from .extensions import database, cors
-from .instance.config import DevelopmentConfig
+from .config import DevelopmentConfig
 
 from .routes import registerResources
 
