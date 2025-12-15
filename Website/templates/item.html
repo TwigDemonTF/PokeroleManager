@@ -67,7 +67,7 @@
 </body>
 
 <script>
-    const API_BASE = "http://127.0.0.1:9000"
+    const BASE_URL = "{{ baseUrl }}"
 document.getElementById("addItemForm").addEventListener("submit", function(e) {
     e.preventDefault(); // Prevent normal form submission
 
@@ -85,7 +85,7 @@ document.getElementById("addItemForm").addEventListener("submit", function(e) {
     };
 
     // Make the POST request
-    fetch(`${API_BASE}/item`, {  // replace with your actual backend URL
+    fetch(`${BASE_URL}/item`, {  // replace with your actual backend URL
         method: "POST",
         headers: {
             "Content-Type": "application/json"

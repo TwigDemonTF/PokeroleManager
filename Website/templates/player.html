@@ -442,7 +442,7 @@
 
     const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
     const GAME_ID = '{{ gameId }}'
-    const API_BASE = `http://127.0.0.1:9000/playerData/${GAME_ID}/${POKEMON_GUID}`;
+    const BASE_URL = "{{ baseUrl }}"
 
     const statCostRules = {
       core: v => v * 10,
@@ -523,7 +523,7 @@
       if (pokemonStatusSource) pokemonStatusSource.close();
 
       pokemonStatusSource = new EventSource(
-        `http://127.0.0.1:9000/playerStateStream/${GAME_ID}/${pokemonGuid}`
+        `${BASE_URL}/playerStateStream/${GAME_ID}/${pokemonGuid}`
       );
 
       pokemonStatusSource.onmessage = (event) => {
@@ -649,7 +649,7 @@
     }
 
     async function buyStat(statName, pokemonGuid) {
-      const res = await fetch(`${API_BASE}/buyStat`, {
+      const res = await fetch(`${BASE_URL}/buyStat/${GAME_ID}/${pokemonGuid}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stat: statName, pokemonGuid: pokemonGuid })
@@ -848,11 +848,11 @@
                 <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">
                     Vitality${statCircles(p.Vitality, 10)}
                 </div>
-                <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">
-                    Insight${statCircles(p.Insight, 10)}
-                </div>
                 <div class="stat" data-stat-name="Special" data-stat-value="${p.Special}" data-xp="${p.ExperiencePoints}">
                     Special${statCircles(p.Special, 10)}
+                </div>
+                <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">
+                    Insight${statCircles(p.Insight, 10)}
                 </div>
             </div>
 
@@ -979,7 +979,7 @@
       }).then(result => {
         if (!result.isConfirmed) return;
 
-        fetch(`http://127.0.0.1:9000/sellItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
+        fetch(`${BASE_URL}/sellItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         })
@@ -1013,7 +1013,7 @@
     function equipItem(itemId) {
       if (!itemId) return;
 
-      fetch(`http://127.0.0.1:9000/equipItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
+      fetch(`${BASE_URL}/equipItem/${GAME_ID}/${POKEMON_GUID}/${itemId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
@@ -1058,7 +1058,7 @@
     setupBagToggle();
 
     async function loadPokemon() {
-      const res = await fetch(`${API_BASE}`);
+      const res = await fetch(`${BASE_URL}/playerData/${GAME_ID}/${POKEMON_GUID}`);
       const json = await res.json();
       renderPokemon(json.data);
     }

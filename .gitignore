@@ -63,6 +63,10 @@ db.sqlite3-journal
 
 # Flask stuff:
 Api/instance/data.db
+Api/instance/config.py
+
+Website/instance/config.py
+
 .webassets-cache
 
 # Scrapy stuff:
@@ -158,3 +162,6 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+.gitignore
+Api/instance/config.py
+Api/instance/config.py

@@ -11,6 +11,7 @@ class ModifierEnum(Enum):
     Contest = "Contest"
     Perform = "Perform"
     Channel = "Channel"
+    ALERT = "Alert"
     Tough = "Tough"
     Intimidate = "Intimidate"
     Cute = "Cute"

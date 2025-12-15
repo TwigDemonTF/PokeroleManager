@@ -175,15 +175,15 @@
 
 <script>
   const playerGuid = "{{ playerGuid }}";
-  const gameId = "{{ gameId }}"
-  const API_BASE = "http://127.0.0.1:9000"
+  const GAME_ID = "{{ gameId }}"
+  const BASE_URL = "{{ baseUrl }}"
 
   document.addEventListener("DOMContentLoaded", () => {
     updateApples();
   });
 
   function updateApples() {
-    fetch(`${API_BASE}/getApples/${gameId}/${playerGuid}`, {
+    fetch(`${BASE_URL}/getApples/${GAME_ID}/${playerGuid}`, {
       method: "POST"
     })
       .then(res => res.json())
@@ -199,7 +199,7 @@
     button.addEventListener("click", () => {
       const itemId = button.id;
 
-      fetch(`${API_BASE}/buyItem`, {
+      fetch(`${BASE_URL}/buyItem`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -207,7 +207,7 @@
         body: JSON.stringify({
           pokemonGuid: playerGuid,
           itemId: itemId,
-          gameId: gameId,
+          GAME_ID: GAME_ID,
         })
       })
       .then(response => response.json())

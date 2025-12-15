@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, session
+from .instance.config import DevelopmentConfig
 import requests
 
 app = Flask(__name__)
 app.secret_key = "Fuck_You_Sessions"
-url = "http://127.0.0.1:9000/"
+app.config.from_object(DevelopmentConfig)
 
 def contextExample():
     context = {
@@ -22,7 +23,7 @@ def login():
                 "password": passwordOrGameColor
             }
 
-            res = requests.post(f"{url}/masterLogin", json=data)
+            res = requests.post(f"{app.config["BASE_URL"]}/masterLogin", json=data)
             res = res.json()
 
             if res["status"] == 401:
@@ -44,7 +45,7 @@ def login():
                 "gameColor": passwordOrGameColor,
             }
 
-            res = requests.post(f"{url}playerLogin", json=data)
+            res = requests.post(f"{app.config["BASE_URL"]}/playerLogin", json=data)
             res = res.json()
             print(res["message"])
             if res["status"] == 401:
@@ -77,7 +78,7 @@ def register():
             "password": password
         }
 
-        res = requests.post("http://127.0.0.1:9000/register", json=data)
+        res = requests.post(f"{app.config["BASE_URL"]}/register", json=data)
         res = res.json()
         return redirect('/Login')
     return render_template('register.html')
@@ -91,24 +92,26 @@ def logout():
 def addPokemon():
     context = {
         "gameId": session.get("gameId"),
+        "baseUrl": app.config["BASE_URL"]
     }
     return render_template('add_pokemon.html', **context)
 
 @app.route('/Game')
 def game():
     context = {
-        "gameId": session.get("gameId")
+        "gameId": session.get("gameId"),
+        "baseUrl": app.config["BASE_URL"]
     }
     return render_template('game.html', **context)
 
 @app.route("/Player")
 def player():
     if session.get("playerGuid"):
-        return render_template("player.html", gameId=session.get("gameId"), pokemonGuid=session.get("playerGuid"))
+        return render_template("player.html", gameId=session.get("gameId"), pokemonGuid=session.get("playerGuid"), baseUrl=app.config["BASE_URL"])
 
 @app.route("/ItemShop")
 def itemShop():
-    res = requests.get(f"{url}/item")
+    res = requests.get(f"{app.config["BASE_URL"]}/item")
     items = [
         item for item in res.json()
         if item["id"] is not None
@@ -118,19 +121,20 @@ def itemShop():
          "items": items, 
          "playerGuid": session.get("playerGuid"), 
          "gameId": session.get("gameId"),
+         "baseUrl": app.config["BASE_URL"]
     }
 
     return render_template("item_shop.html", **context)
 
 @app.route("/Battle")
 def battle():
-    res = requests.get(f"{url}/item")
+    res = requests.get(f"{app.config["BASE_URL"]}/item")
     items = [
         item for item in res.json()
         if item["id"] is not None
     ]
 
-    res = requests.get(f"{url}/itemEnums")
+    res = requests.get(f"{app.config["BASE_URL"]}/itemEnums")
     enums = res.json()
 
     item_categories = enums.get("ItemCategoryEnum", {})
@@ -141,6 +145,7 @@ def battle():
         "items": items,
         "item_categories": item_categories,
         "shop_tiers": shop_tiers,
+        "baseUrl": app.config["BASE_URL"]
     }
     return render_template("battle.html", **context)
 
@@ -149,9 +154,9 @@ def move():
     if request.method == "POST":
         data = request.form.to_dict()
         print("hit")
-        res = requests.post(f"{url}/addMove", json=data)
+        res = requests.post(f"{app.config["BASE_URL"]}/addMove", json=data)
 
-    res = requests.get(f"{url}/addMove")
+    res = requests.get(f"{app.config["BASE_URL"]}/addMove")
     # print(res)
     context = {
         "gameId": session.get("gameId"),
@@ -161,7 +166,7 @@ def move():
 
 @app.route("/Item", methods=["GET"])
 def item():
-    res = requests.get(f"{url}/itemEnums")
+    res = requests.get(f"{app.config["BASE_URL"]}/itemEnums")
     enums = res.json()
 
     item_categories = enums.get("ItemCategoryEnum", {})
@@ -170,6 +175,7 @@ def item():
     context = {
         "item_categories": item_categories,
         "shop_tiers": shop_tiers,
+        "baseUrl": app.config["BASE_URL"]
     }
 
     return render_template("item.html", **context)

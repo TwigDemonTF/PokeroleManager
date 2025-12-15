@@ -152,6 +152,8 @@ body {
 
 <script>
 const apiUrl = "http://192.168.2.11:9000/PullAllPokemon/{{ gameId }}";
+const GAME_ID = "{{ gameId }}"
+const BASE_URL = "{{ baseUrl }}"
 let allMoves = [];
 
 // Utility to render circles
@@ -320,7 +322,7 @@ async function applyMove(guid) {
         return;
     }
 
-    const res = await fetch("http://192.168.2.11:9000/moveManipulation", {
+    const res = await fetch(`${BASE_URL}/moveManipulation`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -336,18 +338,6 @@ async function applyMove(guid) {
         alert(json.error);
         return;
     }
-
-    // Update UI without reload
-    //const move = allMoves.find(m => m.id === moveId);
-    //const list = document.getElementById(`moves-${guid}`);
-
-    //if (list.innerHTML.includes("No moves"))
-        //list.innerHTML = "";
-
-    //list.innerHTML += renderMoveCard(move);
-
-    //moveSelect.value = "";
-    //slotSelect.value = "";
 }
 
 function buildTooltip(move) {
@@ -399,14 +389,14 @@ function buildTooltip(move) {
 }
 
 async function fetchMoves() {
-    const res = await fetch("http://192.168.2.11:9000/moveManipulation");
+    const res = await fetch(`${BASE_URL}/moveManipulation`);
     const json = await res.json();
     allMoves = json.moves;
 }
 
 async function fetchPokemon() {
     await fetchMoves();
-    const res = await fetch(apiUrl);
+    const res = await fetch(`${BASE_URL}/PullAllPokemon/${GAME_ID}`);
     const data = await res.json();
 
     const container = document.getElementById("pokemon-container");

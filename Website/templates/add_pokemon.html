@@ -117,93 +117,95 @@
 </form>
 
 <script>
-async function loadSelect(selectId, url, labelField = "name") {
-    const sel = document.getElementById(selectId);
-    sel.innerHTML = `<option value="">Loading...</option>`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
+    const BASE_URL = "{{ baseUrl }}"
 
-        sel.innerHTML = ""; // clear old content
+    async function loadSelect(selectId, url, labelField = "name") {
+        const sel = document.getElementById(selectId);
+        sel.innerHTML = `<option value="">Loading...</option>`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
 
-        data.forEach((item, index) => {
-            const opt = document.createElement("option");
-            opt.value = item.id === null ? "" : item.id;
-            opt.textContent = item[labelField];
+            sel.innerHTML = ""; // clear old content
 
-            // default select the "None" entry
-            if (index === 0) opt.selected = true;
+            data.forEach((item, index) => {
+                const opt = document.createElement("option");
+                opt.value = item.id === null ? "" : item.id;
+                opt.textContent = item[labelField];
 
-            sel.appendChild(opt);
-        });
+                // default select the "None" entry
+                if (index === 0) opt.selected = true;
 
-    } catch (err) {
-        sel.innerHTML = `<option>Error loading</option>`;
-    }
-}
+                sel.appendChild(opt);
+            });
 
-
-function loadEnum(selectId, values) {
-    const sel = document.getElementById(selectId);
-    sel.innerHTML = "";
-    values.forEach(v => {
-        sel.innerHTML += `<option value="${v}">${v}</option>`;
-    });
-}
-
-async function loadAllFKs() {
-    const tmp1 = loadSelect("BasePokemonId", "http://192.168.2.11:9000/basePokemon");
-    const tmp2 = loadSelect("NatureId", "http://192.168.2.11:9000/nature");
-    const tmp3 = loadSelect("AbilityId", "http://192.168.2.11:9000/ability");
-    const tmp4 = loadSelect("ItemId", "http://192.168.2.11:9000/item");
-    const tmp5 = loadSelect("Garment1", "http://192.168.2.11:9000/garment");
-    const tmp6 = loadSelect("Garment2", "http://192.168.2.11:9000/garment");
-    const tmp7 = loadSelect("Garment3", "http://192.168.2.11:9000/garment");
-
-    await Promise.all([tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7])
-
-    const statusValues = [
-        "Healthy","Burn1","Burn2","Burn3","Poisoned",
-        "Badly Poisoned","Frozen","Asleep","Paralyzed",
-        "Confused","Disabled","Flinched","In Love"
-    ];
-
-    loadEnum("Status", statusValues);
-}
-
-document.addEventListener("DOMContentLoaded", loadAllFKs);
-
-document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const form = new FormData(e.target);
-    const json = {};
-
-    for (const [key, val] of form.entries()) {
-        if (val === "") continue;
-
-        if (val === "true" || val === "false") {
-            json[key] = val === "true";
-        } else if (!isNaN(val)) {
-            json[key] = Number(val);
-        } else {
-            json[key] = val;
+        } catch (err) {
+            sel.innerHTML = `<option>Error loading</option>`;
         }
     }
 
-    // Combine garments (if your API wants an array)
-    json["garments"] = [form.get("Garment1"), form.get("Garment2"), form.get("Garment3")]
-        .filter(v => v !== "");
 
-    const res = await fetch("http://192.168.2.11:9000/gamePokemon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(json)
+    function loadEnum(selectId, values) {
+        const sel = document.getElementById(selectId);
+        sel.innerHTML = "";
+        values.forEach(v => {
+            sel.innerHTML += `<option value="${v}">${v}</option>`;
+        });
+    }
+
+    async function loadAllFKs() {
+        const tmp1 = loadSelect("BasePokemonId", `${BASE_URL}/basePokemon`);
+        const tmp2 = loadSelect("NatureId", `${BASE_URL}/nature`);
+        const tmp3 = loadSelect("AbilityId", `${BASE_URL}/ability`);
+        const tmp4 = loadSelect("ItemId", `${BASE_URL}/item`);
+        const tmp5 = loadSelect("Garment1", `${BASE_URL}/garment`);
+        const tmp6 = loadSelect("Garment2", `${BASE_URL}/garment`);
+        const tmp7 = loadSelect("Garment3", `${BASE_URL}/garment`);
+
+        await Promise.all([tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7])
+
+        const statusValues = [
+            "Healthy","Burn1","Burn2","Burn3","Poisoned",
+            "Badly Poisoned","Frozen","Asleep","Paralyzed",
+            "Confused","Disabled","Flinched","In Love"
+        ];
+
+        loadEnum("Status", statusValues);
+    }
+
+    document.addEventListener("DOMContentLoaded", loadAllFKs);
+
+    document.getElementById("pokemonForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const form = new FormData(e.target);
+        const json = {};
+
+        for (const [key, val] of form.entries()) {
+            if (val === "") continue;
+
+            if (val === "true" || val === "false") {
+                json[key] = val === "true";
+            } else if (!isNaN(val)) {
+                json[key] = Number(val);
+            } else {
+                json[key] = val;
+            }
+        }
+
+        // Combine garments (if your API wants an array)
+        json["garments"] = [form.get("Garment1"), form.get("Garment2"), form.get("Garment3")]
+            .filter(v => v !== "");
+
+        const res = await fetch(`${BASE_URL}/gamePokemon`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(json)
+        });
+
+        const result = await res.json();
+        alert("Server response: " + JSON.stringify(result, null, 2));
     });
-
-    const result = await res.json();
-    alert("Server response: " + JSON.stringify(result, null, 2));
-});
 </script>
 
 </body>

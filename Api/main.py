@@ -24,23 +24,40 @@ from .Enums.Move.Target import TargetEnum
 from .Enums.Items.ItemCategory import ItemCategoryEnum
 from .Enums.Items.ShopTiers import ShopTierEnum
 
+from .instance.config import DevelopmentConfig
+
 import secrets
 import time
 import queue
 import json
+import os
 
 # Set app
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
-api = Api(app)
+def create_app():
+    app = Flask(__name__, instance_relative_config=True)
 
-clients = {}  # { pokemonGuid: Queue() }
+    # Load config
+    app.config.from_object(DevelopmentConfig)
 
-# Database Config
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # Force SQLite to live in ./instance/data.db (STATIC)
+    db_path = os.path.join(app.instance_path, "data.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-database.init_app(app)
+    # Override with instance config (optional)
+    app.config.from_pyfile("config.py", silent=True)
+
+    # Extensions
+    CORS(app, resources={r"/*": {"origins": "*"}})
+    api = Api(app)
+
+    database.init_app(app)
+
+    return app, api
+
+app, api = create_app()
+
+clients = {} # { pokemonGuid: Queue() }
 
 class BasePokemonApi(Resource):
     def get(self):
@@ -1454,7 +1471,7 @@ def UpdateHealth():
         }
     }), 200
 
-@app.route("/playerData/<string:gameId>/<string:pokemonGuid>/buyStat", methods=["POST"])
+@app.route("/buyStat/<string:gameId>/<string:pokemonGuid>", methods=["POST"])
 def BuyStat(gameId, pokemonGuid):
     raw = request.get_json()
     if not raw:
