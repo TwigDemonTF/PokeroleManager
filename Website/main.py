@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session
-from .instance.config import DevelopmentConfig
+from .config import DevelopmentConfig
 import requests
 
 app = Flask(__name__)
