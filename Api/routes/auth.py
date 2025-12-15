@@ -45,7 +45,10 @@ class Register(Resource):
         database.session.add(userGame)
         database.session.commit()
 
-        return {"message": "User registered successfully"}, 201
+        return {
+            "message": "User registered successfully",
+            "gameId": userGame.gameId
+        }, 201
 
 
 class MasterLogin(Resource):
