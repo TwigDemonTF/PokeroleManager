@@ -1,4 +1,4 @@
-name: Back-end Flow
+name: Backend CI/CD
 
 on:
   push:
@@ -55,18 +55,16 @@ jobs:
   deploy:
     needs: backend-tests
     runs-on: self-hosted
-
-    # Optional: only deploy from main branch
     if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy project to stable folder
+      - name: Copy backend to stable folder
         run: |
-          mkdir -p ~/PokeroleManager
-          rsync -a --delete ./ ~/PokeroleManager/
+          mkdir -p ~/PokeroleManager/Api
+          rsync -a --delete Api/ ~/PokeroleManager/Api/
 
       - name: Deploy backend
         run: |
@@ -75,4 +73,4 @@ jobs:
           ~/PokeroleManager/Api/venv/bin/pip install --upgrade pip
           ~/PokeroleManager/Api/venv/bin/pip install -r requirements.txt
           sudo systemctl daemon-reload
-          sudo systemctl restart pokerole.service
+          sudo systemctl restart pokerole-backend.service

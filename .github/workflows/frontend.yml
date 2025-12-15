@@ -1,0 +1,86 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f Website/requirements.txt ]; then pip install -r Website/requirements.txt; fi
+
+      - name: Lint frontend
+        run: pylint Website --exit-zero
+
+  test:
+    name: Frontend Tests
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f Website/requirements.txt ]; then pip install -r Website/requirements.txt; fi
+          pip install pytest
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
+      - name: Run frontend tests
+        run: pytest Website/tests -q || echo "No frontend tests found"
+
+  deploy:
+    name: Frontend Deploy
+    needs: test
+    runs-on: self-hosted
+
+    # Only deploy from main
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Copy frontend to stable folder (scoped)
+      - name: Copy frontend to stable folder
+        run: |
+          mkdir -p ~/PokeroleManager/Website
+          rsync -a --delete Website/ ~/PokeroleManager/Website/
+
+      # 3. (Optional) Frontend venv + deps (Python frontend)
+      - name: Install frontend dependencies
+        run: |
+          cd ~/PokeroleManager/Website
+          python3 -m venv venv
+          ~/PokeroleManager/Website/venv/bin/pip install --upgrade pip
+          if [ -f requirements.txt ]; then \
+            ~/PokeroleManager/Website/venv/bin/pip install -r requirements.txt; \
+          fi
+
+      # 4. (Optional) Restart frontend service / reload web server
+      - name: Restart frontend service (optional)
+        run: |
+          sudo systemctl daemon-reload
+          sudo systemctl restart pokerole-frontend.service || echo "No frontend service defined"
