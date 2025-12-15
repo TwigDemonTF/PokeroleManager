@@ -1,14 +1,12 @@
 def setup_game(client):
-    client.post("/register", json={
+    r = client.post("/register", json={
         "username": "gm",
         "password": "pw"
     })
 
-    r = client.post("/game", json={
-        "name": "Test Game"
-    })
-
     assert r.status_code == 201
+    assert "gameId" in r.json
+
     return r.json["gameId"]
 
 def setup_base_pokemon(client):
