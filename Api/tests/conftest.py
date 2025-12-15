@@ -1,6 +1,6 @@
 import pytest
-from Api.main import create_app
-from Api.database import database as db
+from Api import create_app
+from Api.extensions import database as db
 
 @pytest.fixture(scope="session")
 def app():
