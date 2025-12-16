@@ -519,6 +519,13 @@
         p5: "+5",
     };
 
+    const ITEM_USE_HANDLERS = {
+        heal_pool: openHealPoolSwal,
+        heal_fixed: openHealFixedSwal,
+        revive: openReviveSwal,
+        // future effects go brrrrr
+    };
+
     function startPlayerStateStream(pokemonGuid, p) {
       if (pokemonStatusSource) pokemonStatusSource.close();
 
@@ -840,19 +847,19 @@
         <div class="stats">
             <div class="stat-group">
                 <div class="stat" data-stat-name="Strength" data-stat-value="${p.Strength}" data-xp="${p.ExperiencePoints}">
-                    Strength${statCircles(p.Strength, 10)}
+                    Strength${statCircles(p.Strength, p.StrengthPotential)}
                 </div>
                 <div class="stat" data-stat-name="Dexterity" data-stat-value="${p.Dexterity}" data-xp="${p.ExperiencePoints}">
-                    Dexterity${statCircles(p.Dexterity, 10)}
+                    Dexterity${statCircles(p.Dexterity, p.Dexteritypotential)}
                 </div>
                 <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">
-                    Vitality${statCircles(p.Vitality, 10)}
+                    Vitality${statCircles(p.Vitality, p.VitalityPotential)}
                 </div>
                 <div class="stat" data-stat-name="Special" data-stat-value="${p.Special}" data-xp="${p.ExperiencePoints}">
-                    Special${statCircles(p.Special, 10)}
+                    Special${statCircles(p.Special, p.SpecialPotential)}
                 </div>
                 <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">
-                    Insight${statCircles(p.Insight, 10)}
+                    Insight${statCircles(p.Insight, p.InsightPotential)}
                 </div>
             </div>
 
@@ -915,8 +922,11 @@
                 ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
                 ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
 
-                ${item.itemCategory === "Held Item" || (item.name || "").toLowerCase().includes("berry")
+                ${item.isEquipable === true
                   ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>` 
+                  : ""}
+                ${item.isUsable === true
+                  ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>` 
                   : ""}
               </li>
             `).join('') || '<li class="bag-card">No items</li>'}
@@ -1039,6 +1049,91 @@
         })
         .catch(err => {
           Swal.fire("Request failed", err.toString(), "error");
+        });
+    }
+
+    function useItem(bagItemId) {
+        const item = getItemFromBag(bagItemId);
+
+        if (!item || !item.isUsable) return;
+
+        const handler = ITEM_USE_HANDLERS[item.effectKey];
+
+        if (!handler) {
+            Swal.fire({
+                title: "Cannot Use Item",
+                text: "This item cannot be used manually.",
+                icon: "warning",
+                theme: "dark"
+            });
+            return;
+        }
+
+        handler(item);
+    }
+
+    function openHealPoolSwal(item) {
+        const remaining = item.effectData.maxPool - item.effectData.unitsUsed;
+
+        if (remaining <= 0) {
+            Swal.fire({
+                title: "Item Depleted",
+                text: "This potion has no healing left.",
+                icon: "info",
+                theme: "dark"
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: `Use ${item.name}`,
+            theme: "dark",
+            html: `
+                <p>Remaining healing: <strong>${remaining}</strong></p>
+                <label>Healing Units to Use</label>
+                <input id="healAmount" type="number" class="swal2-input"
+                      min="1" max="${remaining}" value="1">
+                <small>1 unit = 1 HP or 2 Lethal HP</small>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Use",
+            preConfirm: () => {
+                const value = Number(document.getElementById("healAmount").value);
+                if (value < 1 || value > remaining) {
+                    Swal.showValidationMessage("Invalid amount");
+                    return false;
+                }
+                return { units: value };
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            sendUseItemRequest(item.id, result.value);
+        });
+    }
+
+    function sendUseItemRequest(bagItemId, payload = {}) {
+        fetch(`${BASE_URL}/useItem/${GAME_ID}/${bagItemId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Item Used",
+                timer: 2500,
+                showConfirmButton: false,
+                theme: "dark"
+            });
+
+            updatePokemonFromResponse(data);
+        })
+        .catch(() => {
+            Swal.fire("Error", "Failed to use item", "error");
         });
     }
 

@@ -6,7 +6,7 @@ from ..models.Pokemon import GamePokemon, GameEntities
 from ..models.User import Game
 from ..models.Items import Item, BagItem
 
-from ..utils import broadcast_player_update, serialize_move
+from ..Utils.utils import broadcast_player_update, serialize_move
 
 from Api.extensions import database
 

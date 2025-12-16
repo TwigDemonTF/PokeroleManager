@@ -13,11 +13,11 @@ from ..Enums.Move.HitCount import HitCountEnum
 from ..Enums.Move.DamageType import DamageTypeEnum
 
 from ..Enums.Types import Types as TypeEnum
-from ..utils import enum_to_dict_list, getBooleanFields
 
 from ..Enums.Move.HealMoveTypes import HealMoveTypesEnum
 from ..Enums.Move.Modifier import ModifierEnum
 
+from ..Utils.utils import enum_to_dict_list, getBooleanFields
 
 class NatureApi(Resource):
     def post(self):

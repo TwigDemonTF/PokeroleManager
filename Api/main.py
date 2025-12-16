@@ -9,7 +9,7 @@ from .Enums.BagSize import BagSizeEnum
 from .Enums.Items.ItemCategory import ItemCategoryEnum
 from .Enums.Items.ShopTiers import ShopTierEnum
 
-from .utils import broadcast_player_update, clients, STAT_COST_RULES, STAT_TYPE
+from .Utils.utils import broadcast_player_update, clients, STAT_COST_RULES, STAT_TYPE
 
 from Api import create_app
 from Api.extensions import database

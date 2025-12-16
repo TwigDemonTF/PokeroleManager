@@ -6,7 +6,7 @@ from ..models.Items import Item
 from ..models.Misc import Ability, Nature
 from ..models.User import Game
 
-from ..utils import extract_modifiers_from_group
+from ..Utils.utils import extract_modifiers_from_group
 
 from Api.extensions import database
 

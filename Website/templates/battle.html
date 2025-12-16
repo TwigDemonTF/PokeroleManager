@@ -817,12 +817,15 @@ select:focus {
     // If you use cookies/session auth (Flask login), keep credentials: 'include'
     const FETCH_OPTS = { headers: {'Content-Type':'application/json'}};
     const GAME_ID = "{{ gameId }}"
+    const ITEM_CATEGORIES = "{{ item_categories }}"
+    const SHOP_TIERS = "{{ shop_tiers }}"
 
     const playersSelect = document.getElementById('players');
     const npcsSelect = document.getElementById('npcs');
     const searchInput = document.getElementById('search');
     const stageGrid = document.getElementById('stageGrid');
     const countEl = document.getElementById('count');
+
 
     const TYPE_COLORS = {
         Fire: "#F08030",
@@ -2129,6 +2132,113 @@ select:focus {
                 })
                 .catch(err => Swal.fire('Error', 'Failed to assign item', 'error'));
             }
+        });
+    }
+
+    function openAddItemModal(onCreatedCallback = null) {
+        Swal.fire({
+            title: "Add New Item",
+            theme: "dark",
+            html: `
+                <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">
+                    <label>Name</label>
+                    <input id="itemName" class="swal2-input">
+
+                    <label>Description</label>
+                    <textarea id="itemDesc" class="swal2-textarea"></textarea>
+
+                    <label>Effect Key</label>
+                    <input id="effectKey" class="swal2-input" placeholder="heal_hp, boost_stat">
+
+                    <label>Effect Data (JSON)</label>
+                    <textarea id="effectData" class="swal2-textarea"
+                        placeholder='{"amount":20}'></textarea>
+
+                    <div class="mb-3">
+                        <label>Item Category</label>
+                        <select id="itemCategory" name="ItemCategory" class="swal2-select" required>
+                            {% for key, value in item_categories %}
+                                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Minimum Shop Tier</label>
+                        <select id="minShopTier" name="MinShopTier" class="swal2-select" required>
+                            {% for key, value in shop_tiers %}
+                                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <label>Is Usable</label>   
+                    <input id="isUsable" type="checkbox" class="swal2-input" value="0">
+
+                    <label>Is Equipable</label>   
+                    <input id="isEquipable" type="checkbox" class="swal2-input" value="0">
+
+                    <label>Buy Price</label>
+                    <input id="buyPrice" type="number" class="swal2-input" value="0">
+
+                    <label>Sell Price</label>
+                    <input id="sellPrice" type="number" class="swal2-input" value="0">
+
+                    <label>Uses</label>
+                    <input id="numUses" type="number" class="swal2-input" value="1">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Create Item",
+            preConfirm: () => {
+                try {
+                    const effectDataRaw = document.getElementById("effectData").value;
+                    const effectData = effectDataRaw ? JSON.parse(effectDataRaw) : null;
+
+                    return {
+                        name: document.getElementById("itemName").value,
+                        description: document.getElementById("itemDesc").value,
+                        effectKey: document.getElementById("effectKey").value,
+                        effectData: effectData,
+                        itemCategory: document.getElementById("itemCategory").value,
+                        minShopTier: document.getElementById("minShopTier").value,
+                        isUsable: document.getElementById("isUsable").checked,
+                        isEquipable: document.getElementById("isEquipable").checked,
+                        buyPrice: Number(document.getElementById("buyPrice").value),
+                        sellPrice: Number(document.getElementById("sellPrice").value),
+                        numUses: Number(document.getElementById("numUses").value),
+                    };
+                } catch {
+                    Swal.showValidationMessage("Effect Data must be valid JSON");
+                    return false;
+                }
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(`${BASE_URL}/Item`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(res => res.json())
+            .then(item => {
+                items.push(item);
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    title: "Item Created",
+                    icon: "success",
+                    timer: 2500,
+                    showConfirmButton: false,
+                    theme: "dark"
+                });
+
+                if (onCreatedCallback) {
+                    onCreatedCallback(item);
+                }
+            })
+            .catch(() => Swal.fire("Error", "Failed to create item", "error"));
         });
     }
 

@@ -1,11 +1,11 @@
 from flask import jsonify
 from sqlalchemy import Boolean
 
-from .models.Moves import Move
-from .models.User import Game
-from .models.Pokemon import GamePokemon
+from ..models.Moves import Move
+from ..models.User import Game
+from ..models.Pokemon import GamePokemon
 
-from .Enums.StatusTypes import StatusTypes
+from ..Enums.StatusTypes import StatusTypes
 
 from Api.extensions import database
 

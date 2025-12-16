@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session
-from .instance.config import DevelopmentConfig
+from .config import DevelopmentConfig
 import requests
 
 app = Flask(__name__)
@@ -112,7 +112,7 @@ def player():
 
 @app.route("/ItemShop")
 def itemShop():
-    res = requests.get(f"{app.config["BASE_URL"]}/item")
+    res = requests.get(f"{app.config["BASE_URL"]}Item")
     items = [
         item for item in res.json()
         if item["id"] is not None
@@ -129,7 +129,7 @@ def itemShop():
 
 @app.route("/Battle")
 def battle():
-    res = requests.get(f"{app.config["BASE_URL"]}/item")
+    res = requests.get(f"{app.config["BASE_URL"]}/Item")
     items = [
         item for item in res.json()
         if item["id"] is not None

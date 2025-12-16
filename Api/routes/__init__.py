@@ -24,7 +24,7 @@ def registerResources(api):
     api.add_resource(GameApi, "/PullAllPokemon/<string:gameId>")
     api.add_resource(BattleApi, '/battleData')
 
-    api.add_resource(ItemApi, "/item")
+    api.add_resource(ItemApi, "/Item")
 
     api.add_resource(MoveManipulation, "/moveManipulation")
     api.add_resource(BuyItem, "/buyItem")
