@@ -9,7 +9,7 @@ from .Enums.BagSize import BagSizeEnum
 from .Enums.Items.ItemCategory import ItemCategoryEnum
 from .Enums.Items.ShopTiers import ShopTierEnum
 
-from .Utils.utils import broadcast_player_update, clients, STAT_COST_RULES, STAT_TYPE
+from .Utils.utils import broadcast_player_update, clients, STAT_COST_RULES, STAT_TYPE,STATIC_STAT_CAPS , serialize_bag
 
 from Api import create_app
 from Api.extensions import database
@@ -109,6 +109,26 @@ def BuyStat(gameId, pokemonGuid):
 
     current_value = getattr(pokemon, stat_name.lower())
 
+    # 3.5 Check stat potential cap
+    potential_attr = f"{stat_name.lower()}Potential"
+
+    if hasattr(pokemon, potential_attr):
+        max_value = getattr(pokemon, potential_attr)
+    else:
+        # fallback for static stats
+        max_value = STATIC_STAT_CAPS.get(stat_name.lower())
+        if max_value is None:
+            return {
+                "error": f"{stat_name} cannot be purchased"
+            }, 400
+
+    if current_value >= max_value:
+        return {
+            "error": f"{stat_name} is already at maximum potential",
+            "current": current_value,
+            "maximum": max_value
+        }, 400
+
     # 4. Compute cost
     cost = cost_fn(current_value)
 
@@ -190,6 +210,11 @@ def AddItemToBag(gameId, pokemonGuid, itemId):
         database.session.add(bag_item)
         database.session.commit()
 
+        broadcast_player_update(
+            pokemon.Guid,
+            Bag=serialize_bag(pokemon)
+        )
+
         return jsonify({
             "success": True,
             "message": f"{item.name} added to {pokemon.name}'s bag",
@@ -231,8 +256,8 @@ def EquipItem(gameId, pokemonGuid, itemId):
         item = bag_item.item
 
         # ---- Validate Held Item ----
-        if item.itemCategory != ItemCategoryEnum.HELD_ITEM:
-            return {"error": "Only Held Items can be equipped"}, 400
+        if not item.isEquipable:
+            return {"error": "Only Equipable Items can be equipped"}, 400
 
         bag = pokemon.bag
         bag_limit = int(bag.bagSize.name.replace("size", ""))  # size5 → 5
@@ -270,9 +295,73 @@ def EquipItem(gameId, pokemonGuid, itemId):
 
         database.session.commit()
 
+        broadcast_player_update(
+            pokemon.Guid,
+            Bag=serialize_bag(pokemon),
+            HeldItem=item.to_dict()
+        )
+
         return {
             "success": True,
             "equippedItem": item.to_dict()
+        }, 200
+
+    except Exception as e:
+        database.session.rollback()
+        return {"error": str(e)}, 500
+
+@app.route("/unequipItem/<string:gameId>/<string:pokemonGuid>", methods=["GET", "POST"])
+def UnequipItem(gameId, pokemonGuid):
+    try:
+        # ---- Find Pokémon ----
+        pokemon = (
+            database.session.query(GamePokemon)
+            .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
+            .join(Game, GameEntities.gameId == Game.id)
+            .filter(Game.gameId == gameId)
+            .filter(GamePokemon.Guid == pokemonGuid)
+            .first()
+        )
+
+        if not pokemon:
+            return {"error": "Pokémon not found"}, 404
+
+        if not pokemon.heldItem:
+            return {"error": "No item equipped"}, 400
+
+        if not pokemon.bag:
+            return {"error": "Pokémon has no bag"}, 400
+
+        bag = pokemon.bag
+        bag_limit = int(bag.bagSize.name.replace("size", ""))  # size5 → 5
+
+        # ---- Check bag space ----
+        if len(bag.items) >= bag_limit:
+            return {"error": "Bag is full, cannot unequip"}, 400
+
+        # ---- Move held item to bag ----
+        returned_item = BagItem(
+            itemId=pokemon.heldItem.id,
+            bagId=bag.id
+        )
+        database.session.add(returned_item)
+
+        # ---- Unequip item ----
+        pokemon.itemId = None
+
+        database.session.commit()
+
+        broadcast_player_update(
+            pokemon.Guid,
+            Bag=serialize_bag(pokemon),
+            HeldItem=None
+        )
+
+        return {
+            "success": True,
+            "bag": serialize_bag(pokemon),
+            "message": f"Unequipped {returned_item.item.name}",
+            "bagUsage": f"{len(bag.items) + 1}/{bag_limit}"
         }, 200
 
     except Exception as e:
@@ -303,6 +392,12 @@ def SellItem(gameId, pokemonGuid, bagItemId):
         pokemon.apples += sell_price
         database.session.delete(bag_item)
         database.session.commit()
+
+        broadcast_player_update(
+            pokemon.Guid,
+            Bag=serialize_bag(pokemon),
+            Apples=pokemon.apples
+        )
 
         return jsonify({
             "success": True,

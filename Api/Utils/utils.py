@@ -22,6 +22,26 @@ STAT_COST_RULES = {
     "static50": lambda _: 50
 }
 
+STATIC_STAT_CAPS = {
+    "will": 10,
+    # all other static stats
+    "fight": 5,
+    "survival": 5,
+    "contest": 5,
+    "brawl": 5,
+    "channel": 5,
+    "clash": 5,
+    "evasion": 5,
+    "alert": 5,
+    "athletic": 5,
+    "natureStat": 5,
+    "stealth": 5,
+    "allure": 5,
+    "etiquette": 5,
+    "intimidate": 5,
+    "perform": 5,
+}
+
 STAT_TYPE = {
     # Core
     "Strength": "core",
@@ -135,6 +155,29 @@ def updatePokemonHealth(game_id, guid, new_health):
         pokemon.status = StatusTypes.HEALTHY.value
 
     database.session.commit()
+
+def serialize_bag(pokemon):
+    if not pokemon.bag:
+        return {
+            "items": [],
+            "capacity": 0
+        }
+
+    try:
+        capacity = int(pokemon.bag.bagSize.value.replace("size", ""))
+    except Exception:
+        capacity = 5
+
+    return {
+        "items": [
+            {
+                "id": bi.id,
+                **bi.item.to_dict()
+            }
+            for bi in pokemon.bag.items
+        ],
+        "capacity": capacity
+    }
 
 def serialize_move(move):
     # ---- Accuracy & Damage Modifiers ----

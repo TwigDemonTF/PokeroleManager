@@ -1,6 +1,10 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from .config import DevelopmentConfig
+
 import requests
+import csv
+import os
+import random
 
 app = Flask(__name__)
 app.secret_key = "Fuck_You_Sessions"
@@ -112,20 +116,57 @@ def player():
 
 @app.route("/ItemShop")
 def itemShop():
-    res = requests.get(f"{app.config["BASE_URL"]}Item")
+    res = requests.get(f"{app.config['BASE_URL']}/Item")
+    res.raise_for_status()  # optional but strongly recommended
+
+    data = res.json()  # THIS was missing
+
     items = [
-        item for item in res.json()
+        item for item in data
         if item["id"] is not None
     ]
 
     context = {
-         "items": items, 
-         "playerGuid": session.get("playerGuid"), 
-         "gameId": session.get("gameId"),
-         "baseUrl": app.config["BASE_URL"]
+        "items": items,
+        "playerGuid": session.get("playerGuid"),
+        "gameId": session.get("gameId"),
+        "baseUrl": app.config["BASE_URL"]
     }
 
     return render_template("item_shop.html", **context)
+
+def load_items(file_path):
+    items = []
+    weights = []
+    try:
+        with open(file_path, mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if len(row) != 3:
+                    continue
+                item_id, name, weight = row
+                try:
+                    weight = float(weight)
+                    if 0.1 <= weight <= 1:
+                        items.append((int(item_id), name))
+                        weights.append(weight)
+                except ValueError:
+                    continue
+    except FileNotFoundError:
+        print("Item file not found!")
+    return items, weights
+
+@app.route("/genLootItem", methods=["GET"])
+def gen_item():
+    file_path = os.path.join(os.path.dirname(__file__), 'Items.txt')
+    items, weights = load_items(file_path)
+
+    if not items:
+        return jsonify({"error": "No items loaded"}), 500
+
+    item_result = random.choices(items, weights=weights, k=1)[0]
+
+    return jsonify({"item": item_result})
 
 @app.route("/Battle")
 def battle():
@@ -149,6 +190,20 @@ def battle():
         "baseUrl": app.config["BASE_URL"]
     }
     return render_template("battle.html", **context)
+
+def Item(request):
+    item_result = None
+    file_path = os.path.join(os.path.dirname(__file__), 'Items.txt')  # Adjust if your file is in a different folder
+
+    if request.method == 'POST':
+        items, weights = load_items(file_path)
+        if items:
+            item_result = random.choices(items, weights=weights, k=1)[0]
+
+    context = {
+        "item_result": item_result
+    }
+    return
 
 @app.route("/Move", methods=["GET", "POST"])
 def move():

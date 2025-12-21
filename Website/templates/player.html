@@ -439,6 +439,7 @@
       document.body.style.zoom = "80%";
     let pokemonStatusInterval = null;
     let pokemonStatusSource = null;
+    let isBagOpen = false;
 
     const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
     const GAME_ID = '{{ gameId }}'
@@ -521,8 +522,8 @@
 
     const ITEM_USE_HANDLERS = {
         heal_pool: openHealPoolSwal,
-        heal_fixed: openHealFixedSwal,
-        revive: openReviveSwal,
+        //heal_fixed: openHealFixedSwal,
+        //revive: openReviveSwal,
         // future effects go brrrrr
     };
 
@@ -546,6 +547,8 @@
     }
 
     function applyPlayerUpdate(update, p) {
+      Object.assign(p, update)
+
       if ("Health" in update) {
         p.Health = update.Health;
         p._updateHpUI(update.Health, p);
@@ -568,6 +571,16 @@
       if ("Moves" in update) {
         p.Moves = update.Moves;
         updateMovesUI(update.Moves);
+      }
+
+      if ("Bag" in update) {
+        p.Bag = update.Bag;
+        renderBag(update.Bag);
+      }
+
+      if ("HeldItem" in update) {
+        p.HeldItem = update.HeldItem;
+        updateHeldItemBadge(update.HeldItem);
       }
     }
 
@@ -596,6 +609,69 @@
         if (!container) return;
 
         container.innerHTML = moves.map(renderMove).join("");
+    }
+
+    function updateBagUI(bag) {
+      const bagContainer = document.getElementById("bagContainer");
+      if (!bagContainer) return;
+
+      const header = bagContainer.querySelector(".bag-header");
+      const list = bagContainer.querySelector(".bag-content");
+
+      header.textContent = `Pokémon Bag (${bag.items.length} items)`;
+
+      if (!bag.items.length) {
+        list.innerHTML = `<li class="bag-card">No items</li>`;
+        return;
+      }
+
+      list.innerHTML = bag.items.map(item => `
+        <li class="bag-card">
+          <div class="card-top">
+            <div class="card-name-category">
+              <strong>${item.name}</strong>
+              ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
+            </div>
+            ${item.sellPrice
+              ? `<button onclick="sellItem('${item.id}')" class="sell-price equip-btn">
+                  Sell for: ${item.sellPrice}₽
+                </button>` : ""}
+          </div>
+
+          ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
+          ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
+
+          ${item.isEquipable
+            ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>`
+            : ""}
+          ${item.isUsable
+            ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>`
+            : ""}
+        </li>
+      `).join("");
+    }
+
+    function updateHeldItemBadge(item) {
+      const typesContainer = document.querySelector(".types");
+      if (!typesContainer) return;
+
+      const existing = document.getElementById("heldItemBadge");
+      if (existing) existing.remove();
+
+      if (!item) return;
+
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      badge.id = "heldItemBadge";
+      badge.innerHTML = makeTooltip(item.name, item);
+
+      badge.onclick = async () => {
+        await fetch(`${BASE_URL}/unequipItem/${GAME_ID}/${POKEMON_GUID}`, {
+          method: "POST"
+        });
+      };
+
+      typesContainer.appendChild(badge);
     }
 
     async function confirmStatPurchase(statName, currentValue, availableXP) {
@@ -812,6 +888,62 @@
       `;
     }
 
+    function renderBag(pokemonBag) {
+      const bag = document.getElementById("bagContainer");
+      if (!bag) return;
+
+      const bagSizeMap = {
+        size0: 0,
+        size5: 5,
+        size10: 10,
+        size15: 15
+      };
+
+      const header = bag.querySelector(".bag-header");
+      const list = bag.querySelector(".bag-content");
+
+      // Preserve open state
+      bag.classList.toggle("open", isBagOpen);
+      
+      const currentSize = pokemonBag?.items?.length ?? 0;
+      const maxSize = bagSizeMap[pokemonBag.bagSize] ?? 0;
+      header.textContent = `Pokémon Bag (${currentSize}/${maxSize} items)`;
+
+      if (!pokemonBag.items || pokemonBag.items.length === 0) {
+        list.innerHTML = `<li class="bag-card">No items</li>`;
+        return;
+      }
+
+      list.innerHTML = pokemonBag.items.map(item => `
+        <li class="bag-card">
+          <div class="card-top">
+            <div class="card-name-category">
+              <strong>${item.name}</strong>
+              ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
+            </div>
+
+            ${item.sellPrice
+              ? `<button class="sell-price equip-btn"
+                        onclick="sellItem('${item.id}')">
+                  Sell for: ${item.sellPrice}₽
+                </button>`
+              : ""}
+          </div>
+
+          ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
+          ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
+
+          ${!!item.isUsable
+            ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>` 
+            : ""}
+
+          ${!!item.isEquipable
+            ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>`
+            : ""}
+        </li>
+      `).join("");
+    }
+
     function renderPokemon(p) {
       const card = document.getElementById('pokemonCard');
 
@@ -833,7 +965,7 @@
         <div class="types">
         ${p.Ability ? `<div class="badge">${makeTooltip(p.Ability.name, p.Ability)}</div>` : ''}
         ${p.Nature ? `<div class="badge">${makeTooltip(p.Nature.name, p.Nature)}</div>` : ''}
-        ${p.HeldItem ? `<div class="badge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
+        ${p.HeldItem ? `<div class="badge" id="heldItemBadge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
         ${p.Garments?.map(g => `<div class="badge">${g}</div>`).join('') || ''}
         </div>
 
@@ -907,32 +1039,30 @@
         </div>
 
         <div class="bag" id="bagContainer">
-          <div class="bag-header">Pokémon Bag (${p.Bag?.items?.length || 0} items)</div>
-          <ul class="bag-content">
-            ${p.Bag?.items?.map(item => `
-              <li class="bag-card">
-                <div class="card-top">
-                  <div class="card-name-category">
-                    <strong>${item.name || "Unnamed Item"}</strong>
-                    ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
-                  </div>
-                  ${item.sellPrice ? `<button onclick="sellItem('${item.id}')" class="sell-price equip-btn">Sell for: ${item.sellPrice}₽</button>` : ""}
-                </div>
-
-                ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
-                ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
-
-                ${item.isEquipable === true
-                  ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>` 
-                  : ""}
-                ${item.isUsable === true
-                  ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>` 
-                  : ""}
-              </li>
-            `).join('') || '<li class="bag-card">No items</li>'}
-          </ul>
+          <div class="bag-header"></div>
+          <ul class="bag-content"></ul>
         </div>
         `;
+
+        const heldItemBadge = document.getElementById("heldItemBadge");
+        
+        if (heldItemBadge) {
+            heldItemBadge.onclick = async () => {
+                const res = await fetch(`${BASE_URL}/unequipItem/${GAME_ID}/${POKEMON_GUID}`, { method: "POST" });
+                const data = await res.json();
+                console.log(data);
+
+                if (data.success) {
+                    p.Bag = data.bag
+                    console.log(data.bag)
+                    // Optional: refresh bag UI
+                    renderBag(p.Bag)
+                    heldItemBadge.remove(); // remove badge since item is unequipped
+                  } else {
+                    alert(data.error);
+                }
+            };
+        }
 
         const hpFill = card.querySelector('.hp-bar-fill');
         const hpText = card.querySelector('.hp-text');
@@ -966,12 +1096,13 @@
           const target = el.closest('[data-stat-name]');
           if (!target) return;
           const statName = target.dataset.statName;
-          const statValue = Number(target.dataset.statValue);
-          const xp = Number(target.dataset.xp);
+          const statValue = window.currentPokemon[statName];
+          const xp = window.currentPokemon.ExperiencePoints;
           confirmStatPurchase(statName, statValue, xp);
         });
       });
       startPlayerStateStream(POKEMON_GUID, p);
+      renderBag(p.Bag || { items: [] });
       setupBagToggle();
     }
 
@@ -1139,18 +1270,19 @@
 
     // Bag collapsible toggle
     function setupBagToggle() {
-      const bag = document.getElementById('bagContainer');
+      const bag = document.getElementById("bagContainer");
       if (!bag) return;
 
-      const header = bag.querySelector('.bag-header');
+      const header = bag.querySelector(".bag-header");
 
-      header.addEventListener('click', () => {
-        bag.classList.toggle('open');
-      });
+      header.onclick = () => {
+        isBagOpen = !isBagOpen;
+        bag.classList.toggle("open", isBagOpen);
+      };
     }
 
     // Call after the page renders the bag
-    setupBagToggle();
+    //setupBagToggle();
 
     async function loadPokemon() {
       const res = await fetch(`${BASE_URL}/playerData/${GAME_ID}/${POKEMON_GUID}`);

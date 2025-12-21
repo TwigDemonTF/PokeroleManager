@@ -1166,7 +1166,6 @@ select:focus {
     function computeInitiative(poke) {
         // Change this rule if you want different initiative logic
         let d6 = Math.floor(Math.random() * (7 - 1)) + 1
-        console.log(d6)
         return d6 + poke.dexterity + poke.survival ?? 0;
     }
 
@@ -1993,6 +1992,7 @@ select:focus {
             el.style.display = 'none';
         });
         globalAddResourceBtn.style.display = "block";
+        genLootItemBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         fetchSelectedAndRender();
@@ -2397,6 +2397,32 @@ select:focus {
 `;
 
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
+    let genLootItemBtn = document.getElementById("genLootItemBtn");
+
+    if (!genLootItemBtn) {
+        genLootItemBtn = document.createElement("button");
+        genLootItemBtn.id = "genLootItemBtn";
+        genLootItemBtn.textContent = "Generate Loot Item";
+        genLootItemBtn.className = "btn btn-success";
+        genLootItemBtn.style.marginTop = "10px";
+        genLootItemBtn.style.display = "none"
+
+        // Example: open modal for selected player(s)
+        genLootItemBtn.onclick = async () => {
+            const res = await fetch("http://127.0.0.1:8000/genLootItem");
+            const data = await res.json();
+            console.log(data); // { item: "SomeItemName" }
+            Swal.fire({
+                theme: "dark",
+                icon: "question",
+                title: "Loot Item",
+                text: `You found: ${data.item[1]}`,
+            })
+        };
+
+        const initiativePanel = document.getElementById("initiativePanel");
+        initiativePanel.insertAdjacentElement("afterend", genLootItemBtn);
+    }
 
     if (!globalAddResourceBtn) {
         globalAddResourceBtn = document.createElement("button");

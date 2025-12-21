@@ -156,7 +156,7 @@ class BuyItem(Resource):
             item = Item.query.get(itemId)
             if not item:
                 return {"error": "Item not found"}, 404
-
+            
             # 5. Check bag capacity
             current_items = len(bag.items)
             max_capacity = bag.bagSize.value
