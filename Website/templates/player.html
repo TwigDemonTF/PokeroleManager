@@ -574,8 +574,7 @@
       }
 
       if ("Bag" in update) {
-        p.Bag = update.Bag;
-        renderBag(update.Bag);
+        loadPokemon()
       }
 
       if ("HeldItem" in update) {
@@ -1053,10 +1052,7 @@
                 console.log(data);
 
                 if (data.success) {
-                    p.Bag = data.bag
-                    console.log(data.bag)
-                    // Optional: refresh bag UI
-                    renderBag(p.Bag)
+                    loadPokemon()
                     heldItemBadge.remove(); // remove badge since item is unequipped
                   } else {
                     alert(data.error);
