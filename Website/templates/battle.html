@@ -966,7 +966,15 @@ select:focus {
         return multiplier;
     }
 
-    async function handleMoveDrop(move, target) {
+    async function handleMoveDrop(dragData, target) {
+        const {move, sourceGuid} = dragData
+        const attacker = currentPokesOnField.find(p => p.guid === sourceGuid)
+
+        if (!attacker) {
+            console.warn("Attacker not found for STAB calculation", sourceGuid);
+            return;
+        }
+
         const targetTypes = [
             target.primaryType,
             target.secondaryType
@@ -1010,7 +1018,7 @@ select:focus {
 
         if (!damageRolls) return;
 
-        applyDamage(target, damageRolls, multiplier, isCrit);
+        applyDamage(attacker, target, move, damageRolls, multiplier, isCrit);
     }
 
     function updateHealthOnServer(target) {
@@ -1028,8 +1036,22 @@ select:focus {
         .catch(error => console.error('Error updating health:', error));
     }
 
-    function applyDamage(target, rolls, multiplier, isCrit) {
-        let damage = rolls;
+    function hasSTAB(attacker, move) {
+        if (!move || !move.type) return false;
+
+        // Status moves do not get STAB
+        if (move.damageType?.toLowerCase() === "status") return false;
+
+        const moveType = move.type.toLowerCase();
+
+        return (
+            attacker.primaryType?.toLowerCase() === moveType ||
+            attacker.secondaryType?.toLowerCase() === moveType
+        );
+    }
+
+    function applyDamage(attacker, target, move, rolls, multiplier, isCrit) {
+        let damage = Number(rolls);
 
         if (multiplier === 0) damage = 0;
         else if (multiplier === 0.25) damage -= 2;
@@ -1038,6 +1060,9 @@ select:focus {
         else if (multiplier === 4) damage = Number(damage) + 2;
 
         if (isCrit) damage += 1;
+
+        if (hasSTAB(attacker, move))
+            damage += 1
 
         damage = Math.max(0, damage);
 
@@ -1192,14 +1217,14 @@ select:focus {
             }
 
             row.innerHTML = `
-                <div>
-                    <strong>${idx + 1}.</strong>
-                    <span style="color:${nameColor}">${p.name}</span>
-                </div>
-                <div style="color:var(--muted)">
-                    ${initiativeMap[p.guid]} 
-                    (${p.isNpc ? "NPC" : "Player"})
-                </div>
+            <div>
+                <strong>${idx + 1}.</strong>
+                <span style="color:${nameColor}">${p.name}</span>
+            </div>
+            <div style="color:var(--muted)">
+                Init: ${initiativeMap[p.guid]}
+                · Dist: ${p.distance ?? 0}
+            </div>
             `;
 
             listEl.appendChild(row);
@@ -1292,6 +1317,7 @@ select:focus {
 
             playerColor: p.PlayerColor ?? p.playerColor ?? null,
 
+            Bag: p.Bag ?? p.bag ?? [],
             Moves: p.Moves ?? p.moves ?? [],
             MoveIds: p.MoveIds ?? p.moveIds ?? [],
         };
@@ -1775,19 +1801,34 @@ select:focus {
             initBox.style.borderRadius = "8px";
 
             initBox.innerHTML = `
-                <label style="font-size:0.82rem; color:var(--muted)">Initiative</label>
-                <input 
-                    type="number"
-                    style="width:80px; padding:4px; margin-left:8px; background:transparent; color:white; border:1px solid #333; border-radius:4px;"
-                    value="${initiativeMap[p.guid] ?? ''}"
-                />
+            <div style="display:flex; gap:6px; align-items:center;">
+                <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--muted)">Initiative</label>
+                <input type="number" class="initiative-input" />
+                </div>
+                <div style="width:90px;">
+                <label style="font-size:0.75rem; color:var(--muted)">Distance</label>
+                <input type="number" class="distance-input" />
+                </div>
+            </div>
             `;
 
-            const input = initBox.querySelector("input");
-            input.addEventListener("input", () => {
-                initiativeMap[p.guid] = Number(input.value);
+            const initInput = initBox.querySelector(".initiative-input");
+            const distInput = initBox.querySelector(".distance-input");
+            initInput.value = initiativeMap[p.guid] ?? "";
+            distInput.value = p.distance ?? 0;
+
+            initInput.addEventListener("input", () => {
+                initiativeMap[p.guid] = Number(initInput.value);
                 updateInitiativePanel(pokes);
             });
+            distInput.addEventListener("input", () => {
+                let value = Number(distInput.value || 0)
+                console.log(p.isNpc)
+                p.distance = p.isNpc ? Math.abs(value) : -Math.abs(value);
+
+                updateInitiativePanel(pokes);
+            })
 
             card.addEventListener("dragover", e => {
                 e.preventDefault();
@@ -1817,7 +1858,7 @@ select:focus {
                 clearEffectivenessBadges();
 
                 const data = JSON.parse(e.dataTransfer.getData("moveData"));
-                handleMoveDrop(data.move, p);
+                handleMoveDrop(data, p);
             });
 
 
@@ -1992,6 +2033,7 @@ select:focus {
             el.style.display = 'none';
         });
         globalAddResourceBtn.style.display = "block";
+        globalRemoveResourceBtn.style.display = "block";
         genLootItemBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
@@ -2340,7 +2382,47 @@ select:focus {
         });
     }
 
+    function weightedRandom(items, getWeight) {
+    const weights = items.map(getWeight);
+    const total = weights.reduce((a, b) => a + b, 0);
 
+    let roll = Math.random() * total;
+
+    for (let i = 0; i < items.length; i++) {
+        roll -= weights[i];
+        if (roll <= 0) {
+        return items[i];
+        }
+    }
+
+    return items[items.length - 1]; // fallback
+    }
+
+    function pickRandomPlayerTarget() {
+    const players = currentPokesOnField.filter(
+        p => !p.isNpc && typeof p.distance === "number"
+    );
+
+    if (!players.length) {
+        Swal.fire({
+        theme: "dark",
+        icon: "warning",
+        title: "No valid player targets",
+        toast: true,
+        position: "top-end",
+        timer: 2500,
+        showConfirmButton: false,
+        });
+        return null;
+    }
+
+    const target = weightedRandom(players, p => {
+        const dist = Math.abs(p.distance ?? 0);
+        return 1 / (1 + dist);
+    });
+
+    return target;
+    }
     // quick search filtering
     let searchTimer = null;
     searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderSelects(allPokemonCache), 250) });
@@ -2397,7 +2479,15 @@ select:focus {
 `;
 
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
+    let globalRemoveResourceBtn = document.getElementById("globalRemoveResourceBtn");
     let genLootItemBtn = document.getElementById("genLootItemBtn");
+
+    const initiativePanel = document.getElementById("initiativePanel");
+    const targetBtn = document.createElement("button")
+    targetBtn.textContent = "Random Player Target";
+    targetBtn.className = "btn"
+    targetBtn.style.marginTop = "10px"
+    initiativePanel.appendChild(targetBtn)
 
     if (!genLootItemBtn) {
         genLootItemBtn = document.createElement("button");
@@ -2424,6 +2514,99 @@ select:focus {
         initiativePanel.insertAdjacentElement("afterend", genLootItemBtn);
     }
 
+    if (!globalRemoveResourceBtn) {
+        globalRemoveResourceBtn = document.createElement("button")
+        globalRemoveResourceBtn.id = "globalRemoveResourceBtn";
+        globalRemoveResourceBtn.textContent = "Remove Resource";
+        globalRemoveResourceBtn.className = "btn btn-success";
+        globalRemoveResourceBtn.style.marginTop = "10px";
+        globalRemoveResourceBtn.style.display = "none";
+
+        globalRemoveResourceBtn.onclick = async () => {
+            const players = currentPokesOnField.filter(p => !p.isNpc);
+
+            if (!players.length) return;
+
+            const { value: selectedGuid } = await Swal.fire({
+                title: "Select Player",
+                input: "select",
+                inputOptions: Object.fromEntries(
+                players.map(p => [p.guid, p.name])
+                ),
+                theme: "dark",
+                showCancelButton: true,
+            });
+
+            if (!selectedGuid) return;
+
+            const pokemon = players.find(p => p.guid === selectedGuid);
+            const itemOptionsHtml = pokemon.Bag.items
+            .map(bi => `<option value="${bi.bagItemId}">${bi.item.name}</option>`)
+            .join("");
+
+            const { value: result } = await Swal.fire({
+            title: "Remove Resources",
+            html: `
+                <input id="rm-apples" type="number" class="swal2-input" placeholder="Apples">
+                <input id="rm-xp" type="number" class="swal2-input" placeholder="XP">
+
+                <label style="display:block;text-align:left;margin-top:10px;">
+                <strong>Remove Items:</strong>
+                </label>
+                <select
+                id="rm-items"
+                class="swal2-select"
+                multiple
+                size="5"
+                style="width:100%;"
+                >
+                ${itemOptionsHtml}
+                </select>
+            `,
+
+            theme: "dark",
+            showCancelButton: true,
+            preConfirm: () => {
+                const apples = Number(document.getElementById("rm-apples").value) || 0;
+                const xp = Number(document.getElementById("rm-xp").value) || 0;
+
+                const select = document.getElementById("rm-items");
+                const items = select
+                    ? [...select.selectedOptions].map(opt => Number(opt.value))
+                    : [];
+
+                if (apples <= 0 && xp <= 0 && items.length === 0) {
+                    Swal.showValidationMessage("Select at least one resource to remove");
+                    return false;
+                }
+
+                return {
+                    apples,
+                    xp,
+                    items
+                };
+            }
+            });
+            console.log(result)
+            console.log(result.items)
+            if (!result) return;
+
+            await fetch(`${BASE_URL}/removeResources`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                pokemonGuid: selectedGuid,
+                removeApples: result.apples,
+                removeXp: result.xp,
+                removeBagItemIds: result.items
+            })
+            });
+        }
+
+        const initiativePanel = document.getElementById("initiativePanel");
+        initiativePanel.insertAdjacentElement("afterend", globalRemoveResourceBtn);
+    }
+
     if (!globalAddResourceBtn) {
         globalAddResourceBtn = document.createElement("button");
         globalAddResourceBtn.id = "globalAddResourceBtn";
@@ -2442,6 +2625,24 @@ select:focus {
         initiativePanel.insertAdjacentElement("afterend", globalAddResourceBtn);
     }
 
+    targetBtn.addEventListener("click", () => {
+        const target = pickRandomPlayerTarget();
+        if (!target) return;
+
+        Swal.fire({
+            theme: "dark",
+            title: "Target Selected",
+            html: `
+            <strong>${target.name}</strong><br>
+            Distance: ${target.distance}
+            `,
+            icon: "info",
+            toast: true,
+            position: "top-end",
+            timer: 3000,
+            showConfirmButton: false,
+        });
+    });
 
   </script>
 </body>

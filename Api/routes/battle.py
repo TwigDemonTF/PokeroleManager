@@ -227,7 +227,21 @@ class BattleApi(Resource):
             nature = Nature.query.get(p.natureId) if p.natureId else None
             ability = Ability.query.get(p.abilityId) if p.abilityId else None
             item = Item.query.get(p.itemId) if p.itemId else None
+            
+            bag_data = None
 
+            if p.bag:
+                bag_data = {
+                    "bagId": p.bag.id,
+                    "bagSize": p.bag.bagSize.value,
+                    "items": [
+                        {
+                            "bagItemId": bi.id,
+                            "item": bi.item.to_dict()
+                        }
+                        for bi in p.bag.items
+                    ]
+                }
             # ---------- MOVE PROCESSING (COPIED FROM GameApi) ----------
             moves_data = []
 
@@ -388,6 +402,7 @@ class BattleApi(Resource):
                 "PlayerColor": p.playerColor,
 
                 # ✔ Added full moves (NOW MATCHES GameApi)
+                "Bag": bag_data,
                 "Moves": moves_data,
 
                 # ✔ Include IDs too

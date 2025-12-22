@@ -9,6 +9,7 @@ from ..models.Items import Item, BagItem
 from ..Utils.utils import broadcast_player_update, serialize_move
 
 from Api.extensions import database
+from ..Utils.utils import broadcast_player_update, serialize_bag
 
 class MoveManipulation(Resource):
     def get(self):
@@ -196,3 +197,62 @@ class BuyItem(Resource):
             database.session.rollback()
             print("BUY ITEM ERROR:", e)
             return jsonify({"error": str(e)}), 500
+
+class RemoveResourcesApi(Resource):
+    def post(self):
+        """
+        POST /api/pokemon/remove-resources
+        {
+          "pokemonGuid": "ABC123",
+          "removeApples": 2,
+          "removeXp": 5,
+          "removeBagItemIds": [12, 15]
+        }
+        """
+        data = request.get_json()
+
+        pokemon = GamePokemon.query.filter_by(Guid=data.get("pokemonGuid")).first()
+        if not pokemon:
+            return {"message": "Pokemon not found"}, 404
+
+        # --- Remove apples ---
+        if "removeApples" in data:
+            pokemon.apples = max(0, pokemon.apples - int(data["removeApples"]))
+
+        # --- Remove XP ---
+        if "removeXp" in data:
+            pokemon.experiencePoints = max(
+                0,
+                pokemon.experiencePoints - int(data["removeXp"])
+            )
+
+        # --- Remove items ---
+        if "removeBagItemIds" in data and pokemon.bag:
+            for bag_item_id in data["removeBagItemIds"]:
+                print(bag_item_id)
+                print(type(bag_item_id))
+                bag_item_id = int(bag_item_id)  # 🔑 THIS LINE
+
+                bi = next(
+                    (i for i in pokemon.bag.items if i.id == bag_item_id),
+                    None
+                )
+                if bi:
+                    database.session.delete(bi)
+
+        database.session.commit()
+
+        broadcast_player_update(
+            pokemon.Guid,
+            Bag=serialize_bag(pokemon)
+        )
+        broadcast_player_update(
+            pokemon.Guid,
+            Apples=pokemon.apples
+        )
+        broadcast_player_update(
+            pokemon.Guid,
+            ExperiencePoints=pokemon.experiencePoints
+        )
+
+        return {"message": "Resources removed successfully"}, 200

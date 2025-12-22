@@ -4,7 +4,7 @@ from .item import ItemApi
 from .battle import BattleApi, GameApi
 from .pokemon import BasePokemonApi, GamePokemonApi, PullCharacterData
 from .pokemon_components import NatureApi, AbilityApi, MoveApi, GarmentApi
-from .pokemon_manipulation import MoveManipulation, BuyItem
+from .pokemon_manipulation import MoveManipulation, BuyItem, RemoveResourcesApi
 
 def registerResources(api):
     api.add_resource(Register, "/register")
@@ -27,4 +27,5 @@ def registerResources(api):
     api.add_resource(ItemApi, "/Item")
 
     api.add_resource(MoveManipulation, "/moveManipulation")
+    api.add_resource(RemoveResourcesApi, "/removeResources")
     api.add_resource(BuyItem, "/buyItem")

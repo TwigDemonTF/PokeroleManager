@@ -72,22 +72,116 @@ INSERT INTO Ability VALUES(2,'Torrent','This Pokemon builds up pressure to shoot
 INSERT INTO Ability VALUES(3,'Bulletproof','The armor on this Pokemon''s body protects it from projectiles and small explosions.','Reduce all damage from Special and Ranged Physical Attacks by 1 which hit this Pokemon.');
 INSERT INTO Ability VALUES(4,'Inner Focus','The Pokemon is extremely serious and focused on everything it does. It remains calm and never backs down, even if its getting severly injured.','This Pokemon does not Flinch and cannot be Intimidated (Ability).');
 CREATE TABLE IF NOT EXISTS "Item" (
-	id INTEGER NOT NULL, 
-	name VARCHAR(50) NOT NULL, 
-	description TEXT, 
-	effect TEXT, 
-	"minShopTier" VARCHAR(9), 
-	"itemCategory" VARCHAR(17), 
-	"buyPrice" INTEGER, 
-	"sellPrice" INTEGER, 
-	PRIMARY KEY (id)
+    id INTEGER NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    effect TEXT,
+    effectKey VARCHAR(50),
+    effectData JSON,
+    "minShopTier" VARCHAR(9) DEFAULT 'BASIC',
+    "itemCategory" VARCHAR(17) DEFAULT 'MISC',
+    "buyPrice" INTEGER DEFAULT 0,
+    "sellPrice" INTEGER DEFAULT 0,
+    "isUsable" BOOLEAN NOT NULL DEFAULT FALSE,
+    "isEquipable" BOOLEAN NOT NULL DEFAULT FALSE,
+    "numUses" INTEGER DEFAULT NULL,
+    PRIMARY KEY (id)
 );
-INSERT INTO Item VALUES(1,'Lum Berry','The Lum Berry is a green berry that resembles a plum. It is known for its well-balanced flavor and is often described as having a smooth, shiny appearance.','When eaten by a Pokemon, it gets cured of any non-volatile status conditions. Activates automatically when active in Held Item slot.','COMMON','HEALING_ITEM',25,15);
-INSERT INTO Item VALUES(2,'Shiny Stone','An elliptical-shaped stone that is transparent with a ball of light inside it. It is known for its dazzling shine.','Its used to evolve certain Pokemon.','ELITE','EVOLUTION_ITEM',10000,7500);
-INSERT INTO Item VALUES(3,'Blast Seed','A small, round seed with a distinct explosive design, often illustrated with fiery colors to indicate its explosive nature.','When eaten the user suddenly sneezes a breath of fire. Foes do not have time to react','COMMON','MISC',50,30);
-INSERT INTO Item VALUES(4,'Cherri Berry','A bright red berry that blooms with delicate, pretty flowers. It is known for its spicy flavor.','When eaten by a Pokemon, gets cured of Paralysis if it is afflicted with it.','BASIC','HEALING_ITEM',30,20);
-INSERT INTO Item VALUES(5,'Hyper Potion','A pink spray bottle','It is used to restore a Pokémon''s health during battles or outside of them.','EXPERT','HEALING_ITEM',1200,900);
-INSERT INTO Item VALUES(6,'Razz Berry','Resembles a raspberry, featuring a red color and a slightly spicy taste. It has a firm texture and is known for its dry center, making it distinct.','When eaten, restores the users Health by 1/3 of its Maximum Health.','ELITE','HEALING_ITEM',900,600);
+INSERT INTO Item VALUES (
+    1,
+    'Lum Berry',
+    'The Lum Berry is a green berry that resembles a plum. It is known for its well-balanced flavor and is often described as having a smooth, shiny appearance.',
+    'When eaten by a Pokemon, it gets cured of any non-volatile status conditions. Activates automatically when active in Held Item slot.',
+    'CURE_STATUS',
+    '{"statuses": "all_non_volatile"}',
+    'COMMON',
+    'HEALING_ITEM',
+    25,
+    15,
+    TRUE,
+    FALSE,
+    1
+);
+
+INSERT INTO Item VALUES (
+    2,
+    'Shiny Stone',
+    'An elliptical-shaped stone that is transparent with a ball of light inside it. It is known for its dazzling shine.',
+    'Its used to evolve certain Pokemon.',
+    'evolve_pokemon',
+    '{}',
+    'ELITE',
+    'EVOLUTION_ITEM',
+    10000,
+    7500,
+    FALSE,
+    FALSE,
+    NULL
+);
+
+INSERT INTO Item VALUES (
+    3,
+    'Blast Seed',
+    'A small, round seed with a distinct explosive design, often illustrated with fiery colors to indicate its explosive nature.',
+    'When eaten the user suddenly sneezes a breath of fire. Foes do not have time to react',
+    'deal_typed_damage',
+    '{"type": "FIRE", "damage": 1}',
+    'COMMON',
+    'MISC',
+    50,
+    30,
+    TRUE,
+    FALSE,
+    1
+);
+
+INSERT INTO Item VALUES (
+    4,
+    'Cherri Berry',
+    'A bright red berry that blooms with delicate, pretty flowers. It is known for its spicy flavor.',
+    'When eaten by a Pokemon, gets cured of Paralysis if it is afflicted with it.',
+    'cure_status',
+    '{"statuses": ["PARALYSIS"]}',
+    'BASIC',
+    'HEALING_ITEM',
+    30,
+    20,
+    TRUE,
+    FALSE,
+    1
+);
+
+INSERT INTO Item VALUES (
+    5,
+    'Hyper Potion',
+    'A pink spray bottle',
+    'It is used to restore a Pokémon''s health during battles or outside of them.',
+    'heal_pool',
+    '{"maxPool": 14, "usedUnits": 0}',
+    'EXPERT',
+    'HEALING_ITEM',
+    1200,
+    900,
+    TRUE,
+    FALSE,
+    1
+);
+
+INSERT INTO Item VALUES (
+    6,
+    'Razz Berry',
+    'Resembles a raspberry, featuring a red color and a slightly spicy taste. It has a firm texture and is known for its dry center, making it distinct.',
+    'When eaten, restores the users Health by 1/3 of its Maximum Health.',
+    'heal_static',
+    '{"amount": 1}',
+    'ELITE',
+    'HEALING_ITEM',
+    900,
+    600,
+    TRUE,
+    FALSE,
+    1
+);
 CREATE TABLE IF NOT EXISTS "Garment" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
