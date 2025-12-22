@@ -141,11 +141,22 @@
       background: #28c76f;
       transition: width 0.2s ease;
     }
+    .lethal-hp-bar-fill {
+        height: 100%;
+        background: #8e44ad;
+        transition: width 0.2s ease;   
+    }
 
     .hp-text {
       margin-top: 4px;
       font-size: 0.9em;
       color: var(--muted);
+    }
+
+    .lethal-hp-text {
+        margin-top: 4px;
+        font-size: 0.9em;
+        color: var(--muted);
     }
 
     /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
@@ -154,14 +165,15 @@
       display: flex;
       gap: 0.6em;
       margin-top: 1.2em;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       /* keep all on same line */
       align-items: center;
     }
 
     .stats .stat-group {
-      display: flex;
-      gap: 0.6em;
+        display: flex;
+        gap: 0.6em;
+        flex: 0 0 auto;
     }
 
     .stats .stat-group.right {
@@ -229,6 +241,14 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
+    }
+
+    @media (max-width: 1500px) {
+        .stats .stat-group.right {
+            margin-left: 0;       /* stop pushing right */
+            flex-basis: 100%;     /* force onto its own row */
+            justify-content: flex-start;
+        }
     }
 
     /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
@@ -554,6 +574,11 @@
         p._updateHpUI(update.Health, p);
       }
 
+      if ("LethalHealth" in update) {
+        p.LethalHealth = update.LethalHealth;
+        p._updateLethalHpUi(update.LethalHealth, p)
+      }
+
       if ("Status" in update) {
         p.Status = update.Status;
       }
@@ -857,7 +882,6 @@
     }
 
     function renderMove(m) {
-      console.log(m)
       const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
       const damage = [...(m.damageModifiers || []), m.basePower || null]
         .filter(mod => mod && mod !== "NONE")
@@ -948,6 +972,8 @@
 
       const maxHp = p.BaseHealth + p.Vitality;       // correct max HP
       const hpPct = Math.max(0, Math.min(1, p.Health / maxHp)); // correct percentage
+      const maxLethalHp = maxHp
+      const lethalHpPct = Math.max(0, Math.min(1, p.LethalHealth / maxLethalHp))
 
       card.innerHTML = `
         <div class="head">
@@ -973,6 +999,12 @@
             <div class="hp-bar-fill" style="width:${hpPct * 100}%"></div>
             </div>
             <div class="hp-text">${p.Health} / ${p.BaseHealth + p.Vitality} HP · ${p.Status || 'Healthy'}</div>
+        </div>
+            <div class="hp-bar-container">
+            <div class="hp-bar">
+            <div class="lethal-hp-bar-fill" style="width:${lethalHpPct * 100}%"></div>
+            </div>
+            <div class="lethal-hp-text"">${p.LethalHealth} / ${p.BaseHealth + p.Vitality} Lethal</div>
         </div>
 
         <div class="stats">
@@ -1063,6 +1095,9 @@
         const hpFill = card.querySelector('.hp-bar-fill');
         const hpText = card.querySelector('.hp-text');
 
+        const hpLethalFill = card.querySelector(".lethal-hp-bar-fill");
+        const hpLethalText = card.querySelector(".lethal-hp-text");
+
         // function to update HP bar
         function updateHpBar() {
           const currentHp = Math.max(0, Math.min(maxHp, p.Health ?? maxHp));
@@ -1077,11 +1112,30 @@
           hpText.textContent = `${currentHp} / ${maxHp} HP · ${p.Status || 'Healthy'}`;
         }
 
+        function updateLethalHpBar() {
+          const currentLehtalHp = Math.max(0, Math.min(maxLethalHp, p.LethalHealth ?? maxLethalHp));
+          const pct = currentLehtalHp / maxLethalHp;
+
+          hpLethalFill.style.width = (pct * 100) + '%';
+
+          if (pct >= 0.75 && pct < 0.9) {
+              hpLethalFill.style.background = "#ff004c"; // DEAD
+          } else if (pct <= 0.9) {
+              hpLethalFill.style.background = "#ff004c"; // purple
+          } else {
+              hpLethalFill.style.background = "#000000"; // purple
+          }
+
+          hpLethalText.textContent = `${currentLehtalHp} / ${maxLethalHp} · Lethal`;
+        }
+
         // initial render
         updateHpBar();
+        updateLethalHpBar();
 
         // Expose updater if you want to modify HP later
         p._updateHpUI = updateHpBar;
+        p._updateLethalHpUi = updateLethalHpBar;
 
         window.currentPokemonMaxHp = maxHp;
         window.currentPokemon = p;

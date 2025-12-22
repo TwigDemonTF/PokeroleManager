@@ -98,7 +98,7 @@ class GamePokemonApi(Resource):
             gamePokemon = GamePokemon(
                 basePokemonId=base.id,
 
-                # User-input fields (use correct model names)
+                # User-input fields
                 name=raw.get("name"),
                 level=raw.get("level"),
                 gender=raw.get("gender"),
@@ -117,6 +117,7 @@ class GamePokemonApi(Resource):
                 # Base stats
                 baseHealth=base.baseHealth,
                 health=base.baseHealth + base.vitality,
+                lethalHealth=0,
                 will=raw.get("will"),
                 logic=raw.get("logic"),
                 instinct=raw.get("instinct"),

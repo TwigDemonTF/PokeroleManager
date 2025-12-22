@@ -351,6 +351,7 @@ class BattleApi(Resource):
 
                 "BaseHealth": p.baseHealth or base.baseHealth,
                 "Health": p.health,
+                "LethalHealth": p.lethalHealth,
 
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,

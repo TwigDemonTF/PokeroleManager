@@ -779,6 +779,7 @@ select:focus {
             </div>
             <div id="initiativeList" style="margin-top:8px; display:flex; flex-direction:column; gap:4px;"></div>
         </div>
+        <div style="display: flex; width: 100%;" id="actionPanel"></div>
       <div class="stage-controls">
         <div style="font-weight:600">Stage</div>
         <div style="margin-left:8px; color:var(--muted)">Showing <span id="count">0</span> Pokémon</div>
@@ -1029,6 +1030,21 @@ select:focus {
                 gameId: GAME_ID,
                 guid: target.guid,
                 health: target.health
+            })
+        })
+        .then(response => response.json())
+        .then(data => console.log('Health update successful:', data))
+        .catch(error => console.error('Error updating health:', error));
+    }
+
+    function updateLethalHealthOnServer(target) {
+        fetch(`${BASE_URL}/updateLethalHealth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                gameId: GAME_ID,
+                guid: target.guid,
+                lethalHealth: target.lethal
             })
         })
         .then(response => response.json())
@@ -1684,12 +1700,14 @@ select:focus {
             lethalMinus.onclick = () => {
                 currentLethal = Math.max(0, currentLethal - 1);
                 p.lethal = currentLethal;
+                updateLethalHealthOnServer(p)
                 updateLethalBar();
             };
 
             lethalPlus.onclick = () => {
                 currentLethal = Math.min(maxHp, currentLethal + 1);
                 p.lethal = currentLethal;
+                updateLethalHealthOnServer(p)
                 updateLethalBar();
             };
 
@@ -2035,6 +2053,7 @@ select:focus {
         globalAddResourceBtn.style.display = "block";
         globalRemoveResourceBtn.style.display = "block";
         genLootItemBtn.style.display = "block";
+        targetBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         fetchSelectedAndRender();
@@ -2487,6 +2506,7 @@ select:focus {
     targetBtn.textContent = "Random Player Target";
     targetBtn.className = "btn"
     targetBtn.style.marginTop = "10px"
+    targetBtn.style.display = "None"
     initiativePanel.appendChild(targetBtn)
 
     if (!genLootItemBtn) {
@@ -2495,6 +2515,7 @@ select:focus {
         genLootItemBtn.textContent = "Generate Loot Item";
         genLootItemBtn.className = "btn btn-success";
         genLootItemBtn.style.marginTop = "10px";
+        genLootItemBtn.style.marginRight = "10px";
         genLootItemBtn.style.display = "none"
 
         // Example: open modal for selected player(s)
@@ -2510,9 +2531,46 @@ select:focus {
             })
         };
 
-        const initiativePanel = document.getElementById("initiativePanel");
-        initiativePanel.insertAdjacentElement("afterend", genLootItemBtn);
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(genLootItemBtn);
     }
+
+    if (!globalAddResourceBtn) {
+        globalAddResourceBtn = document.createElement("button");
+        globalAddResourceBtn.id = "globalAddResourceBtn";
+        globalAddResourceBtn.textContent = "Add Resource";
+        globalAddResourceBtn.className = "btn btn-success";
+        globalAddResourceBtn.style.marginTop = "10px";
+        globalAddResourceBtn.style.display = "none"
+
+        // Example: open modal for selected player(s)
+        globalAddResourceBtn.onclick = () => {
+            const selectedPlayers = currentPokesOnField.filter(p => !p.isNpc);
+            openGiveResourcesModal(selectedPlayers);
+        };
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(globalAddResourceBtn);
+    }
+
+    targetBtn.addEventListener("click", () => {
+        const target = pickRandomPlayerTarget();
+        if (!target) return;
+
+        Swal.fire({
+            theme: "dark",
+            title: "Target Selected",
+            html: `
+            <strong>${target.name}</strong><br>
+            Distance: ${target.distance}
+            `,
+            icon: "info",
+            toast: true,
+            position: "top-end",
+            timer: 3000,
+            showConfirmButton: false,
+        });
+    });
 
     if (!globalRemoveResourceBtn) {
         globalRemoveResourceBtn = document.createElement("button")
@@ -2520,6 +2578,7 @@ select:focus {
         globalRemoveResourceBtn.textContent = "Remove Resource";
         globalRemoveResourceBtn.className = "btn btn-success";
         globalRemoveResourceBtn.style.marginTop = "10px";
+        globalRemoveResourceBtn.style.marginLeft = "10px";
         globalRemoveResourceBtn.style.display = "none";
 
         globalRemoveResourceBtn.onclick = async () => {
@@ -2603,46 +2662,9 @@ select:focus {
             });
         }
 
-        const initiativePanel = document.getElementById("initiativePanel");
-        initiativePanel.insertAdjacentElement("afterend", globalRemoveResourceBtn);
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(globalRemoveResourceBtn);
     }
-
-    if (!globalAddResourceBtn) {
-        globalAddResourceBtn = document.createElement("button");
-        globalAddResourceBtn.id = "globalAddResourceBtn";
-        globalAddResourceBtn.textContent = "Add Resource";
-        globalAddResourceBtn.className = "btn btn-success";
-        globalAddResourceBtn.style.marginTop = "10px";
-        globalAddResourceBtn.style.display = "none"
-
-        // Example: open modal for selected player(s)
-        globalAddResourceBtn.onclick = () => {
-            const selectedPlayers = currentPokesOnField.filter(p => !p.isNpc);
-            openGiveResourcesModal(selectedPlayers);
-        };
-
-        const initiativePanel = document.getElementById("initiativePanel");
-        initiativePanel.insertAdjacentElement("afterend", globalAddResourceBtn);
-    }
-
-    targetBtn.addEventListener("click", () => {
-        const target = pickRandomPlayerTarget();
-        if (!target) return;
-
-        Swal.fire({
-            theme: "dark",
-            title: "Target Selected",
-            html: `
-            <strong>${target.name}</strong><br>
-            Distance: ${target.distance}
-            `,
-            icon: "info",
-            toast: true,
-            position: "top-end",
-            timer: 3000,
-            showConfirmButton: false,
-        });
-    });
 
   </script>
 </body>

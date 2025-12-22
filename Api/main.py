@@ -69,6 +69,48 @@ def UpdateHealth():
         }
     }), 200
 
+@app.route('/updateLethalHealth', methods=['POST'])
+def UpdateLethalHealth():
+    data = request.get_json()
+    game_id = data.get('gameId')
+    guid = data.get('guid')
+    new_lethal_health = data.get('lethalHealth')
+
+    if not game_id or not guid or new_lethal_health is None:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    # Find the game (optional, ensures game exists)
+    game = Game.query.filter_by(gameId=game_id).first()
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+
+    # Find the Pokémon by GUID
+    pokemon = GamePokemon.query.filter_by(Guid=guid).first()
+    if not pokemon:
+        return jsonify({"error": "Pokemon not found"}), 404
+
+    # Update health
+    pokemon.lethalHealth = new_lethal_health
+
+    database.session.commit()
+
+    subscribers = clients.get(guid, set())
+
+    broadcast_player_update(
+        pokemon.Guid,
+        LethalHealth=pokemon.lethalHealth,
+    )
+
+    return jsonify({
+        "success": True,
+        "pokemon": {
+            "name": pokemon.name,
+            "guid": pokemon.Guid,
+            "health": pokemon.health,
+            "status": pokemon.status
+        }
+    }), 200
+
 @app.route("/buyStat/<string:gameId>/<string:pokemonGuid>", methods=["POST"])
 def BuyStat(gameId, pokemonGuid):
     raw = request.get_json()

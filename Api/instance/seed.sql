@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	status VARCHAR, 
 	"baseHealth" INTEGER NOT NULL, 
 	health INTEGER NOT NULL, 
+	lethalHealth INTEGER NOT NULL,
 	will INTEGER NOT NULL, 
 	logic INTEGER, 
 	instinct INTEGER, 
@@ -290,10 +291,10 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	UNIQUE ("Guid")
 );
-INSERT INTO GamePokemon VALUES(1,1,'Airalin',2,'Female',21,0,'PSYCHIC',NULL,2,1,'Healthy',3,4,6,1,2,0,NULL,1,3,1,3,1,3,2,4,1,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,38,0,'Black','09c38c');
-INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',5,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,5,4,1,2,0,NULL,3,4,2,4,2,4,2,4,2,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,13,0,'Blue','b513fb');
-INSERT INTO GamePokemon VALUES(3,3,'Cyan',6,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,3,2,1,0,NULL,2,5,2,4,1,3,1,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,12,0,'Orange','d63f99');
-INSERT INTO GamePokemon VALUES(4,4,'Pluey',2,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,5,6,1,2,0,NULL,2,4,1,3,2,4,2,4,2,4,0,2,1,0,0,0,0,0,0,0,0,0,0,0,0,17,0,'Purple','a28d51');
+INSERT INTO GamePokemon VALUES(1,1,'Airalin',2,'Female',21,0,'PSYCHIC',NULL,2,1,'Healthy',3,4,0,6,1,2,0,NULL,1,3,1,3,1,3,2,4,1,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,38,0,'Black','09c38c');
+INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',5,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,5,0,4,1,2,0,NULL,3,4,2,4,2,4,2,4,2,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,13,0,'Blue','b513fb');
+INSERT INTO GamePokemon VALUES(3,3,'Cyan',6,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,0,3,2,1,0,NULL,2,5,2,4,1,3,1,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,12,0,'Orange','d63f99');
+INSERT INTO GamePokemon VALUES(4,4,'Pluey',2,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,5,0,6,1,2,0,NULL,2,4,1,3,2,4,2,4,2,4,0,2,1,0,0,0,0,0,0,0,0,0,0,0,0,17,0,'Purple','a28d51');
 CREATE TABLE IF NOT EXISTS "Game" (
 	id INTEGER NOT NULL, 
 	"gameId" VARCHAR(10) NOT NULL, 

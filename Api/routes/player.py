@@ -163,6 +163,7 @@ class PlayerData(Resource):
 
             "BaseHealth": pokemon.baseHealth or base.baseHealth,
             "Health": pokemon.health,
+            "LethalHealth": pokemon.lethalHealth,
 
             "Will": pokemon.will or base.will,
             "Logic": pokemon.logic or base.logic,
