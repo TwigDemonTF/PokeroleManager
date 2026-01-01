@@ -11,6 +11,7 @@ from ..Enums.Move.DamageType import DamageTypeEnum
 from ..Enums.Move.Target import TargetEnum
 from ..Enums.Move.HitCount import HitCountEnum
 from ..Enums.Move.DamageType import DamageTypeEnum
+from ..Enums.Move.MoveRangeTypes import MoveRangeTypesEnum
 
 from ..Enums.Types import Types as TypeEnum
 
@@ -93,7 +94,8 @@ class MoveApi(Resource):
             "healTypes": enum_to_dict_list(HealMoveTypesEnum),
             "accuracyModifiers": enum_to_dict_list(ModifierEnum),
             "damageModifiers":  enum_to_dict_list(ModifierEnum),
-            "booleanFields": getBooleanFields()
+            "booleanFields": getBooleanFields(),
+            "moveRangeTypesEnum": enum_to_dict_list(MoveRangeTypesEnum)
         }
 
         return data, 200
@@ -137,6 +139,8 @@ class MoveApi(Resource):
             damageType=DamageTypeEnum[data["damageTypes"]],
             priority=PriorityEnum(int(data.get("priority", 0))),
             target=TargetEnum[data["targets"]],
+            moveRangeType=MoveRangeTypesEnum[data.get("moveRangeType")],
+            moveGridRange=int(data.get("moveGridRange", 1)),
             multiHitCount=HitCountEnum(int(data.get("multiHits", 1))),
             healingTypeId=None,  # Set if needed
             accuracyModifiersId=accuracy_group.id,

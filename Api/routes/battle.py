@@ -283,6 +283,8 @@ class BattleApi(Resource):
 
                     "basePower": move.basePower,
                     "target": move.target.name if move.target else None,
+                    "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
+                    "moveGridRange": move.moveGridRange if move.moveGridRange else None,
                     "priority": move.priority.name if move.priority else None,
 
                     "accuracyModifiers": acc_mods,

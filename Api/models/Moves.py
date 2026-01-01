@@ -8,6 +8,7 @@ from ..Enums.Move.HealMoveTypes import HealMoveTypesEnum
 from ..Enums.Move.HitCount import HitCountEnum
 from ..Enums.Move.Modifier import ModifierEnum
 from ..Enums.Move.MoveEffectType import MoveEffectTypeEnum
+from ..Enums.Move.MoveRangeTypes import MoveRangeTypesEnum
 from ..Enums.Move.Priority import PriorityEnum
 from ..Enums.Move.Target import TargetEnum
 from ..Enums.Types import Types as TypeEnum
@@ -73,6 +74,8 @@ class Move(database.Model):
     basePower = database.Column(database.Integer, nullable=True)
     priority = database.Column(database.Enum(PriorityEnum), nullable=True)
     target = database.Column(database.Enum(TargetEnum), nullable=True)
+    moveRangeType = database.Column(database.Enum(MoveRangeTypesEnum), nullable=True)
+    moveGridRange = database.Column(database.Integer, nullable=True, default=1)
 
     accuracyModifiersId = database.Column(database.Integer, database.ForeignKey("AccuracyModifierGroup.id"), nullable=True)
     accuracy_modifier_group = relationship("AccuracyModifierGroup", back_populates="moves")

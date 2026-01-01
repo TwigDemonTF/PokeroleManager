@@ -617,7 +617,6 @@ def player_state_stream(gameId, pokemonGuid):
 
     return Response(stream(), mimetype="text/event-stream")
 
-
 if __name__ == "__main__":
     with app.app_context():
         database.create_all()

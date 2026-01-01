@@ -974,7 +974,7 @@
       const hpPct = Math.max(0, Math.min(1, p.Health / maxHp)); // correct percentage
       const maxLethalHp = maxHp
       const lethalHpPct = Math.max(0, Math.min(1, p.LethalHealth / maxLethalHp))
-
+      console.log(p.Dexteritypotential)
       card.innerHTML = `
         <div class="head">
             <div class="meta" style="flex: 1;">
@@ -1013,7 +1013,7 @@
                     Strength${statCircles(p.Strength, p.StrengthPotential)}
                 </div>
                 <div class="stat" data-stat-name="Dexterity" data-stat-value="${p.Dexterity}" data-xp="${p.ExperiencePoints}">
-                    Dexterity${statCircles(p.Dexterity, p.Dexteritypotential)}
+                    Dexterity${statCircles(p.Dexterity, p.DexterityPotential)}
                 </div>
                 <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">
                     Vitality${statCircles(p.Vitality, p.VitalityPotential)}

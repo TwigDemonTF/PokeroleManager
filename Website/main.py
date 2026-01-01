@@ -119,18 +119,23 @@ def itemShop():
     res = requests.get(f"{app.config['BASE_URL']}/Item")
     res.raise_for_status()  # optional but strongly recommended
 
-    data = res.json()  # THIS was missing
+    data = res.json()
 
     items = [
         item for item in data
         if item["id"] is not None
     ]
 
+    shopStatus = requests.get(f"{app.config['BASE_URL']}/Shop/{session.get("gameId")}")
+    shopStatus = shopStatus.json()
+
     context = {
         "items": items,
         "playerGuid": session.get("playerGuid"),
         "gameId": session.get("gameId"),
-        "baseUrl": app.config["BASE_URL"]
+        "baseUrl": app.config["BASE_URL"],
+        "shopStatus": shopStatus,
+        "shopMapping": SHOP_TIER_MAPPING
     }
 
     return render_template("item_shop.html", **context)
@@ -182,12 +187,15 @@ def battle():
     item_categories = enums.get("ItemCategoryEnum", {})
     shop_tiers = enums.get("ShopTierEnum", {})
 
+    res = requests.get(f"{app.config["BASE_URL"]}/addMove")
+
     context = {
         "gameId": session.get("gameId"),
         "items": items,
         "item_categories": item_categories,
         "shop_tiers": shop_tiers,
-        "baseUrl": app.config["BASE_URL"]
+        "baseUrl": app.config["BASE_URL"],
+        "moveData": res.json(),
     }
     return render_template("battle.html", **context)
 
@@ -235,6 +243,17 @@ def item():
     }
 
     return render_template("item.html", **context)
+
+SHOP_TIER_MAPPING = {
+    "Basic Tier": 1,
+    "Common Tier": 2,
+    "Advanced Tier": 3,
+    "Elite Tier": 4,
+    "Expert Tier": 5,
+    "Legendary Tier": 6,
+    "Mythic Tier": 7,
+    "Divine Tier": 8,
+}
 
 if __name__ == "__main__":
     with app.app_context():

@@ -905,6 +905,16 @@ select:focus {
     // eslint-disable-next-line
     let items = JSON.parse('{{ items | tojson }}');
 
+    function formatMoveRange(move) {
+        if (!move.moveRangeType) return null;
+
+        const base = move.moveRangeType;
+        if (!base) return null;
+
+        const range = move.moveGridRange ?? 1;
+        return base.replace("X", range);
+    }
+
     function createEffectivenessBadge(multiplier, moveType, target) {
         const badge = document.createElement("div");
         badge.style.fontWeight = "bold";
@@ -1929,6 +1939,8 @@ select:focus {
     }
 
     function renderMoveCard(move) {
+        const rangeText = formatMoveRange(move)
+        console.log(move.moveRangeType)
         const accuracyMods =
             move.accuracyModifiers?.filter(m => m && m !== "NONE").join(" + ") || "-";
 
@@ -1965,6 +1977,7 @@ select:focus {
 
                 <div>Accuracy: ${accuracyMods}</div>
                 <div>Damage Pool: ${damagePool}</div> <br>
+                <div>Range: ${rangeText}</div> <br>
                 <div>Added Effect: ${move.effectText || "-"}</div>
 
                 <div class="move-footer">${move.flavorText || ""}</div>
@@ -1978,11 +1991,6 @@ select:focus {
 
     function buildTooltip(move) {
         const lines = [];
-
-        // --- Enum fields ---
-        if (move.target) {
-            lines.push(`Target: ${TARGET_LABELS[move.target] ?? move.target}`);
-        }
 
         if (move.priority != null) {
             lines.push(`Priority: ${PRIORITY_LABELS[move.priority] ?? move.priority}`);
@@ -2053,6 +2061,7 @@ select:focus {
         globalAddResourceBtn.style.display = "block";
         globalRemoveResourceBtn.style.display = "block";
         genLootItemBtn.style.display = "block";
+        toggleShopBtn.style.display = "block";
         targetBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
@@ -2100,6 +2109,8 @@ select:focus {
                     <button id="giveItemBtn" class="swal2-confirm swal2-styled">Give Item</button>
                     <button id="giveXpBtn" class="swal2-confirm swal2-styled">Give XP</button>
                     <button id="giveMoneyBtn" class="swal2-confirm swal2-styled">Give Money</button>
+                    <button id="addItem" class="swal2-confirm swal2-styled">Add Item</button>
+                    <button id="addMove" class="swal2-confirm swal2-styled">Add Move</button>
                 </div>
             `,
             didOpen: () => {
@@ -2116,6 +2127,14 @@ select:focus {
                 popup.querySelector("#giveMoneyBtn").addEventListener('click', () => {
                     Swal.close();
                     selectTargetsForValue("Money");
+                });
+                popup.querySelector("#addItem").addEventListener('click', () => {
+                    Swal.close();
+                    openAddItemModal(null);
+                });
+                popup.querySelector("#addMove").addEventListener('click', () => {
+                    Swal.close();
+                    openAddMoveModal(null)
                 });
             }
         });
@@ -2300,6 +2319,238 @@ select:focus {
                 }
             })
             .catch(() => Swal.fire("Error", "Failed to create item", "error"));
+        });
+    }
+
+    function openAddMoveModal(onCreatedCallback = null) {
+        Swal.fire({
+            title: "Add New Move",
+            theme: "dark",
+            width: "60rem",
+            html: `
+            <style>
+            .swal2-popup .swal-move-form select {
+                min-height: unset !important;
+            }
+
+            .swal-move-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px 24px;
+                text-align: left;
+            }
+
+            .swal-move-form label {
+                font-weight: bold;
+                font-size: 0.9rem;
+                margin-top: 6px;
+            }
+
+            .swal-move-form input,
+            .swal-move-form select {
+                padding: 6px;
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 0.9rem;
+                color: hotpink;
+                height: 40px;
+                line-height: 40px;
+                padding: 6px;
+                background-color: transparent;
+                border-radius: 12.5px;
+            }
+
+            .swal-move-form input:not([type="checkbox"]) {
+                height: 32px;
+                padding: 6px;
+            }
+
+            .swal-move-form input[type="checkbox"] {
+                width: auto;
+                margin-top: 8px;
+            }
+            </style>
+
+            <div class="swal-move-form">
+
+            <label>Name</label>
+            <input id="Name">
+
+            <label>Effect Text</label>
+            <input id="effectText">
+
+            <label>Flavor Text</label>
+            <input id="flavorText">
+
+            <label>Base Power</label>
+            <input id="basePower" type="number" value="0">
+
+            <label>Reduced Accuracy</label>
+            <input id="reducedAccuracy" type="number" value="0">
+
+            <label>Type</label>
+            <select style="max-height 100px !important;" id="types">
+                {% for item in moveData.types %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Type</label>
+            <select id="damageTypes">
+                {% for item in moveData.damageTypes %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Priority</label>
+            <select name="priority">
+                {% for item in moveData.priority %}
+                    {% if item.value != 0 %}
+                        <option value="{{ item.value }}">{{ item.value }}</option>
+                    {% else %}
+                        <option selected value="{{ item.value }}">{{ item.value }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <label>Target</label>
+            <select id="targets">
+                {% for item in moveData.targets %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Move Range Type</label>
+            <select id="moveRangeType">
+                {% for item in moveData.moveRangeTypesEnum %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Grid Range</label>
+            <input id="moveGridRange" type="number" value="1">
+
+            <label>Hit Count</label>
+            <select id="multiHits">
+                {% for item in moveData.multiHits %}
+                <option value="{{ item.value }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Heal Type</label>
+            <select id="healTypes">
+                {% for item in moveData.healTypes %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 1</label>
+            <select id="accuracyModifier1">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 2</label>
+            <select id="accuracyModifier2">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 3</label>
+            <select id="accuracyModifier3">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 1</label>
+            <select id="damageModifier1">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 2</label>
+            <select id="damageModifier2">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 3</label>
+            <select id="damageModifier3">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            {% for field in moveData.booleanFields %}
+                <label>{{ field }}</label>
+                <input type="checkbox" id="{{ field }}">
+            {% endfor %}
+
+            </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Create Move",
+            preConfirm: () => {
+                const payload = {
+                    Name: document.getElementById("Name").value,
+                    effectText: document.getElementById("effectText").value,
+                    flavorText: document.getElementById("flavorText").value,
+                    basePower: Number(document.getElementById("basePower").value),
+                    reducedAccuracy: Number(document.getElementById("reducedAccuracy").value),
+                    types: document.getElementById("types").value,
+                    damageTypes: document.getElementById("damageTypes").value,
+                    priority: document.getElementById("priority").value,
+                    targets: document.getElementById("targets").value,
+                    moveRangeType: document.getElementById("moveRangeType").value,
+                    moveGridRange: Number(document.getElementById("moveGridRange").value),
+                    multiHits: document.getElementById("multiHits").value,
+                    healTypes: document.getElementById("healTypes").value,
+                    accuracyModifier1: document.getElementById("accuracyModifier1").value,
+                    accuracyModifier2: document.getElementById("accuracyModifier2").value || null,
+                    accuracyModifier3: document.getElementById("accuracyModifier3").value || null,
+                    damageModifier1: document.getElementById("damageModifier1").value,
+                    damageModifier2: document.getElementById("damageModifier2").value || null,
+                    damageModifier3: document.getElementById("damageModifier3").value || null,
+                };
+
+                {% for field in moveData.booleanFields %}
+                    if (document.getElementById("{{ field }}").checked) {
+                        payload["{{ field }}"] = true;
+                    }
+                {% endfor %}
+
+                return payload;
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(`${BASE_URL}/addMove`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Move Created",
+                    timer: 2500,
+                    showConfirmButton: false,
+                    theme: "dark"
+                });
+
+                if (onCreatedCallback) {
+                    onCreatedCallback(data);
+                }
+            })
+            .catch(() => Swal.fire("Error", "Failed to create move", "error"));
         });
     }
 
@@ -2500,6 +2751,7 @@ select:focus {
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
     let globalRemoveResourceBtn = document.getElementById("globalRemoveResourceBtn");
     let genLootItemBtn = document.getElementById("genLootItemBtn");
+    let toggleShopBtn = document.getElementById("toggleShopBtn");
 
     const initiativePanel = document.getElementById("initiativePanel");
     const targetBtn = document.createElement("button")
@@ -2535,6 +2787,45 @@ select:focus {
         actionPanel.appendChild(genLootItemBtn);
     }
 
+    if (!toggleShopBtn) {
+        toggleShopBtn = document.createElement("button");
+        toggleShopBtn.id = "toggleShopBtn";
+        toggleShopBtn.textContent = "Toggle Shop";
+        toggleShopBtn.className = "btn btn-success";
+        toggleShopBtn.style.marginTop = "10px";
+        toggleShopBtn.style.marginRight = "10px";
+        toggleShopBtn.style.display = "none"
+
+        toggleShopBtn.onclick = async () => {
+            const res = await fetch(`${BASE_URL}/Shop`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gameId: GAME_ID }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+
+            }
+
+            Swal.fire({
+                title: `Shop Status:  ${data.shopActive}`,
+                toast: true,
+                position: "top-end",
+                theme: "dark",
+                icon: "success",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            })
+        };
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(toggleShopBtn);
+    }
+
+
     if (!globalAddResourceBtn) {
         globalAddResourceBtn = document.createElement("button");
         globalAddResourceBtn.id = "globalAddResourceBtn";
@@ -2543,7 +2834,6 @@ select:focus {
         globalAddResourceBtn.style.marginTop = "10px";
         globalAddResourceBtn.style.display = "none"
 
-        // Example: open modal for selected player(s)
         globalAddResourceBtn.onclick = () => {
             const selectedPlayers = currentPokesOnField.filter(p => !p.isNpc);
             openGiveResourcesModal(selectedPlayers);

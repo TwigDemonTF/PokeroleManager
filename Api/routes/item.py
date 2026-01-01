@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_restful import Resource
 
 from ..models.Items import Item
+from ..models.User import Game
 
 from ..Enums.Items.ItemCategory import ItemCategoryEnum
 from ..Enums.Items.ShopTiers import ShopTierEnum
@@ -60,3 +61,25 @@ class ItemApi(Resource):
         data.extend(item.to_dict() for item in items)
 
         return jsonify(data)
+
+class ShopApi(Resource):
+    def post(self):
+        gameId = request.get_json().get("gameId")
+        game = Game.query.filter_by(gameId=gameId).first_or_404()
+        print(game.shopActive)
+        if game.shopActive == True:
+            game.shopActive = False
+        elif game.shopActive == False:
+            game.shopActive = True
+        database.session.commit()
+        return {"shopActive": game.shopActive}, 200
+        
+    def get(self, gameId):
+        game = Game.query.filter_by(gameId=gameId).first_or_404()
+
+        shopData = {
+            "isOpen": game.shopActive,
+            "activeShopTier": game.activeShopTier.value
+        }
+
+        return shopData

@@ -87,101 +87,17 @@ CREATE TABLE IF NOT EXISTS "Item" (
     "numUses" INTEGER DEFAULT NULL,
     PRIMARY KEY (id)
 );
-INSERT INTO Item VALUES (
-    1,
-    'Lum Berry',
-    'The Lum Berry is a green berry that resembles a plum. It is known for its well-balanced flavor and is often described as having a smooth, shiny appearance.',
-    'When eaten by a Pokemon, it gets cured of any non-volatile status conditions. Activates automatically when active in Held Item slot.',
-    'CURE_STATUS',
-    '{"statuses": "all_non_volatile"}',
-    'COMMON',
-    'HEALING_ITEM',
-    25,
-    15,
-    TRUE,
-    FALSE,
-    1
-);
-
-INSERT INTO Item VALUES (
-    2,
-    'Shiny Stone',
-    'An elliptical-shaped stone that is transparent with a ball of light inside it. It is known for its dazzling shine.',
-    'Its used to evolve certain Pokemon.',
-    'evolve_pokemon',
-    '{}',
-    'ELITE',
-    'EVOLUTION_ITEM',
-    10000,
-    7500,
-    FALSE,
-    FALSE,
-    NULL
-);
-
-INSERT INTO Item VALUES (
-    3,
-    'Blast Seed',
-    'A small, round seed with a distinct explosive design, often illustrated with fiery colors to indicate its explosive nature.',
-    'When eaten the user suddenly sneezes a breath of fire. Foes do not have time to react',
-    'deal_typed_damage',
-    '{"type": "FIRE", "damage": 1}',
-    'COMMON',
-    'MISC',
-    50,
-    30,
-    TRUE,
-    FALSE,
-    1
-);
-
-INSERT INTO Item VALUES (
-    4,
-    'Cherri Berry',
-    'A bright red berry that blooms with delicate, pretty flowers. It is known for its spicy flavor.',
-    'When eaten by a Pokemon, gets cured of Paralysis if it is afflicted with it.',
-    'cure_status',
-    '{"statuses": ["PARALYSIS"]}',
-    'BASIC',
-    'HEALING_ITEM',
-    30,
-    20,
-    TRUE,
-    FALSE,
-    1
-);
-
-INSERT INTO Item VALUES (
-    5,
-    'Hyper Potion',
-    'A pink spray bottle',
-    'It is used to restore a Pokémon''s health during battles or outside of them.',
-    'heal_pool',
-    '{"maxPool": 14, "usedUnits": 0}',
-    'EXPERT',
-    'HEALING_ITEM',
-    1200,
-    900,
-    TRUE,
-    FALSE,
-    1
-);
-
-INSERT INTO Item VALUES (
-    6,
-    'Razz Berry',
-    'Resembles a raspberry, featuring a red color and a slightly spicy taste. It has a firm texture and is known for its dry center, making it distinct.',
-    'When eaten, restores the users Health by 1/3 of its Maximum Health.',
-    'heal_static',
-    '{"amount": 1}',
-    'ELITE',
-    'HEALING_ITEM',
-    900,
-    600,
-    TRUE,
-    FALSE,
-    1
-);
+INSERT INTO Item VALUES(1,'Lum Berry','The Lum Berry is a green berry that resembles a plum. It is known for its well-balanced flavor and is often described as having a smooth, shiny appearance.','When eaten by a Pokemon, it gets cured of any non-volatile status conditions. Activates automatically when active in Held Item slot.','CURE_STATUS','{"statuses": "all_non_volatile"}','COMMON','HEALING_ITEM',25,15,1,0,1);
+INSERT INTO Item VALUES(2,'Shiny Stone','An elliptical-shaped stone that is transparent with a ball of light inside it. It is known for its dazzling shine.','Its used to evolve certain Pokemon.','evolve_pokemon','{}','ELITE','EVOLUTION_ITEM',10000,7500,0,0,NULL);
+INSERT INTO Item VALUES(3,'Blast Seed','A small, round seed with a distinct explosive design, often illustrated with fiery colors to indicate its explosive nature.','When eaten the user suddenly sneezes a breath of fire. Foes do not have time to react','deal_typed_damage','{"type": "FIRE", "damage": 1}','COMMON','MISC',50,30,1,0,1);
+INSERT INTO Item VALUES(4,'Cherri Berry','A bright red berry that blooms with delicate, pretty flowers. It is known for its spicy flavor.','When eaten by a Pokemon, gets cured of Paralysis if it is afflicted with it.','cure_status','{"statuses": ["PARALYSIS"]}','BASIC','HEALING_ITEM',30,20,1,0,1);
+INSERT INTO Item VALUES(5,'Hyper Potion','A pink spray bottle','It is used to restore a Pokémon''s health during battles or outside of them.','heal_pool','{"maxPool": 14, "usedUnits": 0}','EXPERT','HEALING_ITEM',1200,900,1,0,1);
+INSERT INTO Item VALUES(6,'Razz Berry','Resembles a raspberry, featuring a red color and a slightly spicy taste. It has a firm texture and is known for its dry center, making it distinct.','When eaten, restores the users Health by 1/3 of its Maximum Health.','heal_static','{"amount": 1}','ELITE','HEALING_ITEM',900,600,1,0,1);
+INSERT INTO Item VALUES(7,'Nanab Berry','When given to an enemy, it calms them down a bit.',NULL,'use_item','{}','BASIC','MISC',30,20,1,0,1);
+INSERT INTO Item VALUES(8,'Magost Berry','A Berry.',NULL,'','{}','BASIC','MISC',30,20,0,0,0);
+INSERT INTO Item VALUES(9,'Hondew Berry','A Berry which is usually given to those they deem as friends. ',NULL,'use_item','{}','BASIC','MISC',30,20,1,0,1);
+INSERT INTO Item VALUES(10,'Sleep Seed','Make a Dexteriy + Fight + Channel roll to shoot these seeds into your foe''s mouth.',NULL,'apply_status','{"status": "ASLEEP"}','BASIC','MISC',75,50,1,0,1);
+INSERT INTO Item VALUES(11,'Stun Seed','Make a Dexterity + Fight + Channel roll to shoot these seeds into the foe''s mouth.',NULL,'apply_status','{"status": "PARALYZED"}','BASIC','MISC',75,50,1,0,1);
 CREATE TABLE IF NOT EXISTS "Garment" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -291,10 +207,10 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	UNIQUE ("Guid")
 );
-INSERT INTO GamePokemon VALUES(1,1,'Airalin',2,'Female',21,0,'PSYCHIC',NULL,2,1,'Healthy',3,4,0,6,1,2,0,NULL,1,3,1,3,1,3,2,4,1,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,38,0,'Black','09c38c');
-INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',5,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,5,0,4,1,2,0,NULL,3,4,2,4,2,4,2,4,2,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,13,0,'Blue','b513fb');
-INSERT INTO GamePokemon VALUES(3,3,'Cyan',6,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,0,3,2,1,0,NULL,2,5,2,4,1,3,1,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,12,0,'Orange','d63f99');
-INSERT INTO GamePokemon VALUES(4,4,'Pluey',2,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,5,0,6,1,2,0,NULL,2,4,1,3,2,4,2,4,2,4,0,2,1,0,0,0,0,0,0,0,0,0,0,0,0,17,0,'Purple','a28d51');
+INSERT INTO GamePokemon VALUES(1,1,'Airalin',2,'Female',21,0,'PSYCHIC',NULL,2,1,'Healthy',3,4,0,6,1,2,0,NULL,1,3,1,3,1,3,2,4,1,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,56,0,'Black','09c38c');
+INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',10,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,6,0,4,1,2,0,NULL,3,4,2,4,3,4,2,4,2,4,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,'Blue','b513fb');
+INSERT INTO GamePokemon VALUES(3,3,'Cyan',12,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,5,0,3,2,1,0,NULL,3,5,2,4,2,3,1,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,'Orange','d63f99');
+INSERT INTO GamePokemon VALUES(4,4,'Pluey',5,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,5,0,6,1,2,0,NULL,2,4,1,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,21,0,'Purple','a28d51');
 CREATE TABLE IF NOT EXISTS "Game" (
 	id INTEGER NOT NULL, 
 	"gameId" VARCHAR(10) NOT NULL, 
@@ -317,6 +233,8 @@ CREATE TABLE IF NOT EXISTS "Move" (
 	"basePower" INTEGER, 
 	priority VARCHAR(2), 
 	target VARCHAR(21), 
+    "moveRangeType" VARCHAR(17), 
+	"moveGridRange" INTEGER,
 	"accuracyModifiersId" INTEGER, 
 	"damageModifiersId" INTEGER, 
 	"reducedAccuracy" INTEGER, 
@@ -348,16 +266,16 @@ CREATE TABLE IF NOT EXISTS "Move" (
 	FOREIGN KEY("modifiedDamageId") REFERENCES "DamageModifierGroup" (id), 
 	FOREIGN KEY("healingTypeId") REFERENCES "HealMove" (id)
 );
-INSERT INTO Move VALUES(1,'Confusion','PSYCHIC','Roll 1 Chance Dice to Confuse the foe','The target''s mind is hit by a weak psychic force that leaves them wondering if they were hit by an invisible enemy. Sometimes the foe is left seeing things that aren''t really there.','Special',2,'n0','SingleEnemy',1,1,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(2,'Growl','NORMAL','Reduce the foe''s Strength.','Either by a menacing attitude or cute demeanor, the foe will be unsure about attacking the user with full force.','Support',0,'n0','AllEnemyInRange',2,2,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(3,'Tackle','NORMAL','','A basic attack that consists of charging at an enemy.','Physical',2,'n0','SingleEnemy',3,3,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(4,'Leer','NORMAL','Recude the Defense of those affected.','A vicious glare that will make any opponent doubt its own strength in battle.','Support',0,'n0','AllEnemyInRange',4,4,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(5,'Quick Attack','NORMAL','Double the Pokemon''s movement speed.','An attack as fast as lightning','Physical',2,'p1','SingleEnemy',5,5,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''s Evasion. User''s Normal and Fighting Moves can affect Ghost Types and Ghost Moves can affect Normal Types','The Pokemon uses its developed senses and mental ability to forsee the immediate future','Support',0,'n0','SingleEnemy',6,6,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'p5','User',7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'n0','SingleEnemy',8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'n0','AllEnemyInRange',9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-CREATE TABLE IF NOT EXISTS pokemon_garments (
+INSERT INTO Move VALUES(1,'Confusion','PSYCHIC','Roll 1 Chance Dice to Confuse the foe','The target''s mind is hit by a weak psychic force that leaves them wondering if they were hit by an invisible enemy. Sometimes the foe is left seeing things that aren''t really there.','Special',2,'n0','SingleEnemy','RANGED_OR_SPECIAL',NULL,1,1,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(2,'Growl','NORMAL','Reduce the foe''s Strength.','Either by a menacing attitude or cute demeanor, the foe will be unsure about attacking the user with full force.','Support',0,'n0','AllEnemyInRange','ALL_IN_RANGE',2,2,2,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(3,'Tackle','NORMAL','','A basic attack that consists of charging at an enemy.','Physical',2,'n0','SingleEnemy','ADJACENT',2,3,3,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(4,'Leer','NORMAL','Recude the Defense of those affected.','A vicious glare that will make any opponent doubt its own strength in battle.','Support',0,'n0','AllEnemyInRange','ALL_IN_RANGE',2,4,4,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(5,'Quick Attack','NORMAL','Double the Pokemon''s movement speed.','An attack as fast as lightning','Physical',2,'p1','SingleEnemy','TARGET_IN_AREA',2,5,5,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''s Evasion. User''s Normal and Fighting Moves can affect Ghost Types and Ghost Moves can affect Normal Types','The Pokemon uses its developed senses and mental ability to forsee the immediate future','Support',0,'n0','SingleEnemy','TARGET_IN_AREA',2,6,6,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'p5','User',NULL,NULL,7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'n0','SingleEnemy','ADJACENT',1,8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'n0','AllEnemyInRange','ALL_IN_FRONT',2,9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+CREATE TABLE pokemon_garments (
 	pokemon_id INTEGER NOT NULL, 
 	garment_id INTEGER NOT NULL, 
 	PRIMARY KEY (pokemon_id, garment_id), 
@@ -428,4 +346,9 @@ INSERT INTO BagItem VALUES(3,3,1);
 INSERT INTO BagItem VALUES(4,4,2);
 INSERT INTO BagItem VALUES(5,5,3);
 INSERT INTO BagItem VALUES(6,6,3);
+INSERT INTO BagItem VALUES(7,9,2);
+INSERT INTO BagItem VALUES(8,8,3);
+INSERT INTO BagItem VALUES(9,7,3);
+INSERT INTO BagItem VALUES(10,10,4);
+INSERT INTO BagItem VALUES(11,11,1);
 COMMIT;
