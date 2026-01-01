@@ -185,6 +185,9 @@ def BuyStat(gameId, pokemonGuid):
     setattr(pokemon, stat_name.lower(), current_value + 1)
     pokemon.experiencePoints -= cost
 
+    # 6. Add level based on new stat level
+    pokemon.level += current_value + 1
+
     database.session.commit()
 
     return {

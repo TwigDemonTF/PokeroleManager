@@ -479,6 +479,26 @@ footer {
    RESPONSIVE
 --------------------------------------------------------- */
 
+.battle-columns {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+.battle-column {
+  flex: 1;
+  min-width: 0;
+}
+
+/* When NPCs are hidden, players take full width */
+.battle-columns.single-column #playersColumn {
+  flex: 1 1 100%;
+}
+
+.battle-columns.single-column #npcsColumn {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .wrap {
     grid-template-columns: 1fr;
@@ -789,15 +809,16 @@ select:focus {
           <button style="margin-right: 25%;" id="zoomOut" class="ghost">Zoom -</button>
         </div>
       </div>
-        <div id="battleColumns" style="display:flex; gap:2rem;">
-        <div style="flex:1;">
+        <div id="battleColumns" class="battle-columns">
+        <div id="playersColumn" class="battle-column">
             <h3 style="margin-bottom:6px;">Players</h3>
             <div class="grid" id="playersGrid"></div>
         </div>
 
-        <div style="flex:1;">
+        <div id="npcsColumn" class="battle-column">
             <h3 style="margin-bottom:6px;">NPCs</h3>
             <div class="grid" id="npcsGrid"></div>
+        </div>
         </div>
         </div>
     </main>
@@ -1457,9 +1478,18 @@ select:focus {
         currentPokesOnField = pokes;
         const playersGrid = document.getElementById('playersGrid');
         const npcsGrid   = document.getElementById('npcsGrid');
+        const battleCols  = document.getElementById('battleColumns');
 
         playersGrid.innerHTML = '';
         npcsGrid.innerHTML   = '';
+
+        const hasPlayers = pokes.some(p => !p.isNpc);
+        const hasNpcs    = pokes.some(p => p.isNpc);
+
+        if (hasPlayers && !hasNpcs)
+            battleCols.classList.add("single-column");
+        else
+            battleCols.classList.remove("single-column");
 
         renderInitiative(pokes);
 
