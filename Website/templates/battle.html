@@ -761,44 +761,50 @@ select:focus {
   </header>
 
   <div class="wrap">
-    <aside class="selectors">
-      <h2>Available Pokémon (your game)</h2>
-      <div style="display:flex; gap:8px; margin-bottom:8px">
-        <input id="search" placeholder="search name or GUID" style="flex:1;padding:8px;border-radius:6px;border:1px solid #1f2937;background:transparent;color:inherit">
-        <button id="refresh">Refresh</button>
-      </div>
-
-      <div class="select-row">
-        <div style="flex:1;">
-          <label style="font-size:0.8rem">Players (non-NPC)</label>
-          <select id="players" multiple></select>
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:0.8rem">Base Pokemon</label>
-          <select id="basePokemon" multiple></select>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button id="fetchStats">Fetch stats</button>
-        <button id="selectAllPlayers" class="ghost">Select all players</button>
-        <button id="selectAllNpcs" class="ghost">Select all NPCs</button>
-      </div>
-
-      <div style="margin-top:12px; font-size:0.82rem; color:var(--muted)">
-        Tip: hold Ctrl / Cmd to select multiple. Click "Fetch stats" to render selected Pokémon on the right.
-      </div>
-    </aside>
 
     <main class="stage">
         <div id="initiativePanel"
             style="margin-bottom: 1.5rem; padding: 12px; background: rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px;">
             <div style="display:flex; align-items:center;">
                 <h3 style="margin:0;">Initiative Order</h3>
-                <button id="autoRollNpcs" class="ghost" style="margin-left:auto;">Start Battle (roll NPCs)</button>
+                <div style="margin-left: auto;">
+                    <button id="saveBattle" class="ghost btn" style="">Save Battle</button>
+                    <button id="loadBattle" class="ghost btn" style="">Load Battle</button>
+                    <button id="autoRollNpcs" class="ghost" style="">Start Battle (roll NPCs)</button>
+                </div>
             </div>
             <div id="initiativeList" style="margin-top:8px; display:flex; flex-direction:column; gap:4px;"></div>
         </div>
+
+        <aside class="selectors" style="max-width: 300px;">
+        <h2>Available Pokémon (your game)</h2>
+        <div style="display:flex; gap:8px; margin-bottom:8px">
+            <input id="search" placeholder="search name or GUID" style="flex:1;padding:8px;border-radius:6px;border:1px solid #1f2937;background:transparent;color:inherit">
+            <button id="refresh">Refresh</button>
+        </div>
+
+        <div class="select-row">
+            <div style="flex:1;">
+            <label style="font-size:0.8rem">Players (non-NPC)</label>
+            <select id="players" multiple></select>
+            </div>
+            <div style="flex:1;">
+            <label style="font-size:0.8rem">Base Pokemon</label>
+            <select id="basePokemon" multiple></select>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="fetchStats">Fetch stats</button>
+            <button id="selectAllPlayers" class="ghost">Select all players</button>
+            <button id="selectAllNpcs" class="ghost">Select all NPCs</button>
+        </div>
+
+        <div style="margin-top:12px; font-size:0.82rem; color:var(--muted)">
+            Tip: hold Ctrl / Cmd to select multiple. Click "Fetch stats" to render selected Pokémon on the right.
+        </div>
+        </aside>
+
         <div style="display: flex; width: 100%;" id="actionPanel"></div>
       <div class="stage-controls">
         <div style="font-weight:600">Stage</div>
@@ -926,6 +932,9 @@ select:focus {
     let activeMove = null;
     let selectedBasePokemonIds = new Set();
 
+    // eslint-disable-next-line
+    //let items = JSON.parse('{{ items | tojson }}');
+
     basePokemonSelect.addEventListener("change", () => {
         Array.from(basePokemonSelect.options).forEach(opt => {
             if (opt.selected)
@@ -935,8 +944,81 @@ select:focus {
         });
     });
 
-    // eslint-disable-next-line
-    //let items = JSON.parse('{{ items | tojson }}');
+    function serializePokemon(p) {
+        return {
+            kind: p.kind,               // "GAME" or "BASE"
+
+            // identity
+            guid: p.guid ?? null,
+            tempId: p.tempId ?? null,
+            basePokemonId: p.basePokemonId ?? null,
+
+            name: p.name,
+            level: p.level,
+            isNpc: p.isNpc,
+
+            status: p.status,
+
+            primaryType: p.primaryType,
+            secondaryType: p.secondaryType,
+
+            // HP state
+            health: p.health,
+            lethal: p.lethal ?? 0,
+            distance: p.distance ?? 0,
+
+            // core stats (FLAT — important)
+            strength: p.strength,
+            dexterity: p.dexterity,
+            vitality: p.vitality,
+            special: p.special,
+            insight: p.insight,
+
+            // skills (FLAT)
+            fight: p.fight,
+            survival: p.survival,
+            contest: p.contest,
+            brawl: p.brawl,
+            evasion: p.evasion,
+            channel: p.channel,
+            clash: p.clash,
+            alert: p.alert,
+            athletic: p.athletic,
+            stealth: p.stealth,
+            perform: p.perform,
+
+            // potentials (needed for UI)
+            strengthPotential: p.strengthPotential,
+            dexterityPotential: p.dexterityPotential,
+            vitalityPotential: p.vitalityPotential,
+            specialPotential: p.specialPotential,
+            insightPotential: p.insightPotential,
+
+            baseHealth: p.baseHealth,
+
+            Moves: p.Moves ?? [],
+        };
+    }
+
+    function serializeBattle() {
+        return {
+            pokes: currentPokesOnField.map(serializePokemon),
+            initiativeMap,
+            zoom
+        };
+    }
+
+    function saveBattleSession(name) {
+        const allSaves = JSON.parse(localStorage.getItem("battleSaves") || "{}");
+
+        allSaves[name] = {
+            name,
+            savedAt: new Date().toISOString(),
+            data: serializeBattle()
+        };
+
+        localStorage.setItem("battleSaves", JSON.stringify(allSaves));
+    }
 
     function formatMoveRange(move) {
         if (!move.moveRangeType) return null;
@@ -3121,6 +3203,130 @@ select:focus {
         actionPanel.appendChild(globalRemoveResourceBtn);
     }
 
+    document.getElementById("saveBattle").addEventListener("click", async () => {
+        const { value: name } = await Swal.fire({
+            title: "Save Battle",
+            input: "text",
+            inputLabel: "Battle name",
+            inputPlaceholder: "BossBattle, Route12, etc",
+            showCancelButton: true
+        });
+
+        if (!name) return;
+
+        saveBattleSession(name);
+
+        Swal.fire({
+            toast: true,
+            icon: "success",
+            title: "Battle saved",
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+
+    function restorePokemon(raw) {
+        if (raw.kind === "BASE") {
+            const base = allBasePokemon.find(b => b.id == raw.basePokemonId);
+            if (!base) return null;
+
+            const p = createEphemeralPokemon(base);
+
+            Object.assign(p, raw);
+            p.tempId = raw.tempId;
+
+            return p;
+        }
+
+        // 🔑 GamePokemon: normalize again
+        const normalized = normalizePokemon(raw);
+
+        // restore battle-only state
+        normalized.health = raw.health;
+        normalized.lethal = raw.lethal ?? 0;
+        normalized.distance = raw.distance ?? 0;
+        normalized.Moves = raw.Moves ?? [];
+
+        return normalized;
+    }
+
+    function restoreBattleSession(session) {
+        initiativeMap = session.data.initiativeMap || {};
+        zoom = session.data.zoom ?? zoom;
+
+        const pokes = session.data.pokes
+            .map(restorePokemon)
+            .filter(Boolean);
+
+        renderStage(pokes);
+    }
+
+    document.getElementById("loadBattle").addEventListener("click", async () => {
+        const allSaves = JSON.parse(localStorage.getItem("battleSaves") || "{}");
+        const names = Object.keys(allSaves);
+
+        if (!names.length) {
+            Swal.fire("No saved battles");
+            return;
+        }
+
+        const options = {};
+        names.forEach(n => {
+            options[n] = `${n} (${new Date(allSaves[n].savedAt).toLocaleString()})`;
+        });
+
+        const result = await Swal.fire({
+            title: "Load or Delete Battle",
+            input: "select",
+            inputOptions: options,
+            showCancelButton: true,
+            confirmButtonText: "Load",
+            showDenyButton: true,
+            denyButtonText: "Delete"
+        });
+
+        if (!result.value) return;
+
+        const selected = result.value;
+
+        // DELETE
+        if (result.isDenied) {
+            const confirm = await Swal.fire({
+                title: `Delete "${selected}"?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            delete allSaves[selected];
+            localStorage.setItem("battleSaves", JSON.stringify(allSaves));
+
+            Swal.fire({
+                toast: true,
+                icon: "success",
+                title: "Battle deleted",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            return;
+        }
+
+        document.querySelectorAll('.selectors').forEach(el => {
+            el.style.display = 'none';
+        });
+        globalAddResourceBtn.style.display = "block";
+        globalRemoveResourceBtn.style.display = "block";
+        genLootItemBtn.style.display = "block";
+        toggleShopBtn.style.display = "block";
+        targetBtn.style.display = "block";
+        document.getElementById("clearStage").style.display = "block";
+
+        // LOAD
+        restoreBattleSession(allSaves[selected]);
+    });
   </script>
 </body>
 </html>
