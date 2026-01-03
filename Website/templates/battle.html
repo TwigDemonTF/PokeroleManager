@@ -924,6 +924,17 @@ select:focus {
     let allMoves = [];
     let allBasePokemon = [];
     let activeMove = null;
+    let selectedBasePokemonIds = new Set();
+
+    basePokemonSelect.addEventListener("change", () => {
+        Array.from(basePokemonSelect.options).forEach(opt => {
+            if (opt.selected)
+                selectedBasePokemonIds.add(opt.value);
+            else
+                selectedBasePokemonIds.delete(opt.value);
+        });
+    });
+
     // eslint-disable-next-line
     //let items = JSON.parse('{{ items | tojson }}');
 
@@ -968,6 +979,10 @@ select:focus {
         else if (multiplier > 1) badge.style.color = "#28c76f";
 
         return badge;
+    }
+
+    function getBattleId(p) {
+        return p.guid ?? `base-${p.tempId}`;
     }
 
     function getSelections() {
@@ -1326,9 +1341,13 @@ select:focus {
         const listEl = document.getElementById("initiativeList");
         listEl.innerHTML = "";
 
-        const filled = pokes.filter(p => initiativeMap[p.guid] !== undefined);
+        const filled = pokes.filter(
+            p => initiativeMap[getBattleId(p)] !== undefined
+        );
 
-        const sorted = filled.sort((a,b) => initiativeMap[b.guid] - initiativeMap[a.guid]);
+        const sorted = filled.sort(
+            (a,b) => initiativeMap[getBattleId(b)] - initiativeMap[getBattleId(a)]
+        );
 
         sorted.forEach((p, idx) => {
             const row = document.createElement('div');
@@ -1350,7 +1369,7 @@ select:focus {
                 <span style="color:${nameColor}">${p.name}</span>
             </div>
             <div style="color:var(--muted)">
-                Init: ${initiativeMap[p.guid]}
+                Init: ${initiativeMap[getBattleId(p)]}
                 · Dist: ${p.distance ?? 0}
             </div>
             `;
@@ -1388,10 +1407,10 @@ select:focus {
     document.getElementById("autoRollNpcs").addEventListener("click", () => {
         // roll NPCs with missing initiative
         for (const p of currentPokesOnField) {
-            if (p.isNpc && initiativeMap[p.guid] === undefined) {
+            if (p.isNpc && initiativeMap[getBattleId(p)] === undefined) {
                 const roll = Math.floor(Math.random()*6)+1;
                 const total = roll + (p.dexterity ?? 0) + (p.survival ?? 0);
-                initiativeMap[p.guid] = total;
+                initiativeMap[getBattleId(p)] = total;
             }
         }
         updateInitiativePanel(currentPokesOnField);
@@ -1488,10 +1507,25 @@ select:focus {
     function renderBasePokemonSelect() {
         basePokemonSelect.innerHTML = "";
 
+        const q = (searchInput.value || "").trim().toLowerCase();
+
         allBasePokemon.forEach(bp => {
+            if (
+                q &&
+                !bp.name.toLowerCase().includes(q) &&
+                !String(bp.id).toLowerCase().includes(q)
+            ) {
+                return;
+            }
+
             const opt = document.createElement("option");
             opt.value = bp.id;
             opt.textContent = bp.name;
+
+            // 🔑 restore selection
+            if (selectedBasePokemonIds.has(String(bp.id)))
+                opt.selected = true;
+
             basePokemonSelect.appendChild(opt);
         });
     }
@@ -1972,11 +2006,11 @@ select:focus {
 
             const initInput = initBox.querySelector(".initiative-input");
             const distInput = initBox.querySelector(".distance-input");
-            initInput.value = initiativeMap[p.guid] ?? "";
+            initInput.value = initiativeMap[getBattleId(p)] ?? "";
             distInput.value = p.distance ?? 0;
 
             initInput.addEventListener("input", () => {
-                initiativeMap[p.guid] = Number(initInput.value);
+                initiativeMap[getBattleId(p)] = Number(initInput.value);
                 updateInitiativePanel(pokes);
             });
             distInput.addEventListener("input", () => {
@@ -2824,7 +2858,9 @@ select:focus {
     }
     // quick search filtering
     let searchTimer = null;
-    searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderSelects(allPokemonCache), 250) });
+    searchInput.addEventListener("input", () => {
+        renderBasePokemonSelect();
+    });
 
     // initial load
     loadAll();
