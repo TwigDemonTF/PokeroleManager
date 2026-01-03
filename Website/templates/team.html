@@ -1,0 +1,894 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokémon — Team View</title>
+
+  <style>
+    :root {
+      --card-scale: 1;
+      /* scaled up for player readability */
+      --panel-bg: #363636;
+      --card-border: #333;
+      --muted: #9aa;
+      --accent: hotpink;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: #222121;
+      color: hotpink;
+      user-select: none;
+    }
+
+    header {
+      padding: 14px 20px;
+      background: var(--panel-bg);
+      border-bottom: 2px solid hotpink;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    main {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ---------- CARD ---------- */
+
+    .poke {
+      font-size: calc(1rem * var(--card-scale));
+      background: var(--panel-bg);
+      padding: 1em;
+      border-radius: 14px;
+      background:
+        linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+        linear-gradient(to right, black, hotpink) border-box;
+      border: 3px solid transparent;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .head {
+      display: flex;
+      gap: 0.8em;
+      align-items: center;
+    }
+
+    .meta h2 {
+      margin: 0;
+      font-size: 1.4em;
+    }
+
+    .sub {
+      font-size: 0.85em;
+      color: var(--muted);
+    }
+
+    /* ---------- TOOLTIP (same behavior as battle page) ---------- */
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+
+    .tooltip .tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      position: absolute;
+      z-index: 20;
+      background: #111;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.8rem;
+      width: 240px;
+      top: 120%;
+      left: 0;
+    }
+
+    .tooltip:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* ---------- TYPES / BADGES ---------- */
+
+    .types {
+      display: flex;
+      gap: 0.5em;
+      margin-top: 0.6em;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 0.35em 0.6em;
+      font-size: 0.8em;
+      border-radius: 0.5em;
+      background: #222;
+      border: 1px solid #444;
+      color: white;
+    }
+
+    /* ---------- HP BAR (READ-ONLY) ---------- */
+
+    .hp-bar-container {
+      margin-top: 1em;
+    }
+
+    .hp-bar {
+      height: 16px;
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #444;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      background: #28c76f;
+      transition: width 0.2s ease;
+    }
+    .lethal-hp-bar-fill {
+        height: 100%;
+        background: #8e44ad;
+        transition: width 0.2s ease;   
+    }
+
+    .hp-text {
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: var(--muted);
+    }
+
+    .lethal-hp-text {
+        margin-top: 4px;
+        font-size: 0.9em;
+        color: var(--muted);
+    }
+
+    /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
+
+    .stats {
+      display: flex;
+      gap: 0.6em;
+      margin-top: 1.2em;
+      flex-wrap: wrap;
+      /* keep all on same line */
+      align-items: center;
+    }
+
+    .stats .stat-group {
+        display: flex;
+        gap: 0.6em;
+        flex: 0 0 auto;
+    }
+
+    .stats .stat-group.right {
+      margin-left: auto;
+      /* pushes this group to the right */
+    }
+
+    .stat {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0.4em 0.6em;
+      font-size: 0.85em;
+    }
+
+    .stat b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .stat-circles {
+      display: flex;
+      gap: 0.25em;
+    }
+
+    .circle {
+      width: 0.9em;
+      height: 0.9em;
+      border-radius: 50%;
+      background: #333;
+      border: 1px solid #555;
+    }
+
+    .circle.filled {
+      background: var(--accent);
+    }
+
+    .stat-columns {
+      display: flex;
+      gap: 1em;
+      margin-top: 1em;
+    }
+
+    .stat-column {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0.4em 0.6em;
+      font-size: 0.85em;
+      flex: 1;
+    }
+
+    .stat-column b {
+      display: flex;
+      flex-direction: column;
+      /* title on top, circles below */
+      gap: 0.4em;
+      margin-bottom: 4px;
+      align-items: center;
+      /* <-- center title + circles horizontally */
+    }
+
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 1500px) {
+        .stats .stat-group.right {
+            margin-left: 0;       /* stop pushing right */
+            flex-basis: 100%;     /* force onto its own row */
+            justify-content: flex-start;
+        }
+    }
+
+    /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
+
+    .moves {
+      margin-top: 1.4em;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8em;
+    }
+
+    .move-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 0.7em;
+      color: white;
+    }
+
+    .move-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .move-name {
+      font-size: 1.05em;
+    }
+
+    .move-footer {
+      margin-top: 6px;
+      font-style: italic;
+      opacity: 0.8;
+      font-size: 0.85em;
+      border-top: 1px solid #555;
+      padding-top: 4px;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    li {
+      margin-left: px;
+    }
+
+    a {
+      text-decoration: none;
+      color: hotpink;
+    }
+
+    a:hover {
+      color: lavender;
+      transition: .75s;
+    }
+
+    /* BAG BRUH */
+    .bag {
+      margin-top: 1.5em;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bag-header {
+      font-weight: bold;
+      cursor: pointer;
+      color: hotpink;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: hotpink solid 4px;
+      border-bottom-left-radius: 12.5px;
+      border-bottom-right-radius: 12.5px;
+    }
+
+    .bag-header::after {
+      content: "▼";
+      transition: transform 0.3s ease;
+    }
+
+    .bag.open .bag-header::after {
+      transform: rotate(-180deg);
+    }
+
+    .bag-content {
+      display: none;
+      margin-top: 0.6em;
+      padding-left: 0;
+      flex-direction: column;
+      gap: 0.5em;
+      animation: fadein 0.05s ease-in;
+    }
+
+    .bag.open .bag-content {
+      display: flex;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .bag-card {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 0.6em 1em;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4em;
+      margin: 1rem;
+      margin-top: 0;
+    }
+
+    .bag-card:first-child {
+      margin-top: 0;
+    }
+
+    .bag-card:hover {
+      background: #333;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-name-category {
+      display: flex;
+      gap: 0.5em;
+      align-items: baseline;
+    }
+
+    .item-category {
+      font-size: 0.85em;
+      color: #aaa;
+    }
+
+    .sell-price {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .effect {
+      font-size: 0.9em;
+    }
+
+    .description {
+      font-style: italic;
+      color: #bbb;
+      font-size: 0.85em;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #555;
+      margin: 0.3em 0;
+    }
+
+    .equip-btn {
+      align-self: flex-start;
+      padding: 0.3em 0.8em;
+      border: none;
+      background: hotpink;
+      color: #222;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 0.5em;
+    }
+
+    .equip-btn:hover {
+      background: #ff69b4;
+    }
+
+    /* Team page only – reduces vertical footprint */
+    .poke.collapsed {
+    padding: 0.6em 0.8em;
+    }
+
+    .poke.collapsed h2 {
+    font-size: 1.1em;
+    margin-bottom: 0.1em;
+    }
+
+    .poke.collapsed .sub {
+    font-size: 0.75em;
+    line-height: 1.2;
+    }
+
+    .poke.collapsed .hp-bar-container {
+    margin-top: 0.35em;
+    }
+
+    .poke.collapsed .hp-text,
+    .poke.collapsed .lethal-hp-text {
+        white-space: nowrap;
+    }
+
+
+    /* Hide expanded-only sections */
+    .poke.collapsed .team-body {
+    display: none;
+    }
+
+    #teamContainer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1em;
+    width: 100%;
+    }
+
+    @media (max-width: 1100px) {
+        #teamContainer {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .poke.expanded .stats {
+    flex-wrap: wrap;
+    }
+
+    .poke.expanded .stat-group {
+    flex-wrap: wrap;
+    }
+
+    .poke.expanded .stat-group.right {
+    margin-left: 0;
+    justify-content: flex-start;
+    }
+
+    .poke.expanded {
+    padding: 0.8em;
+    }
+
+    .poke.expanded .stat {
+    font-size: 0.8em;
+    }
+
+    .poke.expanded .stat-column {
+    font-size: 0.8em;
+    }
+
+    #teamLayout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2em;
+        width: 100%;
+        max-width: 1800px;
+    }
+
+    #detailPane {
+        position: relative;
+    }
+
+    #detailContent {
+        position: sticky;
+        top: 20px;
+    }
+
+    #listPane {
+        width: 100%;
+    }
+
+    @media (max-width: 1100px) {
+        #teamLayout {
+            grid-template-columns: 1fr;
+        }
+
+        #detailContent {
+            position: static;
+        }
+    }
+
+    .poke.active {
+        outline: 2px solid hotpink;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <header style="display:flex;">
+    <h1 style="width:8%;">Team Status</h1>
+    <ul style="display:flex; width: 100%;">
+      <li><a href="/Player">Player</a></li>
+      <li style="margin-left: 10px"><a href="/ItemShop">Item Shop</a></li>
+      <li style="margin-left: 10px; margin-left: auto;"><a href="/Logout">Logout</a></li>
+    </ul>
+  </header>
+
+    <main>
+        <div id="teamLayout">
+            <div id="detailPane">
+            <div id="detailContent">
+                <!-- expanded card renders here -->
+            </div>
+            </div>
+
+            <div id="listPane">
+            <div id="teamContainer"></div>
+            </div>
+        </div>
+    </main>
+
+  <script>
+    const GAME_ID = '{{ gameId }}';
+    const BASE_URL = '{{ baseUrl }}';
+
+    // ---- HARD TOGGLE ----
+    const ALLOW_EXPAND = true; // set false to fully lock cards
+
+    const PRIORITY_LABELS = {
+        n7: "-7",
+        n6: "-6",
+        n5: "-5",
+        n4: "-4",
+        n3: "-3",
+        n2: "-2",
+        n1: "-1",
+        n0: "0",
+        p1: "+1",
+        p2: "+2",
+        p3: "+3",
+        p4: "+4",
+        p5: "+5",
+    };
+
+    const typeColors = {
+      Fire: "#F08030",
+      Water: "#6890F0",
+      Grass: "#78C850",
+      Electric: "#F8D030",
+      Ice: "#98D8D8",
+      Fighting: "#C03028",
+      Poison: "#A040A0",
+      Ground: "#E0C068",
+      Flying: "#A890F0",
+      Psychic: "#F85888",
+      Bug: "#A8B820",
+      Rock: "#B8A038",
+      Ghost: "#705898",
+      Dragon: "#7038F8",
+      Dark: "#705848",
+      Steel: "#B8B8D0",
+      Fairy: "#EE99AC",
+      Normal: "#A8A878",
+    };
+    let activePokemon = null;
+    container = document.getElementById("teamContainer")
+
+    container.querySelectorAll('.poke').forEach((c, i) => {
+        c.classList.toggle('active', pokemons[i] === activePokemon);
+    });
+
+    function titleCase(str) {
+        return str.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    async function loadTeam() {
+      const res = await fetch(`${BASE_URL}/gameData/${GAME_ID}`);
+      const json = await res.json();
+      renderTeam(json.data || []);
+    }
+
+    function renderTeam(pokemons) {
+      const container = document.getElementById('teamContainer');
+      container.innerHTML = pokemons.map(p => renderPokemonCard(p)).join('');
+
+      if (!ALLOW_EXPAND) return;
+
+        container.querySelectorAll('.poke').forEach((card, idx) => {
+            const header = card.querySelector('.team-header');
+            header.onclick = () => {
+                showDetail(pokemons[idx]);
+            };
+        });
+    }
+
+    function renderStatColumn(title, mainValue, stats) {
+        return `
+            <div class="stat-column">
+            <b>${title} ${statCircles(mainValue ?? 0)}</b>
+            ${stats.map(s => `
+                <div class="stat-row">
+                <span>${s.name}</span>
+                ${statCircles(s.value ?? 0)}
+                </div>
+            `).join('')}
+            </div>
+        `;
+    }
+
+    function showDetail(pokemon) {
+        const detail = document.getElementById('detailContent');
+        activePokemon = pokemon;
+
+        detail.innerHTML = `
+            <div class="poke expanded">
+            <div class="head">
+                <div class="meta">
+                <h2>${pokemon.Name} ${pokemon.Level ? 'Lv ' + pokemon.Level : ''}</h2>
+                <div class="sub">${pokemon.PrimaryType}${pokemon.SecondaryType ? ' / ' + pokemon.SecondaryType : ''}</div>
+                <div class="sub">
+                    ${pokemon.Ability || '-'} · ${pokemon.HeldItem || '-'} · ${pokemon.Nature || '-'}
+                </div>
+                </div>
+            </div>
+
+            <div class="hp-bar-container">
+                <div class="hp-bar">
+                <div class="hp-bar-fill" style="width:${hpPct(pokemon)}%"></div>
+                </div>
+                <div class="hp-text">${pokemon.Health ?? maxHp(pokemon)} / ${maxHp(pokemon)} HP</div>
+            </div>
+
+            <div class="hp-bar-container">
+                <div class="hp-bar">
+                <div class="lethal-hp-bar-fill" style="width:${lethalPct(pokemon)}%"></div>
+                </div>
+                <div class="lethal-hp-text">${pokemon.LethalHealth ?? maxHp(pokemon)} / ${maxHp(pokemon)} Lethal</div>
+            </div>
+
+            ${renderExpanded(pokemon)}
+            </div>
+        `;
+    }
+
+    function maxHp(p) {
+        return p.BaseHealth + p.Vitality;
+    }
+
+    function hpPct(p) {
+        return Math.max(0, Math.min(1, (p.Health ?? maxHp(p)) / maxHp(p))) * 100;
+    }
+
+    function lethalPct(p) {
+        return Math.max(0, Math.min(1, (p.LethalHealth ?? maxHp(p)) / maxHp(p))) * 100;
+    }
+
+    function renderPokemonCard(p) {
+      const maxHp = p.BaseHealth + p.Vitality;
+      const hpPct = Math.max(0, Math.min(1, (p.Health ?? maxHp) / maxHp));
+      const lethalPct = Math.max(0, Math.min(1, (p.LethalHealth ?? maxHp) / maxHp));
+
+      return `
+      <div class="poke collapsed">
+        <div class="team-header">
+          <div class="head">
+            <div class="meta" style="flex:1;">
+              <h2>${p.Name} ${p.Level ? 'Lv ' + p.Level : ''}</h2>
+              <div class="sub">${p.PrimaryType}${p.SecondaryType ? ' / ' + p.SecondaryType : ''}</div>
+              <div class="sub">
+                ${p.Ability || '-'} · ${p.HeldItem || '-'} · ${p.Nature || '-'}
+              </div>
+            </div>
+          </div>
+
+          <div class="hp-bar-container">
+            <div class="hp-bar">
+              <div class="hp-bar-fill" style="width:${hpPct * 100}%"></div>
+            </div>
+            <div class="hp-text">${p.Health ?? maxHp} / ${maxHp} HP</div>
+          </div>
+
+          <div class="hp-bar-container">
+            <div class="hp-bar">
+              <div class="lethal-hp-bar-fill" style="width:${lethalPct * 100}%"></div>
+            </div>
+            <div class="lethal-hp-text">${p.LethalHealth ?? maxHp} / ${maxHp} Lethal</div>
+          </div>
+        </div>
+
+        <div class="team-body">
+          ${renderExpanded(p)}
+        </div>
+      </div>`;
+    }
+
+    function renderExpanded(p) {
+    return `
+        <div class="stats">
+        <div class="stat-group">
+            <div class="stat">STR ${statCircles(p.Strength, p.StrengthPotential)}</div>
+            <div class="stat">DEX ${statCircles(p.Dexterity, p.DexterityPotential)}</div>
+            <div class="stat">VIT ${statCircles(p.Vitality, p.VitalityPotential)}</div>
+            <div class="stat">SPE ${statCircles(p.Special, p.SpecialPotential)}</div>
+            <div class="stat">INS ${statCircles(p.Insight, p.InsightPotential)}</div>
+        </div>
+
+        <div class="stat-group right">
+            <div class="stat">Will ${statCircles(p.Will, 10)}</div>
+            <div class="stat">Logic ${statCircles(p.Logic)}</div>
+            <div class="stat">Instinct ${statCircles(p.Instinct)}</div>
+            <div class="stat">Primal ${statCircles(p.Primal)}</div>
+        </div>
+        </div>
+
+        <div class="stat-columns">
+        ${renderStatColumn('Fight', p.Fight, [
+            { name: 'Brawl', value: p.Brawl },
+            { name: 'Channel', value: p.Channel },
+            { name: 'Clash', value: p.Clash },
+            { name: 'Evasion', value: p.Evasion },
+        ])}
+
+        ${renderStatColumn('Survival', p.Survival, [
+            { name: 'Alert', value: p.Alert },
+            { name: 'Athletic', value: p.Athletic },
+            { name: 'Nature', value: p.NatureStat },
+            { name: 'Stealth', value: p.Stealth },
+        ])}
+
+        ${renderStatColumn('Contest', p.Contest, [
+            { name: 'Allure', value: p.Allure },
+            { name: 'Etiquette', value: p.Etiquette },
+            { name: 'Intimidate', value: p.Intimidate },
+            { name: 'Perform', value: p.Perform },
+        ])}
+        </div>
+
+        <div class="moves">
+        ${p.Moves.map(renderMove).join('')}
+        </div>
+    `;
+    }
+
+    function statCircles(value, max = 5) {
+      let out = '<div class="stat-circles">';
+      for (let i = 1; i <= max; i++) {
+        out += `<div class="circle ${i <= value ? 'filled' : ''}"></div>`;
+      }
+      out += '</div>';
+      return out;
+    }
+
+    function renderMove(m) {
+    const accuracy =
+        m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
+
+    const damage =
+        [...(m.damageModifiers || []), m.basePower || null]
+        .filter(mod => mod && mod !== "NONE")
+        .join(" + ") || "-";
+
+    const color = typeColors[m.type] || "#666";
+
+    return `
+        <div class="move-card">
+        <div class="move-header">
+            <span class="move-name" style="color:${color}">
+            ${m.name}
+            </span>
+            <span class="move-type" style="color:${color}">
+            ${m.type || ''}/${m.damageType || ''}
+            </span>
+        </div>
+        <div>Accuracy: ${accuracy}</div>
+        <div>Damage Pool: ${damage}</div>
+        <div>Target: ${m.target || '-'}</div>
+        <div class="move-footer">${m.flavorText || ''}</div>
+        </div>
+    `;
+    }
+
+    function buildMoveTooltip(move) {
+        const lines = [];
+
+        // --- Enum / basic fields ---
+        if (move.target) {
+            lines.push(`Target: ${move.target}`);
+        }
+
+        if (move.priority != null) {
+            lines.push(`Priority: ${PRIORITY_LABELS[move.priority] ?? move.priority}`);
+        }
+
+        if (move.reducedAccuracy != null) {
+            lines.push(`Reduced Accuracy: ${move.reducedAccuracy}`);
+        }
+
+        lines.push('----------------------');
+
+        const booleanFlags = [
+            ["crit", move.hasCritical],
+            ["lethal", move.hasLethal],
+            ["block", move.hasBlock],
+            ["recoil", move.hasRecoil],
+            ["always hit", move.alwaysHitEffect],
+            ["always fail", move.alwaysFailEffect],
+            ["charge move", move.isChargeMove],
+            ["fist based", move.isFistBased],
+            ["high crit", move.isHighCrit],
+            ["never fail", move.isNeverFail],
+            ["healing move", move.isHealingMove],
+            ["shield move", move.isShieldMove],
+            ["sound based", move.isSoundBased],
+            ["switch move", move.isSwitchMove],
+            ["requires recharge", move.requiresRecharge],
+            ["modified damage", move.hasModifiedDamage]
+        ];
+
+        booleanFlags.forEach(([label, value]) => {
+            if (value === true) {
+                lines.push(`${titleCase(label)}.`);
+            }
+        });
+
+        if (move.isMultiHit) {
+            lines.push(`Multi Hit${move.multiHitCount ? ` (${move.multiHitCount})` : ""}.`);
+        }
+
+        if (move.hasWeatherChange && move.weatherChangeTo) {
+            lines.push(`Weather Change: ${move.weatherChangeTo}`);
+        }
+
+        return lines.join('\n');
+    }
+
+    loadTeam();
+  </script>
+
+  <style>
+    /* Collapsing logic only */
+    .poke .team-body { display:none; }
+    .poke.expanded .team-body { display:block; }
+    .team-header { cursor:pointer; }
+
+  </style>
+
+</body>
+</html>

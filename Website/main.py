@@ -16,6 +16,14 @@ def contextExample():
     }
     return render_template('ayayay.html', **context)
 
+@app.route('/Team', methods=['GET'])
+def Team():
+    context = {
+        "gameId": session.get("gameId"),
+        "baseUrl": app.config["BASE_URL"]
+    }
+    return render_template('team.html', **context)
+
 @app.route('/Login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -175,6 +183,8 @@ def gen_item():
 
 @app.route("/Battle")
 def battle():
+    if not session.get("userId"):
+        return redirect("/Login")
     res = requests.get(f"{app.config["BASE_URL"]}/Item")
     items = [
         item for item in res.json()

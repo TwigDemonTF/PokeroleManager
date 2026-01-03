@@ -933,7 +933,7 @@ select:focus {
     let selectedBasePokemonIds = new Set();
 
     // eslint-disable-next-line
-    //let items = JSON.parse('{{ items | tojson }}');
+    let items = JSON.parse('{{ items | tojson }}');
 
     basePokemonSelect.addEventListener("change", () => {
         Array.from(basePokemonSelect.options).forEach(opt => {
@@ -1617,7 +1617,7 @@ select:focus {
             await loadAllMoves();
             await loadBasePokemon();
 
-            const res = await fetch(`${BASE_URL}/PullAllPokemon/{{ gameId }}`);
+            const res = await fetch(`${BASE_URL}/gameData/{{ gameId }}`);
             const raw = await res.json();
 
             allPokemonCache = (raw.data || []).map(p => normalizePokemon(p));
@@ -2408,18 +2408,10 @@ select:focus {
                     <select id="selectItem" class="swal2-select">
                         ${itemOptions}
                     </select>
-
-                    <button id="newItemBtn" class="btn btn-primary" style="margin-top:5px;">Add New Item</button>
                 </div>
             `,
             showCancelButton: true,
             confirmButtonText: "Assign Item",
-            didOpen: () => {
-                document.getElementById('newItemBtn').addEventListener('click', () => {
-                    // Open new item modal (your existing add-item logic)
-                    openAddItemModal(null); // pass null or handle differently for creating item
-                });
-            },
             preConfirm: () => {
                 const selectedPokemon = document.getElementById('selectPokemon').value;
                 const selectedItem = document.getElementById('selectItem').value;

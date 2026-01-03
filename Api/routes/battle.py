@@ -132,6 +132,9 @@ class GameApi(Resource):
 
                 # Core stats
                 "BaseHealth": p.baseHealth or base.baseHealth,
+                "Health": p.health,
+                "LethalHealth": p.lethalHealth,
+                
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,
                 "Instinct": p.instinct or base.instinct,

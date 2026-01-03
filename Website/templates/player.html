@@ -441,11 +441,12 @@
 
 <body>
   <header style="display: flex;">
-    <h1 style="width: 8%;">Pokémon Status</h1>
-    <ul style="display: flex;">
-      <li><a href="/ItemShop">Item Shop</a></li>
+    <h1 style="width: 10%;">Pokémon Status</h1>
+    <ul style="display: flex; width: 100%">
       <!-- TODO: replace with team name from database at some point -->
       <li><a href="/Team">Team</a></li>
+      <li style="margin-left: 10px"><a href="/ItemShop">Item Shop</a></li>
+      <li style="margin-left: 10px; margin-left: auto;"><a href="/Logout">Logout</a></li>
     </ul>
   </header>
 
@@ -457,8 +458,8 @@
 
 
   <script>
-    if (window.innerHeight < 1600)
-      document.body.style.zoom = "80%";
+    // if (window.innerHeight < 1600)
+    //   document.body.style.zoom = "80%";
     let pokemonStatusInterval = null;
     let pokemonStatusSource = null;
     let isBagOpen = false;
