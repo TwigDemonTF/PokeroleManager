@@ -1,5 +1,5 @@
 from Api.extensions import database
-from sqlalchemy import Enum
+from sqlalchemy import Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from ..Enums.Types import Types as TypeEnum
 
@@ -14,6 +14,9 @@ class BasePokemon(database.Model):
 
     id = database.Column(database.Integer, primary_key=True, nullable=False)
     name = database.Column(database.String(), nullable=False, default="")
+
+    evolution = database.Column(database.String(), nullable=True)
+    preEvolution = database.Column(database.String(), nullable=True)
 
     baseHealth = database.Column(database.Integer, nullable=False, default=3)
     will = database.Column(database.Integer, nullable=False, default=3)
@@ -55,12 +58,60 @@ class BasePokemon(database.Model):
     intimidate = database.Column(database.Integer, nullable=False, default=0)
     perform = database.Column(database.Integer, nullable=False, default=0) 
 
+    learnable_moves = relationship(
+        "BasePokemonLearnableMove",
+        back_populates="basePokemon",
+        cascade="all, delete-orphan"
+    )
+
+    @property
+    def learnable_moves_list(self):
+        return [
+            {
+                "move": lm.move.name,
+                "type": lm.move.type.name,
+                "method": lm.learnMethod.value,
+                "level": lm.levelRequired
+            }
+            for lm in self.learnable_moves
+        ]
+
     def toDict(self):
         data = {}
         for column in self.__table__.columns:
             if column.name != "id":
                 data[column.name] = getattr(self, column.name)
         return data
+
+class BasePokemonLearnableMove(database.Model):
+    __tablename__ = "BasePokemonLearnableMove"
+
+    id = database.Column(database.Integer, primary_key=True)
+
+    basePokemonId = database.Column(
+        database.Integer,
+        database.ForeignKey("BasePokemon.id"),
+        nullable=False
+    )
+
+    moveId = database.Column(
+        database.Integer,
+        database.ForeignKey("Move.id"),
+        nullable=False
+    )
+
+    basePokemon = relationship("BasePokemon", back_populates="learnable_moves")
+    move = relationship("Move")
+    unlockXpCost = database.Column(database.Integer, nullable=True, default=0)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "basePokemonId",
+            "moveId",
+            "unlockXpCost",
+            name="uq_basepokemon_move_learn"
+        ),
+    )
 
 class GamePokemon(database.Model):
     __tablename__ = "GamePokemon"
@@ -138,9 +189,43 @@ class GamePokemon(database.Model):
     playerColor = database.Column(database.String(20), nullable=False, default="None")
     Guid = database.Column(database.String(6), nullable=False, unique=True)
 
+    unlocked_moves = relationship(
+        "GamePokemonUnlockedMove",
+        back_populates="pokemon",
+        cascade="all, delete-orphan"
+    )
+
     @property
     def learned_moves(self):
         return [mc.move.name for mc in self.move_connections]
+
+class GamePokemonUnlockedMove(database.Model):
+    __tablename__ = "GamePokemonUnlockedMove"
+
+    id = database.Column(database.Integer, primary_key=True)
+
+    pokemonId = database.Column(
+        database.Integer,
+        database.ForeignKey("GamePokemon.id"),
+        nullable=False
+    )
+
+    moveId = database.Column(
+        database.Integer,
+        database.ForeignKey("Move.id"),
+        nullable=False
+    )
+
+    pokemon = relationship("GamePokemon", back_populates="unlocked_moves")
+    move = relationship("Move")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "pokemonId",
+            "moveId",
+            name="uq_pokemon_unlocked_move"
+        ),
+    )
 
 class GameEntities(database.Model):
     __tablename__ = "GameEntities"

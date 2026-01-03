@@ -924,7 +924,7 @@ select:focus {
     let allMoves = [];
     let activeMove = null;
     // eslint-disable-next-line
-    let items = JSON.parse('{{ items | tojson }}');
+    //let items = JSON.parse('{{ items | tojson }}');
 
     function formatMoveRange(move) {
         if (!move.moveRangeType) return null;
@@ -1578,7 +1578,7 @@ select:focus {
                 t.textContent = p.primaryType; 
                 tline.appendChild(t); 
             }
-
+            console.log(p.secondaryType)
             if(p.secondaryType) { 
                 const t = document.createElement('div'); 
                 t.className='type'; 
@@ -2802,7 +2802,7 @@ select:focus {
 
         // Example: open modal for selected player(s)
         genLootItemBtn.onclick = async () => {
-            const res = await fetch(`${BASE_URL}/genLootItem`);
+            const res = await fetch(`http://192.168.193.96:8000/genLootItem`);
             const data = await res.json();
             console.log(data); // { item: "SomeItemName" }
             Swal.fire({

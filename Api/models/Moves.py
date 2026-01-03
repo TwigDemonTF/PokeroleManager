@@ -122,7 +122,7 @@ class Move(database.Model):
     heal_move = relationship("HealMove", back_populates="moves")
 
     requiresRecharge = database.Column(database.Boolean, nullable=False, default=False)
-
+    
     # relationships
     effect_connections = relationship("MoveEffectConnection", back_populates="move", cascade="all, delete-orphan")
     move_connections = relationship("MoveConnection", back_populates="move", cascade="all, delete-orphan")

@@ -9,6 +9,14 @@ from ..Enums.BagSize import BagSizeEnum
 
 from Api.extensions import database
 
+def resolveStat(stat_value, potential_value):
+    # Treat None the same as 0
+    if stat_value is None or stat_value == 0:
+        if potential_value is None:
+            return 0
+        return potential_value // 2
+    return stat_value
+
 class BasePokemonApi(Resource):
     def get(self):
         base_pokemon = BasePokemon.query.all()
@@ -31,20 +39,29 @@ class BasePokemonApi(Resource):
             return {"error": "No JSON received"}, 400
 
         try:
+            strength = resolveStat(raw.get("Strength"), raw.get("StrengthPotential"))
+            dexterity = resolveStat(raw.get("Dexterity"), raw.get("DexterityPotential"))
+            vitality = resolveStat(raw.get("Vitality"), raw.get("VitalityPotential"))
+            insight = resolveStat(raw.get("Insight"), raw.get("InsightPotential"))
+            special = resolveStat(raw.get("Special"), raw.get("SpecialPotential"))
+
             basePokemon = BasePokemon(
                 name=raw.get("Name"),
+                evolution=raw.get("Evolution"),
+                preEvolution=raw.get("PreEvolution"),
                 baseHealth=raw.get("BaseHealth"),
                 primaryType=raw.get("PrimaryType"),
-                secondaryType=raw.get("secondaryType"),
-                strength=raw.get("Strength"),
+                secondaryType=raw.get("SecondaryType"),
+
+                strength=strength,
                 strengthPotential=raw.get("StrengthPotential"),
-                dexterity=raw.get("Dexterity"),
+                dexterity=dexterity,
                 dexterityPotential=raw.get("DexterityPotential"),
-                vitality=raw.get("Vitality"),
+                vitality=vitality,
                 vitalityPotential=raw.get("VitalityPotential"),
-                special=raw.get("Special"),
+                special=special,
                 specialPotential=raw.get("SpecialPotential"),
-                insight=raw.get("Insight"),
+                insight=insight,
                 insightPotential=raw.get("InsightPotential"),
 
                 fight=raw.get("Fight"),
