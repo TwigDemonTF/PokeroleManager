@@ -5,6 +5,8 @@ from ..models.Pokemon import BasePokemon, GamePokemon, GameEntities
 from ..models.Items import PokemonBag, Garment
 from ..models.User import Game
 
+from ..Utils.utils import serialize_move_for_battle
+
 from ..Enums.BagSize import BagSizeEnum
 
 from Api.extensions import database
@@ -22,11 +24,54 @@ class BasePokemonApi(Resource):
         base_pokemon = BasePokemon.query.all()
 
         data = []
-
         for p in base_pokemon:
             data.append({
                 "id": p.id,
-                "name": p.name
+                "name": p.name,
+
+                "BaseHealth": p.baseHealth,
+                "Will": p.will,
+                "Logic": p.logic,
+                "Instinct": p.instinct,
+                "Primal": p.primal,
+
+                "PrimaryType": p.primaryType.name if p.primaryType else None,
+                "SecondaryType": p.secondaryType.name if p.secondaryType else None,
+
+                # Stats
+                "Strength": p.strength,
+                "StrengthPotential": p.strengthPotential,
+                "Dexterity": p.dexterity,
+                "DexterityPotential": p.dexterityPotential,
+                "Vitality": p.vitality,
+                "VitalityPotential": p.vitalityPotential,
+                "Special": p.special,
+                "SpecialPotential": p.specialPotential,
+                "Insight": p.insight,
+                "InsightPotential": p.insightPotential,
+
+                # Skills
+                "Fight": p.fight,
+                "Survival": p.survival,
+                "Contest": p.contest,
+                "Brawl": p.brawl,
+                "Channel": p.channel,
+                "Clash": p.clash,
+                "Evasion": p.evasion,
+                "Alert": p.alert,
+                "Athletic": p.athletic,
+                "NatureStat": p.natureStat,
+                "Stealth": p.stealth,
+                "Allure": p.allure,
+                "Etiquette": p.etiquette,
+                "Intimidate": p.intimidate,
+                "Perform": p.perform,
+
+                # Learnable moves (FULL)
+                "LearnableMoves": [
+                    serialize_move_for_battle(lm.move)
+                    for lm in p.learnable_moves
+                ]
             })
 
         return jsonify(data)

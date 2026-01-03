@@ -6,7 +6,7 @@ from ..models.Pokemon import GamePokemon, GameEntities
 from ..models.User import Game
 from ..models.Items import Item, BagItem
 
-from ..Utils.utils import broadcast_player_update, serialize_move
+from ..Utils.utils import broadcast_player_update, serialize_move, serialize_move_for_battle
 
 from Api.extensions import database
 from ..Utils.utils import broadcast_player_update, serialize_bag
@@ -15,10 +15,7 @@ class MoveManipulation(Resource):
     def get(self):
         moves = Move.query.all()
         return {
-            "moves": [
-                {"id": m.id, "name": m.name, "type": m.type.name}
-                for m in moves
-            ]
+            "moves": [serialize_move_for_battle(m) for m in moves]
         }, 200
 
     def post(self):

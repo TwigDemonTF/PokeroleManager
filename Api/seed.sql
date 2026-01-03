@@ -303,7 +303,7 @@ INSERT INTO BasePokemon VALUES(261,'Aipom','Ambipom',NULL,3,3,1,1,0,'NORMAL',NUL
 INSERT INTO BasePokemon VALUES(262,'Ambipom',NULL,'Aipom',4,3,1,1,0,'NORMAL',NULL,3,6,3,6,2,4,2,4,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(263,'Sunkern','Sunflora',NULL,3,3,1,1,0,'GRASS',NULL,1,3,1,3,1,3,1,3,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(264,'Sunflora',NULL,'Sunkern',4,3,1,1,0,'GRASS',NULL,2,5,1,3,2,4,3,6,2,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(265,'Yanma','Yanmega',NULL,3,3,1,1,0,'BIG','FLYING',2,4,3,6,2,4,2,5,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(265,'Yanma','Yanmega',NULL,3,3,1,1,0,'BUG','FLYING',2,4,3,6,2,4,2,5,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(266,'Yanma','Yanmega',NULL,3,3,1,1,0,'BUG','FLYING',2,4,3,6,2,4,2,5,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(267,'Yanmega',NULL,'Yanma',4,3,1,1,0,'BUG','FLYING',2,5,3,6,2,5,3,6,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(268,'Wooper','Quagsire',NULL,3,3,1,1,0,'WATER','GROUND',2,4,1,2,2,4,1,3,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);

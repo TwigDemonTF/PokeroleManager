@@ -187,12 +187,6 @@ class GameApi(Resource):
 
 class BattleApi(Resource):
     def post(self):
-        """
-        POST /api/pokemon/batch
-        Body: { "guids": ["GUID1", "GUID2"], "gameId": "game123" }
-        Returns full Pokémon data for the requested GUIDs in that game.
-        Includes full move objects identical to GameApi.
-        """
         data = request.get_json()
         if not data:
             return {"message": "No data provided", "data": []}, 400

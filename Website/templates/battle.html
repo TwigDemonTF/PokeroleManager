@@ -774,8 +774,8 @@ select:focus {
           <select id="players" multiple></select>
         </div>
         <div style="flex:1;">
-          <label style="font-size:0.8rem">NPCs</label>
-          <select id="npcs" multiple></select>
+          <label style="font-size:0.8rem">Base Pokemon</label>
+          <select id="basePokemon" multiple></select>
         </div>
       </div>
 
@@ -843,7 +843,7 @@ select:focus {
     const SHOP_TIERS = "{{ shop_tiers }}"
 
     const playersSelect = document.getElementById('players');
-    const npcsSelect = document.getElementById('npcs');
+    const basePokemonSelect = document.getElementById("basePokemon");
     const searchInput = document.getElementById('search');
     const stageGrid = document.getElementById('stageGrid');
     const countEl = document.getElementById('count');
@@ -922,6 +922,7 @@ select:focus {
     let zoom = 1;
     let initiativeMap = {}; // guid → initiative number
     let allMoves = [];
+    let allBasePokemon = [];
     let activeMove = null;
     // eslint-disable-next-line
     //let items = JSON.parse('{{ items | tojson }}');
@@ -967,6 +968,80 @@ select:focus {
         else if (multiplier > 1) badge.style.color = "#28c76f";
 
         return badge;
+    }
+
+    function getSelections() {
+        return {
+            players: Array.from(playersSelect.selectedOptions).map(o => o.value),
+            basePokemon: Array.from(basePokemonSelect.selectedOptions).map(o => o.value)
+        };
+    }
+
+    function createEphemeralPokemon(base) {
+        return {
+            kind: "BASE",
+            tempId: Math.floor(Math.random() * 1000000),
+
+            // identity
+            name: base.name,
+            basePokemonId: base.id,
+            isNpc: true,
+
+            // core
+            level: "",
+            status: "Healthy",
+
+            primaryType: base.PrimaryType ?? base.primaryType ?? null,
+            secondaryType: base.SecondaryType ?? base.secondaryType ?? null,
+            heldItem: null,
+
+            health: base.BaseHealth + base.Vitality,
+            baseHealth: base.BaseHealth ?? base.baseHealth ?? 3,
+
+            ability: null,
+            nature: null,
+
+            // ───────────────
+            // Stats
+            // ───────────────
+            strength: base.Strength ?? base.strength ?? 0,
+            dexterity: base.Dexterity ?? base.dexterity ?? 0,
+            vitality: base.Vitality ?? base.vitality ?? 0,
+            special: base.Special ?? base.special ?? 0,
+            insight: base.Insight ?? base.insight ?? 0,
+
+            strengthPotential: base.StrengthPotential ?? base.strengthPotential ?? 0,
+            dexterityPotential: base.DexterityPotential ?? base.dexterityPotential ?? 0,
+            vitalityPotential: base.VitalityPotential ?? base.vitalityPotential ?? 0,
+            specialPotential: base.SpecialPotential ?? base.specialPotential ?? 0,
+            insightPotential: base.InsightPotential ?? base.insightPotential ?? 0,
+
+            // ───────────────
+            // Skills
+            // ───────────────
+            fight: base.Fight ?? base.fight ?? 0,
+            survival: base.Survival ?? base.survival ?? 0,
+            contest: base.Contest ?? base.contest ?? 0,
+            brawl: base.Brawl ?? base.brawl ?? 0,
+            evasion: base.Evasion ?? base.evasion ?? 0,
+            channel: base.Channel ?? base.channel ?? 0,
+            clash: base.Clash ?? base.clash ?? 0,
+            alert: base.Alert ?? base.alert ?? 0,
+            athletic: base.Athletic ?? base.athletic ?? 0,
+            natureStat: base.NatureStat ?? base.natureStat ?? 0,
+            stealth: base.Stealth ?? base.stealth ?? 0,
+            perform: base.Perform ?? base.perform ?? 0,
+
+            playerColor: null,
+
+            // inventory / moves
+            Bag: null,
+            Moves: [],
+            MoveIds: [],
+
+            // IMPORTANT: already battle-serialized now
+            LearnableMoves: base.LearnableMoves ?? [],
+        };
     }
 
     function clearEffectivenessBadges() {
@@ -1054,33 +1129,37 @@ select:focus {
     }
 
     function updateHealthOnServer(target) {
-        fetch(`${BASE_URL}/updateHealth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                gameId: GAME_ID,
-                guid: target.guid,
-                health: target.health
+        if (target.guid) {
+            fetch(`${BASE_URL}/updateHealth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameId: GAME_ID,
+                    guid: target.guid,
+                    health: target.health
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => console.log('Health update successful:', data))
-        .catch(error => console.error('Error updating health:', error));
+            .then(response => response.json())
+            .then(data => console.log('Health update successful:', data))
+            .catch(error => console.error('Error updating health:', error));
+        }
     }
 
     function updateLethalHealthOnServer(target) {
-        fetch(`${BASE_URL}/updateLethalHealth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                gameId: GAME_ID,
-                guid: target.guid,
-                lethalHealth: target.lethal
+        if (target.guid) {
+            fetch(`${BASE_URL}/updateLethalHealth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameId: GAME_ID,
+                    guid: target.guid,
+                    lethalHealth: target.lethal
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => console.log('Health update successful:', data))
-        .catch(error => console.error('Error updating health:', error));
+            .then(response => response.json())
+            .then(data => console.log('Health update successful:', data))
+            .catch(error => console.error('Error updating health:', error));
+        }
     }
 
     function hasSTAB(attacker, move) {
@@ -1174,8 +1253,12 @@ select:focus {
     }
 
     function openMovePicker(pokemon, replaceIndex) {
+        const learnable = pokemon.LearnableMoves?.length
+            ? pokemon.LearnableMoves
+            : allMoves;
+
         const options = {};
-        allMoves.forEach(m => {
+        learnable.forEach(m => {
             options[m.id] = `${m.name} (${m.type})`;
         });
 
@@ -1184,37 +1267,35 @@ select:focus {
             theme: "dark",
             input: "select",
             inputOptions: options,
-            inputPlaceholder: "Choose a move",
             showCancelButton: true,
-            confirmButtonText: "Assign Move",
-        }).then(async result => {
+            confirmButtonText: "Assign Move"
+        }).then(result => {
             if (!result.isConfirmed) return;
 
-            const moveId = result.value;
+            const move = allMoves.find(m => m.id == result.value);
 
-            const res = await fetch(`${BASE_URL}/moveManipulation`, {
+            // 🧠 BasePokemon → LOCAL ONLY
+            if (pokemon.kind === "BASE") {
+                pokemon.Moves[replaceIndex] = move;
+                renderStage(currentPokesOnField);
+                return;
+            }
+
+            // 🧠 GamePokemon → API
+            fetch(`${BASE_URL}/moveManipulation`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     Guid: pokemon.guid,
-                    MoveId: moveId,
+                    MoveId: move.id,
                     ReplaceIndex: replaceIndex
                 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                pokemon.Moves[data.slot] = data.move;
+                renderStage(currentPokesOnField);
             });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                Swal.fire("Error", data.error || "Failed to assign move", "error");
-                return;
-            }
-
-            // Update local state
-            const selectedMove = allMoves.find(m => m.id == moveId);
-            pokemon.Moves[data.slot] = data.move;
-
-            // Re-render stage
-            renderStage(currentPokesOnField);
         });
     }
 
@@ -1319,6 +1400,7 @@ select:focus {
 
     function normalizePokemon(p){
         return {
+            kind: "GAME",
             guid: p.Guid ?? p.guid,
             name: p.Name ?? p.name,
             isNpc: p.IsNpc ?? p.isNpc,
@@ -1394,28 +1476,44 @@ select:focus {
     return container;
     }
 
-    async function loadAll(){
-      try{
-          loadAllMoves();
-          const res = await fetch(`${BASE_URL}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
-          if(!res.ok) throw new Error('Failed to load pokemons');
+    async function loadBasePokemon() {
+        const res = await fetch(`${BASE_URL}/basePokemon`);
+        if (!res.ok) throw new Error("Failed to load BasePokemon");
 
-          const raw = await res.json();
-          const list = raw.data || raw.pokemons || raw || [];
+        allBasePokemon = await res.json();
 
-          // Normalize keys so the rest of the UI works
-          allPokemonCache = list.map(p => normalizePokemon(p));
+        renderBasePokemonSelect();
+    }
 
-          renderSelects(allPokemonCache);
-      }catch(e){
-          console.error(e);
-          alert('Error loading pokemons — open console for details');
-      }
+    function renderBasePokemonSelect() {
+        basePokemonSelect.innerHTML = "";
+
+        allBasePokemon.forEach(bp => {
+            const opt = document.createElement("option");
+            opt.value = bp.id;
+            opt.textContent = bp.name;
+            basePokemonSelect.appendChild(opt);
+        });
+    }
+
+    async function loadAll() {
+        try {
+            await loadAllMoves();
+            await loadBasePokemon();
+
+            const res = await fetch(`${BASE_URL}/PullAllPokemon/{{ gameId }}`);
+            const raw = await res.json();
+
+            allPokemonCache = (raw.data || []).map(p => normalizePokemon(p));
+            renderSelects(allPokemonCache);
+        } catch (e) {
+            console.error(e);
+            alert("Failed to load battle data");
+        }
     }
 
     function renderSelects(list){
     playersSelect.innerHTML = '';
-    npcsSelect.innerHTML = '';
 
     const q = (searchInput.value || '').trim().toLowerCase();
 
@@ -1433,45 +1531,46 @@ select:focus {
         opt.textContent = `${p.name} (${guid})`;
         opt.dataset.obj = JSON.stringify(p);
 
-        if (p.isNpc) npcsSelect.appendChild(opt);
-        else playersSelect.appendChild(opt);
+        playersSelect.appendChild(opt);
     });
     }
 
     function getSelectedGuids(){
       const a = Array.from(playersSelect.selectedOptions).map(o=>o.value);
-      const b = Array.from(npcsSelect.selectedOptions).map(o=>o.value);
+      //const b = Array.from(basePokemonSelect.selectedOptions).map(o=>o.value);
       return {players:a,npcs:b,all:a.concat(b)};
     }
 
-    async function fetchSelectedAndRender(){
-        const guids = getSelectedGuids().all;
-        if(!guids.length){ alert('No Pokémon selected'); return; }
+    async function fetchSelectedAndRender() {
+        const { players, basePokemon } = getSelections();
 
-        try{
+        let battlePokemons = [];
+
+        // 1️⃣ Fetch real GamePokemon
+        if (players.length) {
             const res = await fetch(`${BASE_URL}/battleData`, {
-            ...FETCH_OPTS,
-            method:'POST',
-            body: JSON.stringify({ guids, gameId: GAME_ID })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    guids: players,
+                    gameId: GAME_ID
+                })
             });
-
-            if(!res.ok){
-            console.warn("Batch endpoint missing, falling back to cached list");
-            const selected = allPokemonCache.filter(p => guids.includes(p.guid));
-            return renderStage(selected);
-            }
 
             const raw = await res.json();
             const list = raw.data || raw.pokemons || [];
-
-            // Normalize keys just like loadAll()
-            const pokes = list.map(p => normalizePokemon(p));
-
-            renderStage(pokes);
-        }catch(err){
-            console.error(err);
-            alert('Error fetching selected Pokémon details — check console');
+            battlePokemons.push(...list.map(p => normalizePokemon(p)));
         }
+
+        // 2️⃣ Spawn BasePokemon (NO API)
+        basePokemon.forEach(id => {
+            const bp = allBasePokemon.find(b => b.id == id);
+            if (!bp) return;
+
+            battlePokemons.push(createEphemeralPokemon(bp));
+        });
+
+        renderStage(battlePokemons);
     }
 
     function renderStage(pokes){
@@ -2073,7 +2172,7 @@ select:focus {
     document.getElementById('refresh').addEventListener('click', loadAll);
     // document.getElementById('fetchStats').addEventListener('click', fetchSelectedAndRender);
     document.getElementById('selectAllPlayers').addEventListener('click', ()=>{ for(let i=0;i<playersSelect.options.length;i++) playersSelect.options[i].selected=true });
-    document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<npcsSelect.options.length;i++) npcsSelect.options[i].selected=true });
+    document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<basePokemonSelect.options.length;i++) npcbasePokemonSelectsSelect.options[i].selected=true });
     document.getElementById('zoomIn').addEventListener('click', () => {
         zoom = Math.min(1.6, zoom + 0.1);
         document.documentElement.style.setProperty('--card-scale', zoom);

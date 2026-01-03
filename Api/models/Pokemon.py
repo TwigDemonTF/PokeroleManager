@@ -68,10 +68,9 @@ class BasePokemon(database.Model):
     def learnable_moves_list(self):
         return [
             {
-                "move": lm.move.name,
+                "id": lm.move.id,
+                "name": lm.move.name,
                 "type": lm.move.type.name,
-                "method": lm.learnMethod.value,
-                "level": lm.levelRequired
             }
             for lm in self.learnable_moves
         ]

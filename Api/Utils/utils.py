@@ -250,5 +250,78 @@ def serialize_move(move):
         "flavorText": move.flavorText or "",
     }
 
+def serialize_move_for_battle(move):
+    acc_mods = extract_modifiers_from_group(
+        move.accuracy_modifier_group,
+        "accuracyModifier"
+    )
 
+    dmg_mods = extract_modifiers_from_group(
+        move.damage_modifier_group,
+        "damageModifier"
+    )
+
+    heal_data = None
+    if move.heal_move:
+        heal_data = {
+            "healType": move.heal_move.healType.name
+                if move.heal_move.healType else None,
+            "healAmount": move.heal_move.healAmount
+        }
+
+    effects = []
+    for conn in move.effect_connections:
+        me = conn.move_effect
+        effects.append({
+            "effect": me.effect.name,
+            "effectLevel": me.effectLevel.name,
+            "effectLevelDice": me.effectLevelDice
+        })
+
+    return {
+        "id": move.id,
+        "name": move.name,
+        "type": move.type.name if move.type else None,
+        "damageType": move.damageType.name if move.damageType else None,
+
+        "basePower": move.basePower,
+        "target": move.target.name if move.target else None,
+        "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
+        "moveGridRange": move.moveGridRange,
+        "priority": move.priority.name if move.priority else None,
+
+        "accuracyModifiers": acc_mods,
+        "damageModifiers": dmg_mods,
+        "reducedAccuracy": move.reducedAccuracy,
+
+        "hasCritical": move.hasCritical,
+        "hasLethal": move.hasLethal,
+        "hasBlock": move.hasBlock,
+        "hasRecoil": move.hasRecoil,
+        "hasWeatherChange": move.hasWeatherChange,
+        "weatherChangeTo": move.weatherChangeTo.name
+            if move.weatherChangeTo else None,
+
+        "hasModifiedDamage": move.hasModifiedDamage,
+        "alwaysHitEffect": move.alwaysHitEffect,
+        "alwaysFailEffect": move.alwaysFailEffect,
+
+        "isChargeMove": move.isChargeMove,
+        "isFistBased": move.isFistBased,
+        "isHighCrit": move.isHighCrit,
+        "isNeverFail": move.isNeverFail,
+        "isHealingMove": move.isHealingMove,
+        "isShieldMove": move.isShieldMove,
+        "isSoundBased": move.isSoundBased,
+        "isMultiHit": move.isMultiHit,
+        "multiHitCount": move.multiHitCount.name
+            if move.multiHitCount else None,
+        "isSwitchMove": move.isSwitchMove,
+        "requiresRecharge": move.requiresRecharge,
+
+        "healMove": heal_data,
+        "effects": effects,
+        "effectText": move.effectText,
+        "flavorText": move.flavorText,
+    }
 
