@@ -582,7 +582,7 @@ INSERT INTO Item VALUES(9,'Hondew Berry','A green berry that resembles a honeyde
 INSERT INTO Item VALUES(10,'Sleep Seed','If you throw it at an enemy and hit them, it can make them Sleep for a little while. Be careful not to use it on your teammates.','Make a Dexteriy + Fight + Channel roll to shoot these seeds into your foe''s mouth.','apply_status','{"status": "ASLEEP"}','BASIC','MISC',75,50,1,0,1);
 INSERT INTO Item VALUES(11,'Stun Seed','Small, round seeds that typically have a bright yellow color, resembling a small ball. When used, they emit a sparkling effect to indicate their stunning ability on the target Pokémon.','Make a Dexterity + Fight + Channel roll to shoot these seeds into the foe''s mouth.','apply_status','{"status": "PARALYZED"}','BASIC','MISC',75,50,1,0,1);
 INSERT INTO Item VALUES(12,'All-Hit Orb','As it explodes, the visibility around gets clear, no light, darkness or fog impedes your team to strike directly.',NULL,'default','{}','EXPERT','MISC',150,100,1,0,1);
-INSERT INTO Item VALUES(13,'Rindo Berry','a green berry that has a medium chance of producing a Pokéblock. It has a soft texture and a disagreeable "green" flavor typical of vegetables, often described as having a bitter taste with a subtle spiciness.',NULL,'default','{}','COMMON','HELD_ITEM',50,35,1,1,1);
+INSERT INTO Item VALUES(13,'Rindo Berry','a green berry that has a medium chance of producing a Pokéblock. It has a soft texture and a disagreeable green flavor typical of vegetables, often described as having a bitter taste with a subtle spiciness.',NULL,'default','{}','COMMON','HELD_ITEM',50,35,1,1,1);
 CREATE TABLE IF NOT EXISTS "Garment" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 

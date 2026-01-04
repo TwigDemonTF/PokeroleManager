@@ -536,10 +536,8 @@ label {
 }
 
 /* ===== Inputs ===== */
-input[type="text"],
-input[type="number"],
-input[type="select"],
-select {
+
+.initSelects {
     display: block;
     width: 100%;
     padding: 0.25rem 0.5rem; /* slightly smaller padding */
@@ -682,12 +680,13 @@ select:focus {
 }
 
 .swal2-confirm {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
+    background-color: hotpink !important;
+    border-color: hotpink !important;
 }
 
 .swal2-input {
     color: #aaa !important;
+    width: auto !!important;
 }
 
 .core-stats {
@@ -2077,11 +2076,11 @@ select:focus {
             <div style="display:flex; gap:6px; align-items:center;">
                 <div style="flex:1;">
                 <label style="font-size:0.75rem; color:var(--muted)">Initiative</label>
-                <input type="number" class="initiative-input" />
+                <input type="number" class="initiative-input initSelects" />
                 </div>
                 <div style="width:90px;">
                 <label style="font-size:0.75rem; color:var(--muted)">Distance</label>
-                <input type="number" class="distance-input" />
+                <input type="number" class="distance-input initSelects" />
                 </div>
             </div>
             `;
@@ -3199,6 +3198,7 @@ select:focus {
         const { value: name } = await Swal.fire({
             title: "Save Battle",
             input: "text",
+            theme: "dark",
             inputLabel: "Battle name",
             inputPlaceholder: "BossBattle, Route12, etc",
             showCancelButton: true
@@ -3210,9 +3210,12 @@ select:focus {
 
         Swal.fire({
             toast: true,
+            position: "top-end",
+            theme: "dark",
+            timerProgressBar: true,
             icon: "success",
             title: "Battle saved",
-            timer: 2000,
+            timer: 3000,
             showConfirmButton: false
         });
     });
@@ -3258,7 +3261,7 @@ select:focus {
         const names = Object.keys(allSaves);
 
         if (!names.length) {
-            Swal.fire("No saved battles");
+            Swal.fire({title: "No saved battles", theme: "dark"});
             return;
         }
 
@@ -3270,22 +3273,26 @@ select:focus {
         const result = await Swal.fire({
             title: "Load or Delete Battle",
             input: "select",
+            theme: "dark",
             inputOptions: options,
             showCancelButton: true,
             confirmButtonText: "Load",
             showDenyButton: true,
-            denyButtonText: "Delete"
+            denyButtonText: "Delete",
+
+            preDeny: () => {
+                return Swal.getInput().value;
+            }
         });
-
-        if (!result.value) return;
-
-        const selected = result.value;
 
         // DELETE
         if (result.isDenied) {
+            const selected = result.value;
+
             const confirm = await Swal.fire({
                 title: `Delete "${selected}"?`,
                 icon: "warning",
+                theme: "dark",
                 showCancelButton: true,
                 confirmButtonText: "Yes, delete"
             });
@@ -3295,16 +3302,27 @@ select:focus {
             delete allSaves[selected];
             localStorage.setItem("battleSaves", JSON.stringify(allSaves));
 
+            document.getElementById("loadBattle").click();
+
             Swal.fire({
                 toast: true,
+                position: "top-end",
+                theme: "dark",
+                timerProgressBar: true,
                 icon: "success",
                 title: "Battle deleted",
-                timer: 2000,
+                timer: 3000,
                 showConfirmButton: false
             });
 
             return;
         }
+
+        // CANCEL
+        if (!result.isConfirmed) return;
+
+        // LOAD
+        const selected = result.value;
 
         document.querySelectorAll('.selectors').forEach(el => {
             el.style.display = 'none';

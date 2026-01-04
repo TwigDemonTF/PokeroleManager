@@ -805,7 +805,7 @@
         .filter(mod => mod && mod !== "NONE")
         .join(" + ") || "-";
 
-    const color = typeColors[m.type] || "#666";
+    const color = typeColors[titleCase(m.type.toLowerCase())] || "#666";
 
     return `
         <div class="move-card">
@@ -814,7 +814,7 @@
             ${m.name}
             </span>
             <span class="move-type" style="color:${color}">
-            ${m.type || ''}/${m.damageType || ''}
+            ${titleCase(m.type.toLowerCase()) || ''}/${m.damageType || ''}
             </span>
         </div>
         <div>Accuracy: ${accuracy}</div>
