@@ -142,32 +142,36 @@
       </header>
 
     <main>
-        <div class="shop">
-            <div class="items">
-            {% for item in items %}
-            <div class="item-card">
-                <div class="item-name">{{ item.name }}</div>
+      {% if shopStatus["isOpen"] == true %}
+          <div class="shop">
+              <div class="items">
+              {% for item in items %}
+                {% if shopMapping[item.minShopTier] <= shopMapping[shopStatus["activeShopTier"]] %}
+                <div class="item-card">
+                    <div class="item-name">{{ item.name }}</div>
 
-                <div class="item-desc">
-                {{ item.effect }}
-                </div>
+                    <div class="item-desc">
+                    {{ item.effect }}
+                    </div>
 
-                {% if item.effect %}
-                <div class="item-effect">
-                {{ item.description }}
+                    {% if item.effect %}
+                    <div class="item-effect">
+                    {{ item.description }}
+                    </div>
+                    {% endif %}
+
+                    <div class="item-footer">
+                    <div class="price">
+                        Cost: {{ item.buyPrice }}
+                    </div>
+                    <button type="submit" id="{{ item.id }}">Buy</button>
+                    </div>
                 </div>
                 {% endif %}
-
-                <div class="item-footer">
-                <div class="price">
-                    Cost: {{ item.buyPrice }}
-                </div>
-                <button type="submit" id="{{ item.id }}">Buy</button>
-                </div>
-            </div>
-            {% endfor %}
-            </div>
-        </div>
+              {% endfor %}
+              </div>
+          </div>
+        {% endif %}
     </main>
 </body>
 
@@ -207,7 +211,7 @@
         body: JSON.stringify({
           pokemonGuid: playerGuid,
           itemId: itemId,
-          GAME_ID: GAME_ID,
+          gameId: GAME_ID,
         })
       })
       .then(response => response.json())

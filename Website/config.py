@@ -5,7 +5,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:9000")
+    BASE_URL = os.getenv("BASE_URL", "http://192.168.193.96:9000")
 
 class ProductionConfig(Config):
     DEBUG = False

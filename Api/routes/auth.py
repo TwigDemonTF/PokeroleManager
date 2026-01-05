@@ -6,7 +6,7 @@ import secrets
 from Api.extensions import database
 from Api.models.User import User, Game
 from Api.models.Pokemon import GamePokemon, GameEntities
-from Api.utils import generate_game_id
+from Api.Utils.utils import generate_game_id
 
 class Register(Resource):
     def post(self):

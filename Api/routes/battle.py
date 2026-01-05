@@ -6,7 +6,7 @@ from ..models.Items import Item
 from ..models.Misc import Ability, Nature
 from ..models.User import Game
 
-from ..utils import extract_modifiers_from_group
+from ..Utils.utils import extract_modifiers_from_group
 
 from Api.extensions import database
 
@@ -132,6 +132,9 @@ class GameApi(Resource):
 
                 # Core stats
                 "BaseHealth": p.baseHealth or base.baseHealth,
+                "Health": p.health,
+                "LethalHealth": p.lethalHealth,
+                
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,
                 "Instinct": p.instinct or base.instinct,
@@ -187,12 +190,6 @@ class GameApi(Resource):
 
 class BattleApi(Resource):
     def post(self):
-        """
-        POST /api/pokemon/batch
-        Body: { "guids": ["GUID1", "GUID2"], "gameId": "game123" }
-        Returns full Pokémon data for the requested GUIDs in that game.
-        Includes full move objects identical to GameApi.
-        """
         data = request.get_json()
         if not data:
             return {"message": "No data provided", "data": []}, 400
@@ -227,7 +224,21 @@ class BattleApi(Resource):
             nature = Nature.query.get(p.natureId) if p.natureId else None
             ability = Ability.query.get(p.abilityId) if p.abilityId else None
             item = Item.query.get(p.itemId) if p.itemId else None
+            
+            bag_data = None
 
+            if p.bag:
+                bag_data = {
+                    "bagId": p.bag.id,
+                    "bagSize": p.bag.bagSize.value,
+                    "items": [
+                        {
+                            "bagItemId": bi.id,
+                            "item": bi.item.to_dict()
+                        }
+                        for bi in p.bag.items
+                    ]
+                }
             # ---------- MOVE PROCESSING (COPIED FROM GameApi) ----------
             moves_data = []
 
@@ -269,6 +280,8 @@ class BattleApi(Resource):
 
                     "basePower": move.basePower,
                     "target": move.target.name if move.target else None,
+                    "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
+                    "moveGridRange": move.moveGridRange if move.moveGridRange else None,
                     "priority": move.priority.name if move.priority else None,
 
                     "accuracyModifiers": acc_mods,
@@ -337,6 +350,7 @@ class BattleApi(Resource):
 
                 "BaseHealth": p.baseHealth or base.baseHealth,
                 "Health": p.health,
+                "LethalHealth": p.lethalHealth,
 
                 "Will": p.will or base.will,
                 "Logic": p.logic or base.logic,
@@ -388,6 +402,7 @@ class BattleApi(Resource):
                 "PlayerColor": p.playerColor,
 
                 # ✔ Added full moves (NOW MATCHES GameApi)
+                "Bag": bag_data,
                 "Moves": moves_data,
 
                 # ✔ Include IDs too

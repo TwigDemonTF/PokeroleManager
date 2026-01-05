@@ -1,0 +1,306 @@
+1,Aspear Berry,1
+2,Cheri Berry,1
+3,Chesto Berry,1
+4,Lum Berry,1
+5,Oran Berry,1
+6,Petcha Berry,1
+7,Persim Berry,1
+8,Rawst Berry,1
+9,Sitrus Berry,1
+10,All-Hit Orb,1
+11,All-Protect,1
+12,Escape-Orb,1
+13,Health Orb,1
+14,Luminous Orb,1
+15,Observer Orb,1
+16,Weather Orb,1
+17,Berry Juice,1
+18,Fresh Water,1
+19,Lemonade,1
+20,MooMoo Milk,1
+21,Blast Seed,1
+22,Encourage Seed,1
+23,Health Seed,1
+24,Heal Seed,1
+25,Reviver Seed,1
+26,Sleep Seed,1
+27,Stun Seed,1
+28,Apple,1
+29,Big Apple,1
+30,Delicious Rocks,1
+31,Golden Apple,1
+32,Piece of Meat,1
+33,Dawn Stone,0.7
+34,Dusk Stone,0.7
+35,Fire Stone,0.7
+36,Leaf Stone,0.7
+37,Moon Stone,0.7
+38,Shiny Stone,0.7
+39,Sun Stone,0.7
+40,Thunder Stone,0.7
+41,Water Stone,0.7
+42,Belt/Necklace of Power,0.7
+43,Lucky Hat,0.7
+44,Magic Jewel,0.7
+45,Mouth Piece of Good Fortune,0.7
+46,Calcium,0.3
+47,Carbos,0.3
+48,HP Up,0.3
+49,Iron,0.3
+50,PP Up,0.3
+51,Protein,0.3
+52,Rare Canty,0.3
+53,Zinc,0.3
+54,Amulet Coin,0.5
+55,Black Belt,0.5
+56,Black Grass,0.5
+57,Charcoal,0.5
+58,Dragon Fang,0.5
+59,Eviolite,0.5
+60,Expert Belt,0.5
+61,Hard Stone,0.5
+62,King's Rock,0.5
+63,Life Orb,0.5
+64,Light Ball,0.5
+65,Lucky Egg,0.5
+66,Lucky Punch,0.5
+67,Magnet,0.5
+68,Metal Coat,0.5
+69,Miracle Seed,0.5
+70,Mystic Water,0.5
+71,Never-Melt Ice,0.5
+72,Poison Barb,0.5
+73,Quick Claw,0.5
+74,Razor Claw,0.5
+75,Razor Fang,0.5
+76,Rocky Helmet,0.5
+77,Sharp Beak,0.5
+78,Silk Scarf,0.5
+79,Silver Powder,0.5
+80,Soft Sand,0.5
+81,Spell Tag,0.5
+82,Stick,0.5
+83,Thick Club,0.5
+84,Twisted Spoon,0.5
+85,Wide Lens,0.5
+86,Energy Powder,0.7
+87,Energy Root,0.7
+88,Heal Powder,0.7
+89,Revival Herb,0.5
+90,Left Overs,0.5
+91,Normal Gem,0.9
+92,Grass Gem,0.9
+93,Steel Gem,0.9
+94,Electric Gem,0.9
+95,Ground Gem,0.9
+96,Water Gem,0.9
+97,Ice Gem,0.9
+98,Bug Gem,0.9
+99,Fighting Gem,0.9
+100,Fairy Gem,0.9
+101,Dark Gem0.9
+102,Psychic Gem,0.9
+103,Dragon Gem,0.9
+104,Rock Gem,0.9
+105,Ghost Gem,0.9
+106,Fire Gem,0.9
+107,Flying Gem,0.9
+108,Poison Gem,0.9
+109,Blue Orb,0.1
+110,Red Orb,0.1
+111,Soul Dew,0.1
+112,Shock Drive,0.1
+113,Burn Drive,0.1
+114,Chill Drive,0.1
+115,Douse Drive,0.1
+116,Griseous Orb,0.1
+117,Lustrous Orb,0.1
+118,Adamant Orb,0.1
+119,Sacred Ash,0.1
+120,Buginium Z,0.1
+121,Darkinium Z,0.1
+122,Dragonium Z,0.1
+123,Electrium Z,0.1
+124,Fairium Z,0.1
+125,Fightinium Z,0.1
+126,Firium Z,0.1
+127,Flyinium Z,0.1
+128,Ghostium Z,0.1
+129,Grassium Z,0.1
+130,Groundium Z,0.1
+131,Icium Z,0.1
+132,Normalium Z,0.1
+133,Poisonium Z,0.1
+134,Psychium Z,0.1
+135,Rockium Z,0.1
+136,Steelium Z,0.1
+137,Waterium Z,0.1
+138,Aloraichium Z,0.1
+139,Decidium Z,0.1
+140,Eevium Z,0.1
+141,Incinium Z,0.1
+142,Kommonium Z,0.1
+143,Lunalium Z,0.1
+144,Lycanium Z,0.1
+145,Marshadium Z,0.1
+146,Mewnium Z,0.1
+147,Mimikium Z,0.1
+148,Pikanium Z,0.1
+149,Pikashunium Z,0.1
+150,Primarium Z,0.1
+151,Snorlium Z,0.1
+152,Solganium Z,0.1
+153,Tapunium Z,0.1
+154,Ultranecrozium Z,0.1
+155,Cleanse Tag,0.3
+156,Spell Tag,0.3
+157,Venusaurite,0.1
+158,Charizardite X,0.1
+159,Charizardite Y,0.1
+160,Blastoisinite,0.1
+161,Beedrillite,0.1
+162,Pidgeotite,0.1
+163,Alakazite,0.1
+164,Slowbronite,0.1
+165,Gengarite,0.1
+166,Kangaskhanite,0.1
+167,Pinsirite,0.1
+168,Gyaradosite,0.1
+169,Aerodactylite,0.1
+170,Mewtwonite X,0.1
+171,Mewtwonite Y,0.1
+172,Ampharosite,0.1
+173,Steelixite,0.1
+173,Scizorite,0.1
+174,Heracronite,0.1
+175,Houndoominite,0.1
+176,Tyranitarite,0.1
+177,Sceptilite,0.1
+178,Blazikenite,0.1
+179,Swampertite,0.1
+180,Gardevoirite,0.3
+181,Sablenite,0.1
+182,Mawilite,0.1
+183,Aggronite,0.1
+184,Medichamite,0.1
+185,Manectite,0.1
+186,Sharpedonite,0.1
+187,Cameruptite,0.1
+188,Altarianite,0.1
+189,Banettite,0.1
+190,Absolite,0.1
+191,Glalitite,0.1
+192,Salamencite,0.1
+193,Metagrossite,0.1
+194,Latiasite,0.1
+195,Latiosite,0.1
+196,Lopunnite,0.1
+197,Garchompite,0.1
+198,Lucarionite,0.1
+199,Abomasite,0.1
+200,Galladite,0.1
+201,Audinite,0.1
+202,Diancite,0.1
+203,Health  Feather,0.1
+204,Muscle Feather,0.1
+205,Resist Feather,0.1
+206,Genuis Feather,0.1
+207,Clever Feather,0.1
+208,Swift Feather,0.1
+209,Pretty Feather,0.3
+210,Ice Stone,0.7
+211,Blank Plate,0.2
+212,Fist Plate,0.2
+213,Sky Plate,0.2
+214,Toxic Plate,0.2
+215,Earth Plate,0.2
+216,Stone Plate,0.2
+217,Insect Plate,0.2
+218,Spooky Plate,0.2
+219,Iron Plate,0.2
+220,Flame Plate,0.2
+221,Splash Plate,0.2
+222,Meadow Plate,0.2
+223,Zap Plate,0.2
+224,Mind Plate,0.2
+225,Icicle Plate,0.2
+226,Draco Plate,0.2
+227,Dread Plate,0.2
+228,Pixie Plate,0.2
+229,Legend Plate,0.2
+230,Potion,1
+231,Super Potion,0.8
+232,Hyper Potion,0.6
+233,Max Potion,0.5
+234,Full Restore,0.4
+235,PP Max,0.3
+236,Revive,0.3
+237,Max Revive,0.2
+238,Paralyze Heal,0.8
+239,Awakening,0.8
+240,Burn Heal,0.8
+241,Elixir,0.8
+242,Ether,0.8
+243,Full Heal,0.5
+244,Ice Heal,0.8
+245,Max Elixir,0.5
+246,Max Ether,0.5
+247,Leppa Berry,1
+248,Sitrus Berry,1
+249,Figy Berry,1
+250,Wiki Berry,1
+251,Mago Berry,1
+252,Aguav Berry,1
+253,Lapapa Berry,1
+254,Razz Berry,1
+255,Bluk Berry,1
+256,Nanab Berry,1
+257,Wepear Berry,1
+258,Pinap Berry,1
+259,Pomeg Berry,1
+260,Kelpsy Berry,1
+261,Qualot Berry,1
+262,Hondew Berry,1
+263,Grepa Berry,1
+264,Tomato Berry,1
+265,Cornn Berry,1
+266,Magost Berry,1
+267,Rabuta Berry,1
+268,Nomel Berry,1
+269,Spelon Berry,1
+270,Pamtre Berry,1
+271,Watmel Berry,1
+272,Durin Berry,1
+273,Belue Berry,1
+274,Occa Berry,1
+275,Passho Berry,1
+276,Wacan Berry,1
+277,Rindo Berry,1
+278,Yache Berry,1
+279,Chople Berry,1
+280,Kebia Berry,1
+281,Shuca Berry,1
+282,Coba Berry,1
+283,Payapa Berry,1
+284,Tanga Berry,1
+285,Charti Berry,1
+286,Kasib Berry,1
+287,Haban Berry,1
+288,Colbur Berry,1
+289,Babiri Berry,1
+290,Chilan Berry,1
+291,Liechi Berry,1
+292,Ganlon Berry,1
+293,Salac Berry,1
+294,Petaya Berry,1
+295,Apicot Berry,1
+296,Lansat Berry,1
+297,Starf Berry,1
+298,Enigma Berry,1
+299,Micle Berry,1
+300,Custap Berry,1
+301,Jaboca Berry,1
+302,Rowap Berry,1
+303,Roseli Berry,1
+304,Kee Berry,1
+305,Maranga Berry,1

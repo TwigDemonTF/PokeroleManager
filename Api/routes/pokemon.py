@@ -5,20 +5,73 @@ from ..models.Pokemon import BasePokemon, GamePokemon, GameEntities
 from ..models.Items import PokemonBag, Garment
 from ..models.User import Game
 
+from ..Utils.utils import serialize_move_for_battle
+
 from ..Enums.BagSize import BagSizeEnum
 
 from Api.extensions import database
+
+def resolveStat(stat_value, potential_value):
+    # Treat None the same as 0
+    if stat_value is None or stat_value == 0:
+        if potential_value is None:
+            return 0
+        return potential_value // 2
+    return stat_value
 
 class BasePokemonApi(Resource):
     def get(self):
         base_pokemon = BasePokemon.query.all()
 
         data = []
-
         for p in base_pokemon:
             data.append({
                 "id": p.id,
-                "name": p.name
+                "name": p.name,
+
+                "BaseHealth": p.baseHealth,
+                "Will": p.will,
+                "Logic": p.logic,
+                "Instinct": p.instinct,
+                "Primal": p.primal,
+
+                "PrimaryType": p.primaryType.name if p.primaryType else None,
+                "SecondaryType": p.secondaryType.name if p.secondaryType else None,
+
+                # Stats
+                "Strength": p.strength,
+                "StrengthPotential": p.strengthPotential,
+                "Dexterity": p.dexterity,
+                "DexterityPotential": p.dexterityPotential,
+                "Vitality": p.vitality,
+                "VitalityPotential": p.vitalityPotential,
+                "Special": p.special,
+                "SpecialPotential": p.specialPotential,
+                "Insight": p.insight,
+                "InsightPotential": p.insightPotential,
+
+                # Skills
+                "Fight": p.fight,
+                "Survival": p.survival,
+                "Contest": p.contest,
+                "Brawl": p.brawl,
+                "Channel": p.channel,
+                "Clash": p.clash,
+                "Evasion": p.evasion,
+                "Alert": p.alert,
+                "Athletic": p.athletic,
+                "NatureStat": p.natureStat,
+                "Stealth": p.stealth,
+                "Allure": p.allure,
+                "Etiquette": p.etiquette,
+                "Intimidate": p.intimidate,
+                "Perform": p.perform,
+
+                # Learnable moves (FULL)
+                "LearnableMoves": [
+                    serialize_move_for_battle(lm.move)
+                    for lm in p.learnable_moves
+                ]
             })
 
         return jsonify(data)
@@ -31,20 +84,29 @@ class BasePokemonApi(Resource):
             return {"error": "No JSON received"}, 400
 
         try:
+            strength = resolveStat(raw.get("Strength"), raw.get("StrengthPotential"))
+            dexterity = resolveStat(raw.get("Dexterity"), raw.get("DexterityPotential"))
+            vitality = resolveStat(raw.get("Vitality"), raw.get("VitalityPotential"))
+            insight = resolveStat(raw.get("Insight"), raw.get("InsightPotential"))
+            special = resolveStat(raw.get("Special"), raw.get("SpecialPotential"))
+
             basePokemon = BasePokemon(
                 name=raw.get("Name"),
+                evolution=raw.get("Evolution"),
+                preEvolution=raw.get("PreEvolution"),
                 baseHealth=raw.get("BaseHealth"),
                 primaryType=raw.get("PrimaryType"),
-                secondaryType=raw.get("secondaryType"),
-                strength=raw.get("Strength"),
+                secondaryType=raw.get("SecondaryType"),
+
+                strength=strength,
                 strengthPotential=raw.get("StrengthPotential"),
-                dexterity=raw.get("Dexterity"),
+                dexterity=dexterity,
                 dexterityPotential=raw.get("DexterityPotential"),
-                vitality=raw.get("Vitality"),
+                vitality=vitality,
                 vitalityPotential=raw.get("VitalityPotential"),
-                special=raw.get("Special"),
+                special=special,
                 specialPotential=raw.get("SpecialPotential"),
-                insight=raw.get("Insight"),
+                insight=insight,
                 insightPotential=raw.get("InsightPotential"),
 
                 fight=raw.get("Fight"),
@@ -98,7 +160,7 @@ class GamePokemonApi(Resource):
             gamePokemon = GamePokemon(
                 basePokemonId=base.id,
 
-                # User-input fields (use correct model names)
+                # User-input fields
                 name=raw.get("name"),
                 level=raw.get("level"),
                 gender=raw.get("gender"),
@@ -117,6 +179,7 @@ class GamePokemonApi(Resource):
                 # Base stats
                 baseHealth=base.baseHealth,
                 health=base.baseHealth + base.vitality,
+                lethalHealth=0,
                 will=raw.get("will"),
                 logic=raw.get("logic"),
                 instinct=raw.get("instinct"),

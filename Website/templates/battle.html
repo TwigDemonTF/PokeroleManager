@@ -479,6 +479,26 @@ footer {
    RESPONSIVE
 --------------------------------------------------------- */
 
+.battle-columns {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+.battle-column {
+  flex: 1;
+  min-width: 0;
+}
+
+/* When NPCs are hidden, players take full width */
+.battle-columns.single-column #playersColumn {
+  flex: 1 1 100%;
+}
+
+.battle-columns.single-column #npcsColumn {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .wrap {
     grid-template-columns: 1fr;
@@ -516,10 +536,8 @@ label {
 }
 
 /* ===== Inputs ===== */
-input[type="text"],
-input[type="number"],
-input[type="select"],
-select {
+
+.initSelects {
     display: block;
     width: 100%;
     padding: 0.25rem 0.5rem; /* slightly smaller padding */
@@ -662,12 +680,13 @@ select:focus {
 }
 
 .swal2-confirm {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
+    background-color: hotpink !important;
+    border-color: hotpink !important;
 }
 
 .swal2-input {
     color: #aaa !important;
+    width: auto !!important;
 }
 
 .core-stats {
@@ -741,44 +760,51 @@ select:focus {
   </header>
 
   <div class="wrap">
-    <aside class="selectors">
-      <h2>Available Pokémon (your game)</h2>
-      <div style="display:flex; gap:8px; margin-bottom:8px">
-        <input id="search" placeholder="search name or GUID" style="flex:1;padding:8px;border-radius:6px;border:1px solid #1f2937;background:transparent;color:inherit">
-        <button id="refresh">Refresh</button>
-      </div>
-
-      <div class="select-row">
-        <div style="flex:1;">
-          <label style="font-size:0.8rem">Players (non-NPC)</label>
-          <select id="players" multiple></select>
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:0.8rem">NPCs</label>
-          <select id="npcs" multiple></select>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button id="fetchStats">Fetch stats</button>
-        <button id="selectAllPlayers" class="ghost">Select all players</button>
-        <button id="selectAllNpcs" class="ghost">Select all NPCs</button>
-      </div>
-
-      <div style="margin-top:12px; font-size:0.82rem; color:var(--muted)">
-        Tip: hold Ctrl / Cmd to select multiple. Click "Fetch stats" to render selected Pokémon on the right.
-      </div>
-    </aside>
 
     <main class="stage">
         <div id="initiativePanel"
             style="margin-bottom: 1.5rem; padding: 12px; background: rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px;">
             <div style="display:flex; align-items:center;">
                 <h3 style="margin:0;">Initiative Order</h3>
-                <button id="autoRollNpcs" class="ghost" style="margin-left:auto;">Start Battle (roll NPCs)</button>
+                <div style="margin-left: auto;">
+                    <button id="saveBattle" class="ghost btn" style="">Save Battle</button>
+                    <button id="loadBattle" class="ghost btn" style="">Load Battle</button>
+                    <button id="autoRollNpcs" class="ghost" style="">Start Battle (roll NPCs)</button>
+                </div>
             </div>
             <div id="initiativeList" style="margin-top:8px; display:flex; flex-direction:column; gap:4px;"></div>
         </div>
+
+        <aside class="selectors" style="max-width: 300px;">
+        <h2>Available Pokémon (your game)</h2>
+        <div style="display:flex; gap:8px; margin-bottom:8px">
+            <input id="search" placeholder="search name or GUID" style="flex:1;padding:8px;border-radius:6px;border:1px solid #1f2937;background:transparent;color:inherit">
+            <button id="refresh">Refresh</button>
+        </div>
+
+        <div class="select-row">
+            <div style="flex:1;">
+            <label style="font-size:0.8rem">Players (non-NPC)</label>
+            <select id="players" multiple></select>
+            </div>
+            <div style="flex:1;">
+            <label style="font-size:0.8rem">Base Pokemon</label>
+            <select id="basePokemon" multiple></select>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="fetchStats">Fetch stats</button>
+            <button id="selectAllPlayers" class="ghost">Select all players</button>
+            <button id="selectAllNpcs" class="ghost">Select all NPCs</button>
+        </div>
+
+        <div style="margin-top:12px; font-size:0.82rem; color:var(--muted)">
+            Tip: hold Ctrl / Cmd to select multiple. Click "Fetch stats" to render selected Pokémon on the right.
+        </div>
+        </aside>
+
+        <div style="display: flex; width: 100%;" id="actionPanel"></div>
       <div class="stage-controls">
         <div style="font-weight:600">Stage</div>
         <div style="margin-left:8px; color:var(--muted)">Showing <span id="count">0</span> Pokémon</div>
@@ -788,15 +814,16 @@ select:focus {
           <button style="margin-right: 25%;" id="zoomOut" class="ghost">Zoom -</button>
         </div>
       </div>
-        <div id="battleColumns" style="display:flex; gap:2rem;">
-        <div style="flex:1;">
+        <div id="battleColumns" class="battle-columns">
+        <div id="playersColumn" class="battle-column">
             <h3 style="margin-bottom:6px;">Players</h3>
             <div class="grid" id="playersGrid"></div>
         </div>
 
-        <div style="flex:1;">
+        <div id="npcsColumn" class="battle-column">
             <h3 style="margin-bottom:6px;">NPCs</h3>
             <div class="grid" id="npcsGrid"></div>
+        </div>
         </div>
         </div>
     </main>
@@ -817,12 +844,15 @@ select:focus {
     // If you use cookies/session auth (Flask login), keep credentials: 'include'
     const FETCH_OPTS = { headers: {'Content-Type':'application/json'}};
     const GAME_ID = "{{ gameId }}"
+    const ITEM_CATEGORIES = "{{ item_categories }}"
+    const SHOP_TIERS = "{{ shop_tiers }}"
 
     const playersSelect = document.getElementById('players');
-    const npcsSelect = document.getElementById('npcs');
+    const basePokemonSelect = document.getElementById("basePokemon");
     const searchInput = document.getElementById('search');
     const stageGrid = document.getElementById('stageGrid');
     const countEl = document.getElementById('count');
+
 
     const TYPE_COLORS = {
         Fire: "#F08030",
@@ -897,9 +927,107 @@ select:focus {
     let zoom = 1;
     let initiativeMap = {}; // guid → initiative number
     let allMoves = [];
+    let allBasePokemon = [];
     let activeMove = null;
+    let selectedBasePokemonIds = new Set();
+
     // eslint-disable-next-line
     let items = JSON.parse('{{ items | tojson }}');
+
+    basePokemonSelect.addEventListener("change", () => {
+        Array.from(basePokemonSelect.options).forEach(opt => {
+            if (opt.selected)
+                selectedBasePokemonIds.add(opt.value);
+            else
+                selectedBasePokemonIds.delete(opt.value);
+        });
+    });
+
+    function serializePokemon(p) {
+        return {
+            kind: p.kind,               // "GAME" or "BASE"
+
+            // identity
+            guid: p.guid ?? null,
+            tempId: p.tempId ?? null,
+            basePokemonId: p.basePokemonId ?? null,
+
+            name: p.name,
+            level: p.level,
+            isNpc: p.isNpc,
+
+            status: p.status,
+
+            primaryType: p.primaryType,
+            secondaryType: p.secondaryType,
+
+            // HP state
+            health: p.health,
+            lethal: p.lethal ?? 0,
+            distance: p.distance ?? 0,
+
+            // core stats (FLAT — important)
+            strength: p.strength,
+            dexterity: p.dexterity,
+            vitality: p.vitality,
+            special: p.special,
+            insight: p.insight,
+
+            // skills (FLAT)
+            fight: p.fight,
+            survival: p.survival,
+            contest: p.contest,
+            brawl: p.brawl,
+            evasion: p.evasion,
+            channel: p.channel,
+            clash: p.clash,
+            alert: p.alert,
+            athletic: p.athletic,
+            stealth: p.stealth,
+            perform: p.perform,
+
+            // potentials (needed for UI)
+            strengthPotential: p.strengthPotential,
+            dexterityPotential: p.dexterityPotential,
+            vitalityPotential: p.vitalityPotential,
+            specialPotential: p.specialPotential,
+            insightPotential: p.insightPotential,
+
+            baseHealth: p.baseHealth,
+
+            Moves: p.Moves ?? [],
+        };
+    }
+
+    function serializeBattle() {
+        return {
+            pokes: currentPokesOnField.map(serializePokemon),
+            initiativeMap,
+            zoom
+        };
+    }
+
+    function saveBattleSession(name) {
+        const allSaves = JSON.parse(localStorage.getItem("battleSaves") || "{}");
+
+        allSaves[name] = {
+            name,
+            savedAt: new Date().toISOString(),
+            data: serializeBattle()
+        };
+
+        localStorage.setItem("battleSaves", JSON.stringify(allSaves));
+    }
+
+    function formatMoveRange(move) {
+        if (!move.moveRangeType) return null;
+
+        const base = move.moveRangeType;
+        if (!base) return null;
+
+        const range = move.moveGridRange ?? 1;
+        return base.replace("X", range);
+    }
 
     function createEffectivenessBadge(multiplier, moveType, target) {
         const badge = document.createElement("div");
@@ -934,6 +1062,84 @@ select:focus {
         return badge;
     }
 
+    function getBattleId(p) {
+        return p.guid ?? `base-${p.tempId}`;
+    }
+
+    function getSelections() {
+        return {
+            players: Array.from(playersSelect.selectedOptions).map(o => o.value),
+            basePokemon: Array.from(basePokemonSelect.selectedOptions).map(o => o.value)
+        };
+    }
+
+    function createEphemeralPokemon(base) {
+        return {
+            kind: "BASE",
+            tempId: Math.floor(Math.random() * 1000000),
+
+            // identity
+            name: base.name,
+            basePokemonId: base.id,
+            isNpc: true,
+
+            // core
+            level: "",
+            status: "Healthy",
+
+            primaryType: base.PrimaryType ?? base.primaryType ?? null,
+            secondaryType: base.SecondaryType ?? base.secondaryType ?? null,
+            heldItem: null,
+
+            health: base.BaseHealth + base.Vitality,
+            baseHealth: base.BaseHealth ?? base.baseHealth ?? 3,
+
+            ability: null,
+            nature: null,
+
+            // ───────────────
+            // Stats
+            // ───────────────
+            strength: base.Strength ?? base.strength ?? 0,
+            dexterity: base.Dexterity ?? base.dexterity ?? 0,
+            vitality: base.Vitality ?? base.vitality ?? 0,
+            special: base.Special ?? base.special ?? 0,
+            insight: base.Insight ?? base.insight ?? 0,
+
+            strengthPotential: base.StrengthPotential ?? base.strengthPotential ?? 0,
+            dexterityPotential: base.DexterityPotential ?? base.dexterityPotential ?? 0,
+            vitalityPotential: base.VitalityPotential ?? base.vitalityPotential ?? 0,
+            specialPotential: base.SpecialPotential ?? base.specialPotential ?? 0,
+            insightPotential: base.InsightPotential ?? base.insightPotential ?? 0,
+
+            // ───────────────
+            // Skills
+            // ───────────────
+            fight: base.Fight ?? base.fight ?? 0,
+            survival: base.Survival ?? base.survival ?? 0,
+            contest: base.Contest ?? base.contest ?? 0,
+            brawl: base.Brawl ?? base.brawl ?? 0,
+            evasion: base.Evasion ?? base.evasion ?? 0,
+            channel: base.Channel ?? base.channel ?? 0,
+            clash: base.Clash ?? base.clash ?? 0,
+            alert: base.Alert ?? base.alert ?? 0,
+            athletic: base.Athletic ?? base.athletic ?? 0,
+            natureStat: base.NatureStat ?? base.natureStat ?? 0,
+            stealth: base.Stealth ?? base.stealth ?? 0,
+            perform: base.Perform ?? base.perform ?? 0,
+
+            playerColor: null,
+
+            // inventory / moves
+            Bag: null,
+            Moves: [],
+            MoveIds: [],
+
+            // IMPORTANT: already battle-serialized now
+            LearnableMoves: base.LearnableMoves ?? [],
+        };
+    }
+
     function clearEffectivenessBadges() {
         document.querySelectorAll(".poke").forEach(card => {
             if (card._effectivenessShown) {
@@ -963,7 +1169,15 @@ select:focus {
         return multiplier;
     }
 
-    async function handleMoveDrop(move, target) {
+    async function handleMoveDrop(dragData, target) {
+        const {move, sourceGuid} = dragData
+        const attacker = currentPokesOnField.find(p => p.guid === sourceGuid)
+
+        if (!attacker) {
+            console.warn("Attacker not found for STAB calculation", sourceGuid);
+            return;
+        }
+
         const targetTypes = [
             target.primaryType,
             target.secondaryType
@@ -1007,26 +1221,59 @@ select:focus {
 
         if (!damageRolls) return;
 
-        applyDamage(target, damageRolls, multiplier, isCrit);
+        applyDamage(attacker, target, move, damageRolls, multiplier, isCrit);
     }
 
     function updateHealthOnServer(target) {
-        fetch(`${BASE_URL}/updateHealth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                gameId: GAME_ID,
-                guid: target.guid,
-                health: target.health
+        if (target.guid) {
+            fetch(`${BASE_URL}/updateHealth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameId: GAME_ID,
+                    guid: target.guid,
+                    health: target.health
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => console.log('Health update successful:', data))
-        .catch(error => console.error('Error updating health:', error));
+            .then(response => response.json())
+            .then(data => console.log('Health update successful:', data))
+            .catch(error => console.error('Error updating health:', error));
+        }
     }
 
-    function applyDamage(target, rolls, multiplier, isCrit) {
-        let damage = rolls;
+    function updateLethalHealthOnServer(target) {
+        if (target.guid) {
+            fetch(`${BASE_URL}/updateLethalHealth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameId: GAME_ID,
+                    guid: target.guid,
+                    lethalHealth: target.lethal
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Health update successful:', data))
+            .catch(error => console.error('Error updating health:', error));
+        }
+    }
+
+    function hasSTAB(attacker, move) {
+        if (!move || !move.type) return false;
+
+        // Status moves do not get STAB
+        if (move.damageType?.toLowerCase() === "status") return false;
+
+        const moveType = move.type.toLowerCase();
+
+        return (
+            attacker.primaryType?.toLowerCase() === moveType ||
+            attacker.secondaryType?.toLowerCase() === moveType
+        );
+    }
+
+    function applyDamage(attacker, target, move, rolls, multiplier, isCrit) {
+        let damage = Number(rolls);
 
         if (multiplier === 0) damage = 0;
         else if (multiplier === 0.25) damage -= 2;
@@ -1035,6 +1282,9 @@ select:focus {
         else if (multiplier === 4) damage = Number(damage) + 2;
 
         if (isCrit) damage += 1;
+
+        if (hasSTAB(attacker, move))
+            damage += 1
 
         damage = Math.max(0, damage);
 
@@ -1099,8 +1349,12 @@ select:focus {
     }
 
     function openMovePicker(pokemon, replaceIndex) {
+        const learnable = pokemon.LearnableMoves?.length
+            ? pokemon.LearnableMoves
+            : allMoves;
+
         const options = {};
-        allMoves.forEach(m => {
+        learnable.forEach(m => {
             options[m.id] = `${m.name} (${m.type})`;
         });
 
@@ -1109,37 +1363,35 @@ select:focus {
             theme: "dark",
             input: "select",
             inputOptions: options,
-            inputPlaceholder: "Choose a move",
             showCancelButton: true,
-            confirmButtonText: "Assign Move",
-        }).then(async result => {
+            confirmButtonText: "Assign Move"
+        }).then(result => {
             if (!result.isConfirmed) return;
 
-            const moveId = result.value;
+            const move = allMoves.find(m => m.id == result.value);
 
-            const res = await fetch(`${BASE_URL}/moveManipulation`, {
+            // 🧠 BasePokemon → LOCAL ONLY
+            if (pokemon.kind === "BASE") {
+                pokemon.Moves[replaceIndex] = move;
+                renderStage(currentPokesOnField);
+                return;
+            }
+
+            // 🧠 GamePokemon → API
+            fetch(`${BASE_URL}/moveManipulation`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     Guid: pokemon.guid,
-                    MoveId: moveId,
+                    MoveId: move.id,
                     ReplaceIndex: replaceIndex
                 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                pokemon.Moves[data.slot] = data.move;
+                renderStage(currentPokesOnField);
             });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                Swal.fire("Error", data.error || "Failed to assign move", "error");
-                return;
-            }
-
-            // Update local state
-            const selectedMove = allMoves.find(m => m.id == moveId);
-            pokemon.Moves[data.slot] = data.move;
-
-            // Re-render stage
-            renderStage(currentPokesOnField);
         });
     }
 
@@ -1163,7 +1415,6 @@ select:focus {
     function computeInitiative(poke) {
         // Change this rule if you want different initiative logic
         let d6 = Math.floor(Math.random() * (7 - 1)) + 1
-        console.log(d6)
         return d6 + poke.dexterity + poke.survival ?? 0;
     }
 
@@ -1171,9 +1422,13 @@ select:focus {
         const listEl = document.getElementById("initiativeList");
         listEl.innerHTML = "";
 
-        const filled = pokes.filter(p => initiativeMap[p.guid] !== undefined);
+        const filled = pokes.filter(
+            p => initiativeMap[getBattleId(p)] !== undefined
+        );
 
-        const sorted = filled.sort((a,b) => initiativeMap[b.guid] - initiativeMap[a.guid]);
+        const sorted = filled.sort(
+            (a,b) => initiativeMap[getBattleId(b)] - initiativeMap[getBattleId(a)]
+        );
 
         sorted.forEach((p, idx) => {
             const row = document.createElement('div');
@@ -1190,14 +1445,14 @@ select:focus {
             }
 
             row.innerHTML = `
-                <div>
-                    <strong>${idx + 1}.</strong>
-                    <span style="color:${nameColor}">${p.name}</span>
-                </div>
-                <div style="color:var(--muted)">
-                    ${initiativeMap[p.guid]} 
-                    (${p.isNpc ? "NPC" : "Player"})
-                </div>
+            <div>
+                <strong>${idx + 1}.</strong>
+                <span style="color:${nameColor}">${p.name}</span>
+            </div>
+            <div style="color:var(--muted)">
+                Init: ${initiativeMap[getBattleId(p)]}
+                · Dist: ${p.distance ?? 0}
+            </div>
             `;
 
             listEl.appendChild(row);
@@ -1233,10 +1488,10 @@ select:focus {
     document.getElementById("autoRollNpcs").addEventListener("click", () => {
         // roll NPCs with missing initiative
         for (const p of currentPokesOnField) {
-            if (p.isNpc && initiativeMap[p.guid] === undefined) {
+            if (p.isNpc && initiativeMap[getBattleId(p)] === undefined) {
                 const roll = Math.floor(Math.random()*6)+1;
                 const total = roll + (p.dexterity ?? 0) + (p.survival ?? 0);
-                initiativeMap[p.guid] = total;
+                initiativeMap[getBattleId(p)] = total;
             }
         }
         updateInitiativePanel(currentPokesOnField);
@@ -1245,6 +1500,7 @@ select:focus {
 
     function normalizePokemon(p){
         return {
+            kind: "GAME",
             guid: p.Guid ?? p.guid,
             name: p.Name ?? p.name,
             isNpc: p.IsNpc ?? p.isNpc,
@@ -1290,6 +1546,7 @@ select:focus {
 
             playerColor: p.PlayerColor ?? p.playerColor ?? null,
 
+            Bag: p.Bag ?? p.bag ?? [],
             Moves: p.Moves ?? p.moves ?? [],
             MoveIds: p.MoveIds ?? p.moveIds ?? [],
         };
@@ -1319,28 +1576,59 @@ select:focus {
     return container;
     }
 
-    async function loadAll(){
-      try{
-          loadAllMoves();
-          const res = await fetch(`${BASE_URL}/PullAllPokemon/{{ gameId }}`, {...FETCH_OPTS, method:'GET'});
-          if(!res.ok) throw new Error('Failed to load pokemons');
+    async function loadBasePokemon() {
+        const res = await fetch(`${BASE_URL}/basePokemon`);
+        if (!res.ok) throw new Error("Failed to load BasePokemon");
 
-          const raw = await res.json();
-          const list = raw.data || raw.pokemons || raw || [];
+        allBasePokemon = await res.json();
 
-          // Normalize keys so the rest of the UI works
-          allPokemonCache = list.map(p => normalizePokemon(p));
+        renderBasePokemonSelect();
+    }
 
-          renderSelects(allPokemonCache);
-      }catch(e){
-          console.error(e);
-          alert('Error loading pokemons — open console for details');
-      }
+    function renderBasePokemonSelect() {
+        basePokemonSelect.innerHTML = "";
+
+        const q = (searchInput.value || "").trim().toLowerCase();
+
+        allBasePokemon.forEach(bp => {
+            if (
+                q &&
+                !bp.name.toLowerCase().includes(q) &&
+                !String(bp.id).toLowerCase().includes(q)
+            ) {
+                return;
+            }
+
+            const opt = document.createElement("option");
+            opt.value = bp.id;
+            opt.textContent = bp.name;
+
+            // 🔑 restore selection
+            if (selectedBasePokemonIds.has(String(bp.id)))
+                opt.selected = true;
+
+            basePokemonSelect.appendChild(opt);
+        });
+    }
+
+    async function loadAll() {
+        try {
+            await loadAllMoves();
+            await loadBasePokemon();
+
+            const res = await fetch(`${BASE_URL}/gameData/{{ gameId }}`);
+            const raw = await res.json();
+
+            allPokemonCache = (raw.data || []).map(p => normalizePokemon(p));
+            renderSelects(allPokemonCache);
+        } catch (e) {
+            console.error(e);
+            alert("Failed to load battle data");
+        }
     }
 
     function renderSelects(list){
     playersSelect.innerHTML = '';
-    npcsSelect.innerHTML = '';
 
     const q = (searchInput.value || '').trim().toLowerCase();
 
@@ -1358,54 +1646,64 @@ select:focus {
         opt.textContent = `${p.name} (${guid})`;
         opt.dataset.obj = JSON.stringify(p);
 
-        if (p.isNpc) npcsSelect.appendChild(opt);
-        else playersSelect.appendChild(opt);
+        playersSelect.appendChild(opt);
     });
     }
 
     function getSelectedGuids(){
       const a = Array.from(playersSelect.selectedOptions).map(o=>o.value);
-      const b = Array.from(npcsSelect.selectedOptions).map(o=>o.value);
+      //const b = Array.from(basePokemonSelect.selectedOptions).map(o=>o.value);
       return {players:a,npcs:b,all:a.concat(b)};
     }
 
-    async function fetchSelectedAndRender(){
-        const guids = getSelectedGuids().all;
-        if(!guids.length){ alert('No Pokémon selected'); return; }
+    async function fetchSelectedAndRender() {
+        const { players, basePokemon } = getSelections();
 
-        try{
+        let battlePokemons = [];
+
+        // 1️⃣ Fetch real GamePokemon
+        if (players.length) {
             const res = await fetch(`${BASE_URL}/battleData`, {
-            ...FETCH_OPTS,
-            method:'POST',
-            body: JSON.stringify({ guids, gameId: GAME_ID })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    guids: players,
+                    gameId: GAME_ID
+                })
             });
-
-            if(!res.ok){
-            console.warn("Batch endpoint missing, falling back to cached list");
-            const selected = allPokemonCache.filter(p => guids.includes(p.guid));
-            return renderStage(selected);
-            }
 
             const raw = await res.json();
             const list = raw.data || raw.pokemons || [];
-
-            // Normalize keys just like loadAll()
-            const pokes = list.map(p => normalizePokemon(p));
-
-            renderStage(pokes);
-        }catch(err){
-            console.error(err);
-            alert('Error fetching selected Pokémon details — check console');
+            battlePokemons.push(...list.map(p => normalizePokemon(p)));
         }
+
+        // 2️⃣ Spawn BasePokemon (NO API)
+        basePokemon.forEach(id => {
+            const bp = allBasePokemon.find(b => b.id == id);
+            if (!bp) return;
+
+            battlePokemons.push(createEphemeralPokemon(bp));
+        });
+
+        renderStage(battlePokemons);
     }
 
     function renderStage(pokes){
         currentPokesOnField = pokes;
         const playersGrid = document.getElementById('playersGrid');
         const npcsGrid   = document.getElementById('npcsGrid');
+        const battleCols  = document.getElementById('battleColumns');
 
         playersGrid.innerHTML = '';
         npcsGrid.innerHTML   = '';
+
+        const hasPlayers = pokes.some(p => !p.isNpc);
+        const hasNpcs    = pokes.some(p => p.isNpc);
+
+        if (hasPlayers && !hasNpcs)
+            battleCols.classList.add("single-column");
+        else
+            battleCols.classList.remove("single-column");
 
         renderInitiative(pokes);
 
@@ -1494,7 +1792,7 @@ select:focus {
                 t.textContent = p.primaryType; 
                 tline.appendChild(t); 
             }
-
+            console.log(p.secondaryType)
             if(p.secondaryType) { 
                 const t = document.createElement('div'); 
                 t.className='type'; 
@@ -1656,12 +1954,14 @@ select:focus {
             lethalMinus.onclick = () => {
                 currentLethal = Math.max(0, currentLethal - 1);
                 p.lethal = currentLethal;
+                updateLethalHealthOnServer(p)
                 updateLethalBar();
             };
 
             lethalPlus.onclick = () => {
                 currentLethal = Math.min(maxHp, currentLethal + 1);
                 p.lethal = currentLethal;
+                updateLethalHealthOnServer(p)
                 updateLethalBar();
             };
 
@@ -1773,19 +2073,34 @@ select:focus {
             initBox.style.borderRadius = "8px";
 
             initBox.innerHTML = `
-                <label style="font-size:0.82rem; color:var(--muted)">Initiative</label>
-                <input 
-                    type="number"
-                    style="width:80px; padding:4px; margin-left:8px; background:transparent; color:white; border:1px solid #333; border-radius:4px;"
-                    value="${initiativeMap[p.guid] ?? ''}"
-                />
+            <div style="display:flex; gap:6px; align-items:center;">
+                <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--muted)">Initiative</label>
+                <input type="number" class="initiative-input initSelects" />
+                </div>
+                <div style="width:90px;">
+                <label style="font-size:0.75rem; color:var(--muted)">Distance</label>
+                <input type="number" class="distance-input initSelects" />
+                </div>
+            </div>
             `;
 
-            const input = initBox.querySelector("input");
-            input.addEventListener("input", () => {
-                initiativeMap[p.guid] = Number(input.value);
+            const initInput = initBox.querySelector(".initiative-input");
+            const distInput = initBox.querySelector(".distance-input");
+            initInput.value = initiativeMap[getBattleId(p)] ?? "";
+            distInput.value = p.distance ?? 0;
+
+            initInput.addEventListener("input", () => {
+                initiativeMap[getBattleId(p)] = Number(initInput.value);
                 updateInitiativePanel(pokes);
             });
+            distInput.addEventListener("input", () => {
+                let value = Number(distInput.value || 0)
+                console.log(p.isNpc)
+                p.distance = p.isNpc ? Math.abs(value) : -Math.abs(value);
+
+                updateInitiativePanel(pokes);
+            })
 
             card.addEventListener("dragover", e => {
                 e.preventDefault();
@@ -1815,7 +2130,7 @@ select:focus {
                 clearEffectivenessBadges();
 
                 const data = JSON.parse(e.dataTransfer.getData("moveData"));
-                handleMoveDrop(data.move, p);
+                handleMoveDrop(data, p);
             });
 
 
@@ -1868,6 +2183,8 @@ select:focus {
     }
 
     function renderMoveCard(move) {
+        const rangeText = formatMoveRange(move)
+        console.log(move.moveRangeType)
         const accuracyMods =
             move.accuracyModifiers?.filter(m => m && m !== "NONE").join(" + ") || "-";
 
@@ -1904,6 +2221,7 @@ select:focus {
 
                 <div>Accuracy: ${accuracyMods}</div>
                 <div>Damage Pool: ${damagePool}</div> <br>
+                <div>Range: ${rangeText}</div> <br>
                 <div>Added Effect: ${move.effectText || "-"}</div>
 
                 <div class="move-footer">${move.flavorText || ""}</div>
@@ -1917,11 +2235,6 @@ select:focus {
 
     function buildTooltip(move) {
         const lines = [];
-
-        // --- Enum fields ---
-        if (move.target) {
-            lines.push(`Target: ${TARGET_LABELS[move.target] ?? move.target}`);
-        }
 
         if (move.priority != null) {
             lines.push(`Priority: ${PRIORITY_LABELS[move.priority] ?? move.priority}`);
@@ -1974,7 +2287,7 @@ select:focus {
     document.getElementById('refresh').addEventListener('click', loadAll);
     // document.getElementById('fetchStats').addEventListener('click', fetchSelectedAndRender);
     document.getElementById('selectAllPlayers').addEventListener('click', ()=>{ for(let i=0;i<playersSelect.options.length;i++) playersSelect.options[i].selected=true });
-    document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<npcsSelect.options.length;i++) npcsSelect.options[i].selected=true });
+    document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<basePokemonSelect.options.length;i++) npcbasePokemonSelectsSelect.options[i].selected=true });
     document.getElementById('zoomIn').addEventListener('click', () => {
         zoom = Math.min(1.6, zoom + 0.1);
         document.documentElement.style.setProperty('--card-scale', zoom);
@@ -1990,6 +2303,10 @@ select:focus {
             el.style.display = 'none';
         });
         globalAddResourceBtn.style.display = "block";
+        globalRemoveResourceBtn.style.display = "block";
+        genLootItemBtn.style.display = "block";
+        toggleShopBtn.style.display = "block";
+        targetBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         fetchSelectedAndRender();
@@ -2036,6 +2353,8 @@ select:focus {
                     <button id="giveItemBtn" class="swal2-confirm swal2-styled">Give Item</button>
                     <button id="giveXpBtn" class="swal2-confirm swal2-styled">Give XP</button>
                     <button id="giveMoneyBtn" class="swal2-confirm swal2-styled">Give Money</button>
+                    <button id="addItem" class="swal2-confirm swal2-styled">Add Item</button>
+                    <button id="addMove" class="swal2-confirm swal2-styled">Add Move</button>
                 </div>
             `,
             didOpen: () => {
@@ -2052,6 +2371,14 @@ select:focus {
                 popup.querySelector("#giveMoneyBtn").addEventListener('click', () => {
                     Swal.close();
                     selectTargetsForValue("Money");
+                });
+                popup.querySelector("#addItem").addEventListener('click', () => {
+                    Swal.close();
+                    openAddItemModal(null);
+                });
+                popup.querySelector("#addMove").addEventListener('click', () => {
+                    Swal.close();
+                    openAddMoveModal(null)
                 });
             }
         });
@@ -2080,18 +2407,10 @@ select:focus {
                     <select id="selectItem" class="swal2-select">
                         ${itemOptions}
                     </select>
-
-                    <button id="newItemBtn" class="btn btn-primary" style="margin-top:5px;">Add New Item</button>
                 </div>
             `,
             showCancelButton: true,
             confirmButtonText: "Assign Item",
-            didOpen: () => {
-                document.getElementById('newItemBtn').addEventListener('click', () => {
-                    // Open new item modal (your existing add-item logic)
-                    openAddItemModal(null); // pass null or handle differently for creating item
-                });
-            },
             preConfirm: () => {
                 const selectedPokemon = document.getElementById('selectPokemon').value;
                 const selectedItem = document.getElementById('selectItem').value;
@@ -2129,6 +2448,345 @@ select:focus {
                 })
                 .catch(err => Swal.fire('Error', 'Failed to assign item', 'error'));
             }
+        });
+    }
+
+    function openAddItemModal(onCreatedCallback = null) {
+        Swal.fire({
+            title: "Add New Item",
+            theme: "dark",
+            html: `
+                <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">
+                    <label>Name</label>
+                    <input id="itemName" class="swal2-input">
+
+                    <label>Description</label>
+                    <textarea id="itemDesc" class="swal2-textarea"></textarea>
+
+                    <label>Effect Key</label>
+                    <input id="effectKey" class="swal2-input" placeholder="heal_hp, boost_stat">
+
+                    <label>Effect Data (JSON)</label>
+                    <textarea id="effectData" class="swal2-textarea"
+                        placeholder='{"amount":20}'></textarea>
+
+                    <div class="mb-3">
+                        <label>Item Category</label>
+                        <select id="itemCategory" name="ItemCategory" class="swal2-select" required>
+                            {% for key, value in item_categories %}
+                                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Minimum Shop Tier</label>
+                        <select id="minShopTier" name="MinShopTier" class="swal2-select" required>
+                            {% for key, value in shop_tiers %}
+                                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <label>Is Usable</label>   
+                    <input id="isUsable" type="checkbox" class="swal2-input" value="0">
+
+                    <label>Is Equipable</label>   
+                    <input id="isEquipable" type="checkbox" class="swal2-input" value="0">
+
+                    <label>Buy Price</label>
+                    <input id="buyPrice" type="number" class="swal2-input" value="0">
+
+                    <label>Sell Price</label>
+                    <input id="sellPrice" type="number" class="swal2-input" value="0">
+
+                    <label>Uses</label>
+                    <input id="numUses" type="number" class="swal2-input" value="1">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Create Item",
+            preConfirm: () => {
+                try {
+                    const effectDataRaw = document.getElementById("effectData").value;
+                    const effectData = effectDataRaw ? JSON.parse(effectDataRaw) : null;
+
+                    return {
+                        name: document.getElementById("itemName").value,
+                        description: document.getElementById("itemDesc").value,
+                        effectKey: document.getElementById("effectKey").value,
+                        effectData: effectData,
+                        itemCategory: document.getElementById("itemCategory").value,
+                        minShopTier: document.getElementById("minShopTier").value,
+                        isUsable: document.getElementById("isUsable").checked,
+                        isEquipable: document.getElementById("isEquipable").checked,
+                        buyPrice: Number(document.getElementById("buyPrice").value),
+                        sellPrice: Number(document.getElementById("sellPrice").value),
+                        numUses: Number(document.getElementById("numUses").value),
+                    };
+                } catch {
+                    Swal.showValidationMessage("Effect Data must be valid JSON");
+                    return false;
+                }
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(`${BASE_URL}/Item`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(res => res.json())
+            .then(item => {
+                items.push(item);
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    title: "Item Created",
+                    icon: "success",
+                    timer: 2500,
+                    showConfirmButton: false,
+                    theme: "dark"
+                });
+
+                if (onCreatedCallback) {
+                    onCreatedCallback(item);
+                }
+            })
+            .catch(() => Swal.fire("Error", "Failed to create item", "error"));
+        });
+    }
+
+    function openAddMoveModal(onCreatedCallback = null) {
+        Swal.fire({
+            title: "Add New Move",
+            theme: "dark",
+            width: "60rem",
+            html: `
+            <style>
+            .swal2-popup .swal-move-form select {
+                min-height: unset !important;
+            }
+
+            .swal-move-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px 24px;
+                text-align: left;
+            }
+
+            .swal-move-form label {
+                font-weight: bold;
+                font-size: 0.9rem;
+                margin-top: 6px;
+            }
+
+            .swal-move-form input,
+            .swal-move-form select {
+                padding: 6px;
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 0.9rem;
+                color: hotpink;
+                height: 40px;
+                line-height: 40px;
+                padding: 6px;
+                background-color: transparent;
+                border-radius: 12.5px;
+            }
+
+            .swal-move-form input:not([type="checkbox"]) {
+                height: 32px;
+                padding: 6px;
+            }
+
+            .swal-move-form input[type="checkbox"] {
+                width: auto;
+                margin-top: 8px;
+            }
+            </style>
+
+            <div class="swal-move-form">
+
+            <label>Name</label>
+            <input id="Name">
+
+            <label>Effect Text</label>
+            <input id="effectText">
+
+            <label>Flavor Text</label>
+            <input id="flavorText">
+
+            <label>Base Power</label>
+            <input id="basePower" type="number" value="0">
+
+            <label>Reduced Accuracy</label>
+            <input id="reducedAccuracy" type="number" value="0">
+
+            <label>Type</label>
+            <select style="max-height 100px !important;" id="types">
+                {% for item in moveData.types %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Type</label>
+            <select id="damageTypes">
+                {% for item in moveData.damageTypes %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Priority</label>
+            <select name="priority">
+                {% for item in moveData.priority %}
+                    {% if item.value != 0 %}
+                        <option value="{{ item.value }}">{{ item.value }}</option>
+                    {% else %}
+                        <option selected value="{{ item.value }}">{{ item.value }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <label>Target</label>
+            <select id="targets">
+                {% for item in moveData.targets %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Move Range Type</label>
+            <select id="moveRangeType">
+                {% for item in moveData.moveRangeTypesEnum %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Grid Range</label>
+            <input id="moveGridRange" type="number" value="1">
+
+            <label>Hit Count</label>
+            <select id="multiHits">
+                {% for item in moveData.multiHits %}
+                <option value="{{ item.value }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Heal Type</label>
+            <select id="healTypes">
+                {% for item in moveData.healTypes %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 1</label>
+            <select id="accuracyModifier1">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 2</label>
+            <select id="accuracyModifier2">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Accuracy Modifier 3</label>
+            <select id="accuracyModifier3">
+                {% for item in moveData.accuracyModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 1</label>
+            <select id="damageModifier1">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 2</label>
+            <select id="damageModifier2">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Damage Modifier 3</label>
+            <select id="damageModifier3">
+                {% for item in moveData.damageModifiers %}
+                <option value="{{ item.id }}">{{ item.value }}</option>
+                {% endfor %}
+            </select>
+
+            {% for field in moveData.booleanFields %}
+                <label>{{ field }}</label>
+                <input type="checkbox" id="{{ field }}">
+            {% endfor %}
+
+            </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Create Move",
+            preConfirm: () => {
+                const payload = {
+                    Name: document.getElementById("Name").value,
+                    effectText: document.getElementById("effectText").value,
+                    flavorText: document.getElementById("flavorText").value,
+                    basePower: Number(document.getElementById("basePower").value),
+                    reducedAccuracy: Number(document.getElementById("reducedAccuracy").value),
+                    types: document.getElementById("types").value,
+                    damageTypes: document.getElementById("damageTypes").value,
+                    priority: document.getElementById("priority").value,
+                    targets: document.getElementById("targets").value,
+                    moveRangeType: document.getElementById("moveRangeType").value,
+                    moveGridRange: Number(document.getElementById("moveGridRange").value),
+                    multiHits: document.getElementById("multiHits").value,
+                    healTypes: document.getElementById("healTypes").value,
+                    accuracyModifier1: document.getElementById("accuracyModifier1").value,
+                    accuracyModifier2: document.getElementById("accuracyModifier2").value || null,
+                    accuracyModifier3: document.getElementById("accuracyModifier3").value || null,
+                    damageModifier1: document.getElementById("damageModifier1").value,
+                    damageModifier2: document.getElementById("damageModifier2").value || null,
+                    damageModifier3: document.getElementById("damageModifier3").value || null,
+                };
+
+                {% for field in moveData.booleanFields %}
+                    if (document.getElementById("{{ field }}").checked) {
+                        payload["{{ field }}"] = true;
+                    }
+                {% endfor %}
+
+                return payload;
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(`${BASE_URL}/addMove`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(result.value)
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Move Created",
+                    timer: 2500,
+                    showConfirmButton: false,
+                    theme: "dark"
+                });
+
+                if (onCreatedCallback) {
+                    onCreatedCallback(data);
+                }
+            })
+            .catch(() => Swal.fire("Error", "Failed to create move", "error"));
         });
     }
 
@@ -2230,10 +2888,52 @@ select:focus {
         });
     }
 
+    function weightedRandom(items, getWeight) {
+    const weights = items.map(getWeight);
+    const total = weights.reduce((a, b) => a + b, 0);
 
+    let roll = Math.random() * total;
+
+    for (let i = 0; i < items.length; i++) {
+        roll -= weights[i];
+        if (roll <= 0) {
+        return items[i];
+        }
+    }
+
+    return items[items.length - 1]; // fallback
+    }
+
+    function pickRandomPlayerTarget() {
+    const players = currentPokesOnField.filter(
+        p => !p.isNpc && typeof p.distance === "number"
+    );
+
+    if (!players.length) {
+        Swal.fire({
+        theme: "dark",
+        icon: "warning",
+        title: "No valid player targets",
+        toast: true,
+        position: "top-end",
+        timer: 2500,
+        showConfirmButton: false,
+        });
+        return null;
+    }
+
+    const target = weightedRandom(players, p => {
+        const dist = Math.abs(p.distance ?? 0);
+        return 1 / (1 + dist);
+    });
+
+    return target;
+    }
     // quick search filtering
     let searchTimer = null;
-    searchInput.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderSelects(allPokemonCache), 250) });
+    searchInput.addEventListener("input", () => {
+        renderBasePokemonSelect();
+    });
 
     // initial load
     loadAll();
@@ -2287,6 +2987,82 @@ select:focus {
 `;
 
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
+    let globalRemoveResourceBtn = document.getElementById("globalRemoveResourceBtn");
+    let genLootItemBtn = document.getElementById("genLootItemBtn");
+    let toggleShopBtn = document.getElementById("toggleShopBtn");
+
+    const initiativePanel = document.getElementById("initiativePanel");
+    const targetBtn = document.createElement("button")
+    targetBtn.textContent = "Random Player Target";
+    targetBtn.className = "btn"
+    targetBtn.style.marginTop = "10px"
+    targetBtn.style.display = "None"
+    initiativePanel.appendChild(targetBtn)
+
+    if (!genLootItemBtn) {
+        genLootItemBtn = document.createElement("button");
+        genLootItemBtn.id = "genLootItemBtn";
+        genLootItemBtn.textContent = "Generate Loot Item";
+        genLootItemBtn.className = "btn btn-success";
+        genLootItemBtn.style.marginTop = "10px";
+        genLootItemBtn.style.marginRight = "10px";
+        genLootItemBtn.style.display = "none"
+
+        // Example: open modal for selected player(s)
+        genLootItemBtn.onclick = async () => {
+            const res = await fetch(`http://192.168.193.96:8000/genLootItem`);
+            const data = await res.json();
+            console.log(data); // { item: "SomeItemName" }
+            Swal.fire({
+                theme: "dark",
+                icon: "question",
+                title: "Loot Item",
+                text: `You found: ${data.item[1]}`,
+            })
+        };
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(genLootItemBtn);
+    }
+
+    if (!toggleShopBtn) {
+        toggleShopBtn = document.createElement("button");
+        toggleShopBtn.id = "toggleShopBtn";
+        toggleShopBtn.textContent = "Toggle Shop";
+        toggleShopBtn.className = "btn btn-success";
+        toggleShopBtn.style.marginTop = "10px";
+        toggleShopBtn.style.marginRight = "10px";
+        toggleShopBtn.style.display = "none"
+
+        toggleShopBtn.onclick = async () => {
+            const res = await fetch(`${BASE_URL}/Shop`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gameId: GAME_ID }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+
+            }
+
+            Swal.fire({
+                title: `Shop Status:  ${data.shopActive}`,
+                toast: true,
+                position: "top-end",
+                theme: "dark",
+                icon: "success",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            })
+        };
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(toggleShopBtn);
+    }
+
 
     if (!globalAddResourceBtn) {
         globalAddResourceBtn = document.createElement("button");
@@ -2296,17 +3072,271 @@ select:focus {
         globalAddResourceBtn.style.marginTop = "10px";
         globalAddResourceBtn.style.display = "none"
 
-        // Example: open modal for selected player(s)
         globalAddResourceBtn.onclick = () => {
             const selectedPlayers = currentPokesOnField.filter(p => !p.isNpc);
             openGiveResourcesModal(selectedPlayers);
         };
 
-        const initiativePanel = document.getElementById("initiativePanel");
-        initiativePanel.insertAdjacentElement("afterend", globalAddResourceBtn);
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(globalAddResourceBtn);
     }
 
+    targetBtn.addEventListener("click", () => {
+        const target = pickRandomPlayerTarget();
+        if (!target) return;
 
+        Swal.fire({
+            theme: "dark",
+            title: "Target Selected",
+            html: `
+            <strong>${target.name}</strong><br>
+            Distance: ${target.distance}
+            `,
+            icon: "info",
+            toast: true,
+            position: "top-end",
+            timer: 3000,
+            showConfirmButton: false,
+        });
+    });
+
+    if (!globalRemoveResourceBtn) {
+        globalRemoveResourceBtn = document.createElement("button")
+        globalRemoveResourceBtn.id = "globalRemoveResourceBtn";
+        globalRemoveResourceBtn.textContent = "Remove Resource";
+        globalRemoveResourceBtn.className = "btn btn-success";
+        globalRemoveResourceBtn.style.marginTop = "10px";
+        globalRemoveResourceBtn.style.marginLeft = "10px";
+        globalRemoveResourceBtn.style.display = "none";
+
+        globalRemoveResourceBtn.onclick = async () => {
+            const players = currentPokesOnField.filter(p => !p.isNpc);
+
+            if (!players.length) return;
+
+            const { value: selectedGuid } = await Swal.fire({
+                title: "Select Player",
+                input: "select",
+                inputOptions: Object.fromEntries(
+                players.map(p => [p.guid, p.name])
+                ),
+                theme: "dark",
+                showCancelButton: true,
+            });
+
+            if (!selectedGuid) return;
+
+            const pokemon = players.find(p => p.guid === selectedGuid);
+            const itemOptionsHtml = pokemon.Bag.items
+            .map(bi => `<option value="${bi.bagItemId}">${bi.item.name}</option>`)
+            .join("");
+
+            const { value: result } = await Swal.fire({
+            title: "Remove Resources",
+            html: `
+                <input id="rm-apples" type="number" class="swal2-input" placeholder="Apples">
+                <input id="rm-xp" type="number" class="swal2-input" placeholder="XP">
+
+                <label style="display:block;text-align:left;margin-top:10px;">
+                <strong>Remove Items:</strong>
+                </label>
+                <select
+                id="rm-items"
+                class="swal2-select"
+                multiple
+                size="5"
+                style="width:100%;"
+                >
+                ${itemOptionsHtml}
+                </select>
+            `,
+
+            theme: "dark",
+            showCancelButton: true,
+            preConfirm: () => {
+                const apples = Number(document.getElementById("rm-apples").value) || 0;
+                const xp = Number(document.getElementById("rm-xp").value) || 0;
+
+                const select = document.getElementById("rm-items");
+                const items = select
+                    ? [...select.selectedOptions].map(opt => Number(opt.value))
+                    : [];
+
+                if (apples <= 0 && xp <= 0 && items.length === 0) {
+                    Swal.showValidationMessage("Select at least one resource to remove");
+                    return false;
+                }
+
+                return {
+                    apples,
+                    xp,
+                    items
+                };
+            }
+            });
+            console.log(result)
+            console.log(result.items)
+            if (!result) return;
+
+            await fetch(`${BASE_URL}/removeResources`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                pokemonGuid: selectedGuid,
+                removeApples: result.apples,
+                removeXp: result.xp,
+                removeBagItemIds: result.items
+            })
+            });
+        }
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(globalRemoveResourceBtn);
+    }
+
+    document.getElementById("saveBattle").addEventListener("click", async () => {
+        const { value: name } = await Swal.fire({
+            title: "Save Battle",
+            input: "text",
+            theme: "dark",
+            inputLabel: "Battle name",
+            inputPlaceholder: "BossBattle, Route12, etc",
+            showCancelButton: true
+        });
+
+        if (!name) return;
+
+        saveBattleSession(name);
+
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            theme: "dark",
+            timerProgressBar: true,
+            icon: "success",
+            title: "Battle saved",
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+
+    function restorePokemon(raw) {
+        if (raw.kind === "BASE") {
+            const base = allBasePokemon.find(b => b.id == raw.basePokemonId);
+            if (!base) return null;
+
+            const p = createEphemeralPokemon(base);
+
+            Object.assign(p, raw);
+            p.tempId = raw.tempId;
+
+            return p;
+        }
+
+        // 🔑 GamePokemon: normalize again
+        const normalized = normalizePokemon(raw);
+
+        // restore battle-only state
+        normalized.health = raw.health;
+        normalized.lethal = raw.lethal ?? 0;
+        normalized.distance = raw.distance ?? 0;
+        normalized.Moves = raw.Moves ?? [];
+
+        return normalized;
+    }
+
+    function restoreBattleSession(session) {
+        initiativeMap = session.data.initiativeMap || {};
+        zoom = session.data.zoom ?? zoom;
+
+        const pokes = session.data.pokes
+            .map(restorePokemon)
+            .filter(Boolean);
+
+        renderStage(pokes);
+    }
+
+    document.getElementById("loadBattle").addEventListener("click", async () => {
+        const allSaves = JSON.parse(localStorage.getItem("battleSaves") || "{}");
+        const names = Object.keys(allSaves);
+
+        if (!names.length) {
+            Swal.fire({title: "No saved battles", theme: "dark"});
+            return;
+        }
+
+        const options = {};
+        names.forEach(n => {
+            options[n] = `${n} (${new Date(allSaves[n].savedAt).toLocaleString()})`;
+        });
+
+        const result = await Swal.fire({
+            title: "Load or Delete Battle",
+            input: "select",
+            theme: "dark",
+            inputOptions: options,
+            showCancelButton: true,
+            confirmButtonText: "Load",
+            showDenyButton: true,
+            denyButtonText: "Delete",
+
+            preDeny: () => {
+                return Swal.getInput().value;
+            }
+        });
+
+        // DELETE
+        if (result.isDenied) {
+            const selected = result.value;
+
+            const confirm = await Swal.fire({
+                title: `Delete "${selected}"?`,
+                icon: "warning",
+                theme: "dark",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            delete allSaves[selected];
+            localStorage.setItem("battleSaves", JSON.stringify(allSaves));
+
+            document.getElementById("loadBattle").click();
+
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                theme: "dark",
+                timerProgressBar: true,
+                icon: "success",
+                title: "Battle deleted",
+                timer: 3000,
+                showConfirmButton: false
+            });
+
+            return;
+        }
+
+        // CANCEL
+        if (!result.isConfirmed) return;
+
+        // LOAD
+        const selected = result.value;
+
+        document.querySelectorAll('.selectors').forEach(el => {
+            el.style.display = 'none';
+        });
+        globalAddResourceBtn.style.display = "block";
+        globalRemoveResourceBtn.style.display = "block";
+        genLootItemBtn.style.display = "block";
+        toggleShopBtn.style.display = "block";
+        targetBtn.style.display = "block";
+        document.getElementById("clearStage").style.display = "block";
+
+        // LOAD
+        restoreBattleSession(allSaves[selected]);
+    });
   </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ from ..models.Misc import Nature
 from ..models.Misc import Ability
 from ..models.Items import Item
 
-from ..utils import extract_modifiers_from_group
+from ..Utils.utils import extract_modifiers_from_group
 
 class PlayerData(Resource):
     def get(self, gameId, playerGuid):
@@ -41,13 +41,17 @@ class PlayerData(Resource):
                         "id": bag_item.id,
                         "itemId": bag_item.itemId,
                         "name": bag_item.item.name if bag_item.item else None,
-                        "itemCategory": bag_item.item.itemCategory if bag_item.item else None,
                         "itemCategory": bag_item.item.itemCategory.value if bag_item.item else None,
                         "minShopTier": bag_item.item.minShopTier.value if bag_item.item else None,
                         "effect": bag_item.item.effect if bag_item.item else None,
+                        "effectKey": bag_item.item.effectKey if bag_item.item else None,
+                        "effectData": bag_item.item.effectData if bag_item.item else None,
+                        "isUsable": bag_item.item.isUsable if bag_item.item else None,
+                        "isEquipable": bag_item.item.isEquipable if bag_item.item else None,
                         "description": bag_item.item.description or "",
                         "buyPrice": bag_item.item.buyPrice if bag_item.item else None,
                         "sellPrice": bag_item.item.sellPrice if bag_item.item else None,
+                        "numUses": bag_item.item.numUses if bag_item.item else None,
                     }
                     for bag_item in pokemon.bag.items
                 ]
@@ -159,6 +163,7 @@ class PlayerData(Resource):
 
             "BaseHealth": pokemon.baseHealth or base.baseHealth,
             "Health": pokemon.health,
+            "LethalHealth": pokemon.lethalHealth,
 
             "Will": pokemon.will or base.will,
             "Logic": pokemon.logic or base.logic,

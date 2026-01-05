@@ -141,11 +141,22 @@
       background: #28c76f;
       transition: width 0.2s ease;
     }
+    .lethal-hp-bar-fill {
+        height: 100%;
+        background: #8e44ad;
+        transition: width 0.2s ease;   
+    }
 
     .hp-text {
       margin-top: 4px;
       font-size: 0.9em;
       color: var(--muted);
+    }
+
+    .lethal-hp-text {
+        margin-top: 4px;
+        font-size: 0.9em;
+        color: var(--muted);
     }
 
     /* ---------- STAT CIRCLES (READ-ONLY) ---------- */
@@ -154,14 +165,15 @@
       display: flex;
       gap: 0.6em;
       margin-top: 1.2em;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       /* keep all on same line */
       align-items: center;
     }
 
     .stats .stat-group {
-      display: flex;
-      gap: 0.6em;
+        display: flex;
+        gap: 0.6em;
+        flex: 0 0 auto;
     }
 
     .stats .stat-group.right {
@@ -229,6 +241,14 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
+    }
+
+    @media (max-width: 1500px) {
+        .stats .stat-group.right {
+            margin-left: 0;       /* stop pushing right */
+            flex-basis: 100%;     /* force onto its own row */
+            justify-content: flex-start;
+        }
     }
 
     /* ---------- MOVES (READ-ONLY + TOOLTIP) ---------- */
@@ -421,9 +441,12 @@
 
 <body>
   <header style="display: flex;">
-    <h1 style="width: 8%;">Pokémon Status</h1>
-    <ul style="display: flex;">
-      <li><a href="/ItemShop">Item Shop</a></li>
+    <h1 style="width: 10%;">Pokémon Status</h1>
+    <ul style="display: flex; width: 100%">
+      <!-- TODO: replace with team name from database at some point -->
+      <li><a href="/Team">Team</a></li>
+      <li style="margin-left: 10px"><a href="/ItemShop">Item Shop</a></li>
+      <li style="margin-left: 10px; margin-left: auto;"><a href="/Logout">Logout</a></li>
     </ul>
   </header>
 
@@ -435,10 +458,11 @@
 
 
   <script>
-    if (window.innerHeight < 1600)
-      document.body.style.zoom = "80%";
+    // if (window.innerHeight < 1600)
+    //   document.body.style.zoom = "80%";
     let pokemonStatusInterval = null;
     let pokemonStatusSource = null;
+    let isBagOpen = false;
 
     const POKEMON_GUID = '{{ pokemonGuid }}'; // injected by backend
     const GAME_ID = '{{ gameId }}'
@@ -519,6 +543,13 @@
         p5: "+5",
     };
 
+    const ITEM_USE_HANDLERS = {
+        heal_pool: openHealPoolSwal,
+        //heal_fixed: openHealFixedSwal,
+        //revive: openReviveSwal,
+        // future effects go brrrrr
+    };
+
     function startPlayerStateStream(pokemonGuid, p) {
       if (pokemonStatusSource) pokemonStatusSource.close();
 
@@ -539,9 +570,16 @@
     }
 
     function applyPlayerUpdate(update, p) {
+      Object.assign(p, update)
+
       if ("Health" in update) {
         p.Health = update.Health;
         p._updateHpUI(update.Health, p);
+      }
+
+      if ("LethalHealth" in update) {
+        p.LethalHealth = update.LethalHealth;
+        p._updateLethalHpUi(update.LethalHealth, p)
       }
 
       if ("Status" in update) {
@@ -561,6 +599,15 @@
       if ("Moves" in update) {
         p.Moves = update.Moves;
         updateMovesUI(update.Moves);
+      }
+
+      if ("Bag" in update) {
+        loadPokemon()
+      }
+
+      if ("HeldItem" in update) {
+        p.HeldItem = update.HeldItem;
+        updateHeldItemBadge(update.HeldItem);
       }
     }
 
@@ -589,6 +636,69 @@
         if (!container) return;
 
         container.innerHTML = moves.map(renderMove).join("");
+    }
+
+    function updateBagUI(bag) {
+      const bagContainer = document.getElementById("bagContainer");
+      if (!bagContainer) return;
+
+      const header = bagContainer.querySelector(".bag-header");
+      const list = bagContainer.querySelector(".bag-content");
+
+      header.textContent = `Pokémon Bag (${bag.items.length} items)`;
+
+      if (!bag.items.length) {
+        list.innerHTML = `<li class="bag-card">No items</li>`;
+        return;
+      }
+
+      list.innerHTML = bag.items.map(item => `
+        <li class="bag-card">
+          <div class="card-top">
+            <div class="card-name-category">
+              <strong>${item.name}</strong>
+              ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
+            </div>
+            ${item.sellPrice
+              ? `<button onclick="sellItem('${item.id}')" class="sell-price equip-btn">
+                  Sell for: ${item.sellPrice}₽
+                </button>` : ""}
+          </div>
+
+          ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
+          ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
+
+          ${item.isEquipable
+            ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>`
+            : ""}
+          ${item.isUsable
+            ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>`
+            : ""}
+        </li>
+      `).join("");
+    }
+
+    function updateHeldItemBadge(item) {
+      const typesContainer = document.querySelector(".types");
+      if (!typesContainer) return;
+
+      const existing = document.getElementById("heldItemBadge");
+      if (existing) existing.remove();
+
+      if (!item) return;
+
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      badge.id = "heldItemBadge";
+      badge.innerHTML = makeTooltip(item.name, item);
+
+      badge.onclick = async () => {
+        await fetch(`${BASE_URL}/unequipItem/${GAME_ID}/${POKEMON_GUID}`, {
+          method: "POST"
+        });
+      };
+
+      typesContainer.appendChild(badge);
     }
 
     async function confirmStatPurchase(statName, currentValue, availableXP) {
@@ -775,7 +885,6 @@
     }
 
     function renderMove(m) {
-      console.log(m)
       const accuracy = m.accuracyModifiers?.filter(mod => mod && mod !== "NONE").join(" + ") || "-";
       const damage = [...(m.damageModifiers || []), m.basePower || null]
         .filter(mod => mod && mod !== "NONE")
@@ -805,12 +914,70 @@
       `;
     }
 
+    function renderBag(pokemonBag) {
+      const bag = document.getElementById("bagContainer");
+      if (!bag) return;
+
+      const bagSizeMap = {
+        size0: 0,
+        size5: 5,
+        size10: 10,
+        size15: 15
+      };
+
+      const header = bag.querySelector(".bag-header");
+      const list = bag.querySelector(".bag-content");
+
+      // Preserve open state
+      bag.classList.toggle("open", isBagOpen);
+      
+      const currentSize = pokemonBag?.items?.length ?? 0;
+      const maxSize = bagSizeMap[pokemonBag.bagSize] ?? 0;
+      header.textContent = `Pokémon Bag (${currentSize}/${maxSize} items)`;
+
+      if (!pokemonBag.items || pokemonBag.items.length === 0) {
+        list.innerHTML = `<li class="bag-card">No items</li>`;
+        return;
+      }
+
+      list.innerHTML = pokemonBag.items.map(item => `
+        <li class="bag-card">
+          <div class="card-top">
+            <div class="card-name-category">
+              <strong>${item.name}</strong>
+              ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
+            </div>
+
+            ${item.sellPrice
+              ? `<button class="sell-price equip-btn"
+                        onclick="sellItem('${item.id}')">
+                  Sell for: ${item.sellPrice}₽
+                </button>`
+              : ""}
+          </div>
+
+          ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
+          ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
+
+          ${!!item.isUsable
+            ? `<button class="equip-btn" onclick="useItem('${item.id}')">Use Item</button>` 
+            : ""}
+
+          ${!!item.isEquipable
+            ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>`
+            : ""}
+        </li>
+      `).join("");
+    }
+
     function renderPokemon(p) {
       const card = document.getElementById('pokemonCard');
 
       const maxHp = p.BaseHealth + p.Vitality;       // correct max HP
       const hpPct = Math.max(0, Math.min(1, p.Health / maxHp)); // correct percentage
-
+      const maxLethalHp = maxHp
+      const lethalHpPct = Math.max(0, Math.min(1, p.LethalHealth / maxLethalHp))
+      console.log(p.Dexteritypotential)
       card.innerHTML = `
         <div class="head">
             <div class="meta" style="flex: 1;">
@@ -826,7 +993,7 @@
         <div class="types">
         ${p.Ability ? `<div class="badge">${makeTooltip(p.Ability.name, p.Ability)}</div>` : ''}
         ${p.Nature ? `<div class="badge">${makeTooltip(p.Nature.name, p.Nature)}</div>` : ''}
-        ${p.HeldItem ? `<div class="badge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
+        ${p.HeldItem ? `<div class="badge" id="heldItemBadge">${makeTooltip(p.HeldItem.name, p.HeldItem)}</div>` : ''}
         ${p.Garments?.map(g => `<div class="badge">${g}</div>`).join('') || ''}
         </div>
 
@@ -836,23 +1003,29 @@
             </div>
             <div class="hp-text">${p.Health} / ${p.BaseHealth + p.Vitality} HP · ${p.Status || 'Healthy'}</div>
         </div>
+            <div class="hp-bar-container">
+            <div class="hp-bar">
+            <div class="lethal-hp-bar-fill" style="width:${lethalHpPct * 100}%"></div>
+            </div>
+            <div class="lethal-hp-text"">${p.LethalHealth} / ${p.BaseHealth + p.Vitality} Lethal</div>
+        </div>
 
         <div class="stats">
             <div class="stat-group">
                 <div class="stat" data-stat-name="Strength" data-stat-value="${p.Strength}" data-xp="${p.ExperiencePoints}">
-                    Strength${statCircles(p.Strength, 10)}
+                    Strength${statCircles(p.Strength, p.StrengthPotential)}
                 </div>
                 <div class="stat" data-stat-name="Dexterity" data-stat-value="${p.Dexterity}" data-xp="${p.ExperiencePoints}">
-                    Dexterity${statCircles(p.Dexterity, 10)}
+                    Dexterity${statCircles(p.Dexterity, p.DexterityPotential)}
                 </div>
                 <div class="stat" data-stat-name="Vitality" data-stat-value="${p.Vitality}" data-xp="${p.ExperiencePoints}">
-                    Vitality${statCircles(p.Vitality, 10)}
+                    Vitality${statCircles(p.Vitality, p.VitalityPotential)}
                 </div>
                 <div class="stat" data-stat-name="Special" data-stat-value="${p.Special}" data-xp="${p.ExperiencePoints}">
-                    Special${statCircles(p.Special, 10)}
+                    Special${statCircles(p.Special, p.SpecialPotential)}
                 </div>
                 <div class="stat" data-stat-name="Insight" data-stat-value="${p.Insight}" data-xp="${p.ExperiencePoints}">
-                    Insight${statCircles(p.Insight, 10)}
+                    Insight${statCircles(p.Insight, p.InsightPotential)}
                 </div>
             </div>
 
@@ -900,32 +1073,33 @@
         </div>
 
         <div class="bag" id="bagContainer">
-          <div class="bag-header">Pokémon Bag (${p.Bag?.items?.length || 0} items)</div>
-          <ul class="bag-content">
-            ${p.Bag?.items?.map(item => `
-              <li class="bag-card">
-                <div class="card-top">
-                  <div class="card-name-category">
-                    <strong>${item.name || "Unnamed Item"}</strong>
-                    ${item.itemCategory ? `<span class="item-category">${item.itemCategory}</span>` : ""}
-                  </div>
-                  ${item.sellPrice ? `<button onclick="sellItem('${item.id}')" class="sell-price equip-btn">Sell for: ${item.sellPrice}₽</button>` : ""}
-                </div>
-
-                ${item.effect ? `<div class="effect">${item.effect}</div>` : ""}
-                ${item.description ? `<hr><div class="description">${item.description}</div>` : ""}
-
-                ${item.itemCategory === "Held Item" || (item.name || "").toLowerCase().includes("berry")
-                  ? `<button class="equip-btn" onclick="equipItem('${item.id}')">Equip</button>` 
-                  : ""}
-              </li>
-            `).join('') || '<li class="bag-card">No items</li>'}
-          </ul>
+          <div class="bag-header"></div>
+          <ul class="bag-content"></ul>
         </div>
         `;
 
+        const heldItemBadge = document.getElementById("heldItemBadge");
+        
+        if (heldItemBadge) {
+            heldItemBadge.onclick = async () => {
+                const res = await fetch(`${BASE_URL}/unequipItem/${GAME_ID}/${POKEMON_GUID}`, { method: "POST" });
+                const data = await res.json();
+                console.log(data);
+
+                if (data.success) {
+                    loadPokemon()
+                    heldItemBadge.remove(); // remove badge since item is unequipped
+                  } else {
+                    alert(data.error);
+                }
+            };
+        }
+
         const hpFill = card.querySelector('.hp-bar-fill');
         const hpText = card.querySelector('.hp-text');
+
+        const hpLethalFill = card.querySelector(".lethal-hp-bar-fill");
+        const hpLethalText = card.querySelector(".lethal-hp-text");
 
         // function to update HP bar
         function updateHpBar() {
@@ -941,11 +1115,30 @@
           hpText.textContent = `${currentHp} / ${maxHp} HP · ${p.Status || 'Healthy'}`;
         }
 
+        function updateLethalHpBar() {
+          const currentLehtalHp = Math.max(0, Math.min(maxLethalHp, p.LethalHealth ?? maxLethalHp));
+          const pct = currentLehtalHp / maxLethalHp;
+
+          hpLethalFill.style.width = (pct * 100) + '%';
+
+          if (pct >= 0.75 && pct < 0.9) {
+              hpLethalFill.style.background = "#ff004c"; // DEAD
+          } else if (pct <= 0.9) {
+              hpLethalFill.style.background = "#ff004c"; // purple
+          } else {
+              hpLethalFill.style.background = "#000000"; // purple
+          }
+
+          hpLethalText.textContent = `${currentLehtalHp} / ${maxLethalHp} · Lethal`;
+        }
+
         // initial render
         updateHpBar();
+        updateLethalHpBar();
 
         // Expose updater if you want to modify HP later
         p._updateHpUI = updateHpBar;
+        p._updateLethalHpUi = updateLethalHpBar;
 
         window.currentPokemonMaxHp = maxHp;
         window.currentPokemon = p;
@@ -956,12 +1149,13 @@
           const target = el.closest('[data-stat-name]');
           if (!target) return;
           const statName = target.dataset.statName;
-          const statValue = Number(target.dataset.statValue);
-          const xp = Number(target.dataset.xp);
+          const statValue = window.currentPokemon[statName];
+          const xp = window.currentPokemon.ExperiencePoints;
           confirmStatPurchase(statName, statValue, xp);
         });
       });
       startPlayerStateStream(POKEMON_GUID, p);
+      renderBag(p.Bag || { items: [] });
       setupBagToggle();
     }
 
@@ -1042,20 +1236,106 @@
         });
     }
 
+    function useItem(bagItemId) {
+        const item = getItemFromBag(bagItemId);
+
+        if (!item || !item.isUsable) return;
+
+        const handler = ITEM_USE_HANDLERS[item.effectKey];
+
+        if (!handler) {
+            Swal.fire({
+                title: "Cannot Use Item",
+                text: "This item cannot be used manually.",
+                icon: "warning",
+                theme: "dark"
+            });
+            return;
+        }
+
+        handler(item);
+    }
+
+    function openHealPoolSwal(item) {
+        const remaining = item.effectData.maxPool - item.effectData.unitsUsed;
+
+        if (remaining <= 0) {
+            Swal.fire({
+                title: "Item Depleted",
+                text: "This potion has no healing left.",
+                icon: "info",
+                theme: "dark"
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: `Use ${item.name}`,
+            theme: "dark",
+            html: `
+                <p>Remaining healing: <strong>${remaining}</strong></p>
+                <label>Healing Units to Use</label>
+                <input id="healAmount" type="number" class="swal2-input"
+                      min="1" max="${remaining}" value="1">
+                <small>1 unit = 1 HP or 2 Lethal HP</small>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Use",
+            preConfirm: () => {
+                const value = Number(document.getElementById("healAmount").value);
+                if (value < 1 || value > remaining) {
+                    Swal.showValidationMessage("Invalid amount");
+                    return false;
+                }
+                return { units: value };
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            sendUseItemRequest(item.id, result.value);
+        });
+    }
+
+    function sendUseItemRequest(bagItemId, payload = {}) {
+        fetch(`${BASE_URL}/useItem/${GAME_ID}/${bagItemId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Item Used",
+                timer: 2500,
+                showConfirmButton: false,
+                theme: "dark"
+            });
+
+            updatePokemonFromResponse(data);
+        })
+        .catch(() => {
+            Swal.fire("Error", "Failed to use item", "error");
+        });
+    }
+
     // Bag collapsible toggle
     function setupBagToggle() {
-      const bag = document.getElementById('bagContainer');
+      const bag = document.getElementById("bagContainer");
       if (!bag) return;
 
-      const header = bag.querySelector('.bag-header');
+      const header = bag.querySelector(".bag-header");
 
-      header.addEventListener('click', () => {
-        bag.classList.toggle('open');
-      });
+      header.onclick = () => {
+        isBagOpen = !isBagOpen;
+        bag.classList.toggle("open", isBagOpen);
+      };
     }
 
     // Call after the page renders the bag
-    setupBagToggle();
+    //setupBagToggle();
 
     async function loadPokemon() {
       const res = await fetch(`${BASE_URL}/playerData/${GAME_ID}/${POKEMON_GUID}`);

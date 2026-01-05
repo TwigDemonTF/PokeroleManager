@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restful import Api
+from flask_cors import CORS
 from .extensions import database, cors
 from .config import DevelopmentConfig
 
@@ -17,7 +18,11 @@ def create_app():
     )
     app.config.from_object(DevelopmentConfig)
 
-    cors.init_app(app)
+    CORS(
+        app,
+        resources={r"/*": {"origins": "*"}},
+        supports_credentials=False
+    )
 
     db_path = os.path.join(app.instance_path, "data.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"

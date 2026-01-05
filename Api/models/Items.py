@@ -12,11 +12,20 @@ class Item(database.Model):
     id = database.Column(database.Integer, primary_key=True)
     name = database.Column(database.String(50), nullable=False)
     description = database.Column(database.Text, nullable=True)
+
+    effectKey = database.Column(database.String(50), nullable=True)
+    effectData = database.Column(database.JSON, nullable=True)
+
     effect = database.Column(database.Text, nullable=True)
     minShopTier = database.Column(database.Enum(ShopTierEnum), default=ShopTierEnum.BASIC)
     itemCategory = database.Column(database.Enum(ItemCategoryEnum), default=ItemCategoryEnum.MISC)
     buyPrice = database.Column(database.Integer, nullable=True, default=0)
     sellPrice = database.Column(database.Integer, nullable=True, default=0)
+
+    isUsable = database.Column(database.Boolean, nullable=False, default=False)
+    isEquipable = database.Column(database.Boolean, nullable=False, default=False)
+
+    numUses = database.Column(database.Integer, nullable=True, default=None)
 
     def to_dict(self):
         return {
@@ -24,10 +33,13 @@ class Item(database.Model):
             "name": self.name,
             "description": self.description,
             "effect": self.effect,
+            "effectKey": self.effectKey,
+            "effectData": self.effectData,
             "minShopTier": self.minShopTier.value,
             "itemCategory": self.itemCategory.value,
             "buyPrice": self.buyPrice,
-            "sellPrice": self.sellPrice
+            "sellPrice": self.sellPrice,
+            "numUses": self.numUses
         }
 
 class Garment(database.Model):

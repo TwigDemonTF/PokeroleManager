@@ -1,10 +1,10 @@
 from .auth import MasterLogin, PlayerLogin, Register
 from .player import PlayerData
-from .item import ItemApi
+from .item import ItemApi, ShopApi
 from .battle import BattleApi, GameApi
 from .pokemon import BasePokemonApi, GamePokemonApi, PullCharacterData
 from .pokemon_components import NatureApi, AbilityApi, MoveApi, GarmentApi
-from .pokemon_manipulation import MoveManipulation, BuyItem
+from .pokemon_manipulation import MoveManipulation, BuyItem, RemoveResourcesApi
 
 def registerResources(api):
     api.add_resource(Register, "/register")
@@ -21,10 +21,12 @@ def registerResources(api):
     api.add_resource(BasePokemonApi, "/basePokemon")
     api.add_resource(GamePokemonApi, '/gamePokemon')
 
-    api.add_resource(GameApi, "/PullAllPokemon/<string:gameId>")
+    api.add_resource(GameApi, "/gameData/<string:gameId>")
     api.add_resource(BattleApi, '/battleData')
 
-    api.add_resource(ItemApi, "/item")
+    api.add_resource(ItemApi, "/Item")
+    api.add_resource(ShopApi, "/Shop/<string:gameId>", "/Shop")
 
     api.add_resource(MoveManipulation, "/moveManipulation")
+    api.add_resource(RemoveResourcesApi, "/removeResources")
     api.add_resource(BuyItem, "/buyItem")
