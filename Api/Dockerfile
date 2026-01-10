@@ -26,4 +26,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the API
-CMD ["python", "main.py"]
+CMD ["python3", "-m Api.main"]
