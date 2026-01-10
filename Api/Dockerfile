@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY Api ./Api
 
 WORKDIR /app
-EXPOSE 5000
+EXPOSE 9000
 
 # Run as module
 CMD ["python3", "-m", "Api.main"]
