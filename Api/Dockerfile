@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Set workdir inside container
-WORKDIR /app
+WORKDIR /Api
 
 # Install system dependencies (optional but common)
 RUN apt-get update && apt-get install -y \
