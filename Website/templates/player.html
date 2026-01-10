@@ -441,7 +441,7 @@
 
 <body>
   <header style="display: flex;">
-    <h1 style="width: 10%;">Pokémon Status</h1>
+    <h1 style="width: 8%;">Pokémon Status</h1>
     <ul style="display: flex; width: 100%">
       <!-- TODO: replace with team name from database at some point -->
       <li><a href="/Team">Team</a></li>
@@ -977,7 +977,7 @@
       const hpPct = Math.max(0, Math.min(1, p.Health / maxHp)); // correct percentage
       const maxLethalHp = maxHp
       const lethalHpPct = Math.max(0, Math.min(1, p.LethalHealth / maxLethalHp))
-      console.log(p.Dexteritypotential)
+
       card.innerHTML = `
         <div class="head">
             <div class="meta" style="flex: 1;">

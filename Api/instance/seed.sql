@@ -524,6 +524,14 @@ INSERT INTO BasePokemon VALUES(482,'Deoxys',NULL,NULL,4,3,1,1,0,'PSYCHIC',NULL,8
 INSERT INTO BasePokemon VALUES(483,'Deoxys (Attack Form)',NULL,NULL,4,3,1,1,0,'PSYCHIC',NULL,10,10,8,8,2,2,10,10,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(484,'Deoxys (Defense Form)',NULL,NULL,4,3,1,1,0,'PSYCHIC',NULL,5,5,5,5,9,9,5,5,9,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(485,'Deoxys (Speed Form)',NULL,NULL,4,3,1,1,0,'PSYCHIC',NULL,5,5,10,10,5,5,6,6,5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(486,'Deoxys (Speed Form)',NULL,NULL,4,3,1,1,0,'PSYCHIC',NULL,5,5,10,10,5,5,6,6,5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(487,'Origin Giratina',NULL,'Giratina',8,3,1,1,0,'GHOST','DRAGON',7,7,5,5,6,6,7,7,6,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(488,'Zorua','Zoroark',NULL,3,3,1,1,0,'DARK',NULL,2,4,2,4,1,3,2,5,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(489,'Zoroark',NULL,'Zorua',4,3,1,1,0,'DARK',NULL,3,6,3,6,2,4,3,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(490,'Honedge','Doublade',NULL,3,3,1,1,0,'STEEL','GHOST',2,5,1,3,3,6,1,3,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(491,'Doublade','Aegislash','Honedge',4,3,1,1,0,'STEEL','GHOST',3,6,1,3,4,8,2,4,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(492,'Aegislash (Defense Form)',NULL,'Doublade',5,3,1,1,0,'STEEL','GHOST',2,4,1,3,4,8,2,4,4,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO BasePokemon VALUES(493,'Aegislash (Attack Form)',NULL,'Doublade',5,3,1,1,0,'STEEL','GHOST',4,8,1,3,2,4,4,8,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 CREATE TABLE IF NOT EXISTS "User" (
 	id INTEGER NOT NULL, 
 	username VARCHAR(100) NOT NULL, 
@@ -554,6 +562,8 @@ INSERT INTO Ability VALUES(1,'Synchronize','The Pokemon can share its mood, feel
 INSERT INTO Ability VALUES(2,'Torrent','This Pokemon builds up pressure to shoot water streams. When that pressure cannot be held in, it is released through uncontrollable torrents.','When this Pokemon''s Health is at half or less, Pain Penalization will not reduce successes from Damage rolls of its Water-Type Moves, and they will get 1 Extra Drice to their Damage Pool.');
 INSERT INTO Ability VALUES(3,'Bulletproof','The armor on this Pokemon''s body protects it from projectiles and small explosions.','Reduce all damage from Special and Ranged Physical Attacks by 1 which hit this Pokemon.');
 INSERT INTO Ability VALUES(4,'Inner Focus','The Pokemon is extremely serious and focused on everything it does. It remains calm and never backs down, even if its getting severly injured.','This Pokemon does not Flinch and cannot be Intimidated (Ability).');
+INSERT INTO Ability VALUES(5,'Illusion','The pokemon casts an illusion on itself to look like another creature it has seen. The illusion is indistinguishable from the real one.','When this pokemon comes out, it will have the form of another Pokemon in the party, it will regain it original form if it takes damage. When taking a human form, it cannot speak and its tail may remain visible.');
+INSERT INTO Ability VALUES(6,'No Guard','This Pokemon can focus on attacking perfectly but will be open to the attacks of its foes as it wont focus on anything but its precision','You can declare you wont make any Evasion Action at the sart of the Round. If you do, roll all the moves of this Pokemon as if they had no reduced accuracy.');
 CREATE TABLE IF NOT EXISTS "Item" (
     id INTEGER NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -583,6 +593,12 @@ INSERT INTO Item VALUES(10,'Sleep Seed','If you throw it at an enemy and hit the
 INSERT INTO Item VALUES(11,'Stun Seed','Small, round seeds that typically have a bright yellow color, resembling a small ball. When used, they emit a sparkling effect to indicate their stunning ability on the target Pokémon.','Make a Dexterity + Fight + Channel roll to shoot these seeds into the foe''s mouth.','apply_status','{"status": "PARALYZED"}','BASIC','MISC',75,50,1,0,1);
 INSERT INTO Item VALUES(12,'All-Hit Orb','As it explodes, the visibility around gets clear, no light, darkness or fog impedes your team to strike directly.',NULL,'default','{}','EXPERT','MISC',150,100,1,0,1);
 INSERT INTO Item VALUES(13,'Rindo Berry','a green berry that has a medium chance of producing a Pokéblock. It has a soft texture and a disagreeable green flavor typical of vegetables, often described as having a bitter taste with a subtle spiciness.',NULL,'default','{}','COMMON','HELD_ITEM',50,35,1,1,1);
+INSERT INTO Item VALUES(14,'Dusk Stone','This stone seems to suck the light around it into a small dark hole.',NULL,'evolution_stone','{}','EXPERT','EVOLUTION_ITEM',10000,7500,1,0,1);
+INSERT INTO Item VALUES(15,'Escape Orb',NULL,'This orb allows you to escape back to the guild. (The Mission will fail if the objective was not completed.)','use_item','{}','ADVANCED','MISC',200,150,1,0,1);
+INSERT INTO Item VALUES(16,'Nomel Berry','Its a yellow berry that is quite sour, with its sourness concentrated at the pointed end. It is known for its hard texture and is used for making Pokéblocks and Poffins.',NULL,'default','{}','BASIC','MISC',100,70,0,0,1);
+INSERT INTO Item VALUES(17,'Ether','Its depicted as a small, blue bottle with a white cap. The bottle has a label that typically features a stylized "PP" symbol, indicating its function related to Power Points (PP).',NULL,'default','{}','ADVANCED','MISC',250,200,1,0,1);
+INSERT INTO Item VALUES(18,'Oran Berry','A small, round, blue fruit that resembles a berry. It has a smooth surface and is known for its vibrant color, making it visually appealing.',NULL,'heal_percentage','{"Percentage": 30}','ELITE','HEALING_ITEM',300,200,1,1,1);
+INSERT INTO Item VALUES(19,'Chople Berry','A small, red berry that is soft and round in shape. It is often associated with a medium chance of producing a Pokéblock and is known for its ability to weaken Fighting-type moves when held by a Pokémon.',NULL,'move_type_damage_reduction','{"Percentage": 50}','ADVANCED','HELD_ITEM',150,100,1,1,1);
 CREATE TABLE IF NOT EXISTS "Garment" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -692,14 +708,12 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	UNIQUE ("Guid")
 );
-INSERT INTO GamePokemon VALUES(1,1,'Airalin',2,'Female',21,50,'PSYCHIC','FAIRY',2,1,'Healthy',3,3,0,6,1,2,0,NULL,1,3,1,3,1,3,2,4,1,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,60,0,'Black','09c38c');
-INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',10,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,1,0,4,1,2,0,NULL,3,4,2,4,3,4,2,4,2,4,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,'Blue','b513fb');
-INSERT INTO GamePokemon VALUES(3,3,'Cyan',12,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,1,0,3,2,1,0,NULL,3,5,2,4,2,3,1,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,4,0,'Orange','d63f99');
-INSERT INTO GamePokemon VALUES(4,4,'Pluey',5,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,2,0,6,1,2,0,NULL,2,4,1,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,25,0,'Purple','a28d51');
-INSERT INTO GamePokemon VALUES(5,6,'Nickit',1,'None',0,0,'DARK',NULL,NULL,NULL,'Fainted',3,0,0,3,1,1,0,NULL,1,3,2,4,1,3,2,4,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,'None','123se2');
-INSERT INTO GamePokemon VALUES(6,5,'Gabite',1,'None',0,0,'DRAGON','GROUND',NULL,NULL,'Fainted',4,0,0,3,1,1,0,NULL,2,5,2,5,2,4,2,4,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,'None','133se2');
-INSERT INTO GamePokemon VALUES(7,7,'Palkia',1,'None',0,0,'WATER','DRAGON',NULL,NULL,'Healthy',5,8,0,3,1,1,0,NULL,7,10,6,10,6,10,8,10,7,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,'None','1sf304');
-INSERT INTO GamePokemon VALUES(8,8,'Dialga',1,'None',0,0,'STEEL','DRAGON',NULL,NULL,'Healthy',7,6,0,3,1,1,0,NULL,7,10,5,10,7,10,8,10,6,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,'None','1sf305');
+INSERT INTO GamePokemon VALUES(1,1,'Airalin',17,'Female',21,0,'PSYCHIC','FAIRY',2,1,'Healthy',3,4,0,6,1,2,0,1,2,3,2,3,2,3,3,4,3,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'Black','09c38c');
+INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',10,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,4,0,4,1,2,0,NULL,3,4,2,4,3,4,2,4,2,4,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,29,0,'Blue','b513fb');
+INSERT INTO GamePokemon VALUES(3,3,'Cyan',14,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,0,3,2,1,0,NULL,3,5,2,4,2,3,2,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,16,0,'Orange','d63f99');
+INSERT INTO GamePokemon VALUES(4,4,'Pluey',7,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,4,0,6,1,2,0,NULL,2,4,2,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,37,0,'Purple','a28d51');
+INSERT INTO GamePokemon VALUES(5,488,'Rem',4,'Male',26,0,'DARK',NULL,4,5,'Healthy',3,4,0,4,2,1,0,19,2,4,3,4,1,3,2,5,1,3,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,9,0,'Green','cddc04');
+INSERT INTO GamePokemon VALUES(6,490,'Julian',1,'Male',559,0,'STEEL','GHOST',1,6,'Healthy',3,6,0,6,1,2,0,NULL,2,5,1,3,3,6,1,3,1,3,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,25,0,'Yellow','7b5a36');
 CREATE TABLE IF NOT EXISTS "Game" (
 	id INTEGER NOT NULL, 
 	"gameId" VARCHAR(10) NOT NULL, 
@@ -806,6 +820,8 @@ INSERT INTO GameEntities VALUES(5,1,5);
 INSERT INTO GameEntities VALUES(6,1,6);
 INSERT INTO GameEntities VALUES(7,1,7);
 INSERT INTO GameEntities VALUES(8,1,8);
+INSERT INTO GameEntities VALUES(9,1,5);
+INSERT INTO GameEntities VALUES(10,1,6);
 CREATE TABLE IF NOT EXISTS "PokemonBag" (
 	id INTEGER NOT NULL, 
 	"bagSize" VARCHAR(6) NOT NULL, 
@@ -821,6 +837,8 @@ INSERT INTO PokemonBag VALUES(5,'size5',5);
 INSERT INTO PokemonBag VALUES(6,'size5',6);
 INSERT INTO PokemonBag VALUES(7,'size5',7);
 INSERT INTO PokemonBag VALUES(8,'size5',8);
+INSERT INTO PokemonBag VALUES(9,'size5',5);
+INSERT INTO PokemonBag VALUES(10,'size5',6);
 CREATE TABLE IF NOT EXISTS "MoveEffectConnection" (
 	id INTEGER NOT NULL, 
 	"moveId" INTEGER NOT NULL, 
@@ -848,7 +866,7 @@ INSERT INTO MoveConnection VALUES(6,3,7);
 INSERT INTO MoveConnection VALUES(7,3,6);
 INSERT INTO MoveConnection VALUES(8,4,9);
 INSERT INTO MoveConnection VALUES(9,4,8);
-INSERT INTO MoveConnection VALUES(10,5,5);
+INSERT INTO MoveConnection VALUES(10,5,4);
 INSERT INTO MoveConnection VALUES(11,6,3);
 CREATE TABLE IF NOT EXISTS "BagItem" (
 	id INTEGER NOT NULL, 
@@ -866,5 +884,10 @@ INSERT INTO BagItem VALUES(7,9,2);
 INSERT INTO BagItem VALUES(10,10,4);
 INSERT INTO BagItem VALUES(13,12,3);
 INSERT INTO BagItem VALUES(14,13,4);
-INSERT INTO BagItem VALUES(15,1,1);
+INSERT INTO BagItem VALUES(16,11,1);
+INSERT INTO BagItem VALUES(17,14,6);
+INSERT INTO BagItem VALUES(18,16,5);
+INSERT INTO BagItem VALUES(19,15,5);
+INSERT INTO BagItem VALUES(20,17,5);
+INSERT INTO BagItem VALUES(22,18,5);
 COMMIT;

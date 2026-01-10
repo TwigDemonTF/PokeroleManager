@@ -13,13 +13,12 @@ from Api.extensions import database
 class GameApi(Resource):
     def get(self, gameId):
 
-        # Get all NON-NPC pokemon for this game
+        # Get all player controlled pokemon for this game
         allPokemon = (
             database.session.query(GamePokemon)
             .join(GameEntities, GamePokemon.id == GameEntities.pokemonId)
             .join(Game, GameEntities.gameId == Game.id)
             .filter(Game.gameId == gameId)
-            # .filter(GamePokemon.isNpc == False)
             .all()
         )
 
@@ -38,7 +37,7 @@ class GameApi(Resource):
 
             moves_data = []
 
-            # --- Build full move objects properly ---
+            # Build full move objects properly
             for mc in p.move_connections:
                 move = mc.move
 
@@ -72,7 +71,7 @@ class GameApi(Resource):
                         "effectLevelDice": me.effectLevelDice
                     })
 
-                # Final move object (matching frontend!)
+                # Final move object
                 move_json = {
                     "id": move.id,
                     "name": move.name,
@@ -116,7 +115,7 @@ class GameApi(Resource):
 
                 moves_data.append(move_json)
 
-            # ——— Build Pokémon Output ———
+            # Build Pokémon Output
             data = {
                 "GameId": gameId,
                 "Guid": p.Guid,
@@ -177,10 +176,9 @@ class GameApi(Resource):
                 "IsNpc": p.isNpc,
                 "PlayerColor": p.playerColor,
 
-                # ✔ Full move objects returned
+                # Full move objects
                 "Moves": moves_data,
 
-                # IDs too (frontend uses these for dropdown)
                 "MoveIds": [mc.move.id for mc in p.move_connections],
             }
 
@@ -239,7 +237,7 @@ class BattleApi(Resource):
                         for bi in p.bag.items
                     ]
                 }
-            # ---------- MOVE PROCESSING (COPIED FROM GameApi) ----------
+            # Move Building
             moves_data = []
 
             for mc in p.move_connections:
@@ -319,7 +317,7 @@ class BattleApi(Resource):
 
                 moves_data.append(move_json)
 
-            # ---------- POKÉMON CORE DATA ----------
+            # Core Data
             pokemon_data = {
                 "GameId": game_id,
                 "Guid": p.Guid,
@@ -401,11 +399,10 @@ class BattleApi(Resource):
                 "IsNpc": p.isNpc,
                 "PlayerColor": p.playerColor,
 
-                # ✔ Added full moves (NOW MATCHES GameApi)
+                # Complete Objects
                 "Bag": bag_data,
                 "Moves": moves_data,
 
-                # ✔ Include IDs too
                 "MoveIds": [mc.move.id for mc in p.move_connections],
             }
 
