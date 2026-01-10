@@ -89,10 +89,7 @@ jobs:
 
       - name: Build backend Docker image
         run: |
-          docker build \
-            -t pokerole-backend:latest \
-            -f Api/Dockerfile \
-            Api
+          docker build -t pokerole-backend:latest -f Api/Dockerfile .
 
       - name: Stop old backend container (if exists)
         run: |
