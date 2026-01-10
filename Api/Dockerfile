@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Set workdir inside container
-WORKDIR /Api
+WORKDIR /app
 
 # Install system dependencies (optional but common)
 RUN apt-get update && apt-get install -y \
@@ -26,4 +26,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the API
-CMD ["python", "main.py"]
+CMD ["python3", "-m", "Api.main"]
