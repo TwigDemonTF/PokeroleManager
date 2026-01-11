@@ -1,6 +1,7 @@
 [MESSAGES CONTROL]
 disable =
-    C0114,  # Missing module docstring
+    C0114   # Missing module docstring
     C0303   # Trailing whitespace
     C0116   # Missing function or method docstring
     C0103   # Snake Casing
+
