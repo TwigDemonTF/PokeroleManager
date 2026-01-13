@@ -30,7 +30,6 @@ class PlayerData(Resource):
         ability = Ability.query.get(pokemon.abilityId) if pokemon.abilityId else None
         item = Item.query.get(pokemon.itemId) if pokemon.itemId else None
 
-        # ---------- POKÉMON BAG ----------
         bag_data = None
         if pokemon.bag:
             bag_data = {
@@ -57,7 +56,6 @@ class PlayerData(Resource):
                 ]
             }
 
-        # ---------- MOVE PROCESSING ----------
         moves_data = []
 
         for mc in pokemon.move_connections:
@@ -129,7 +127,6 @@ class PlayerData(Resource):
                 "flavorText": move.flavorText,
             })
 
-        # ---------- SINGLE POKÉMON RESPONSE ----------
         pokemon_data = {
             "GameId": gameId,
             "Guid": pokemon.Guid,

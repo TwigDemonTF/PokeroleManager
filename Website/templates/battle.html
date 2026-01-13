@@ -829,19 +829,18 @@ select:focus {
     </main>
   </div>
 
-  <footer>
+  <!-- <footer>
     Expected API endpoints (configurable inside the script):
     <ul>
       <li><code>GET /api/game/pokemons</code> — returns array of all GamePokemon for the connected game, each item should include at least: <code>Guid</code>, <code>name</code>, <code>isNpc</code>, and summary stats.</li>
       <li><code>POST /api/pokemon/batch</code> — accepts JSON <code>{ guids: ["GUID1","GUID2", ...] }</code> and returns full GamePokemon objects for the requested GUIDs (used to render detailed cards).</li>
     </ul>
-  </footer>
+  </footer> -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     window.GameEvents = new EventTarget();
-    // Configuration — edit to match your back-end and auth method
     const BASE_URL = "{{ baseUrl }}"
-    // If you use cookies/session auth (Flask login), keep credentials: 'include'
+
     const FETCH_OPTS = { headers: {'Content-Type':'application/json'}};
     const GAME_ID = "{{ gameId }}"
     const ITEM_CATEGORIES = "{{ item_categories }}"
@@ -923,7 +922,7 @@ select:focus {
         Battlefield: "Battlefield",
     };
 
-    let allPokemonCache = []; // cached list from GET /api/game/pokemons
+    let allPokemonCache = []; // cached list
     let zoom = 1;
     let initiativeMap = {}; // guid → initiative number
     let allMoves = [];
@@ -932,7 +931,7 @@ select:focus {
     let selectedBasePokemonIds = new Set();
 
     // eslint-disable-next-line
-    let items = JSON.parse('{{ items | tojson }}');
+    let items = {{ items | tojson }};
 
     basePokemonSelect.addEventListener("change", () => {
         Array.from(basePokemonSelect.options).forEach(opt => {
@@ -966,7 +965,7 @@ select:focus {
             lethal: p.lethal ?? 0,
             distance: p.distance ?? 0,
 
-            // core stats (FLAT — important)
+            // core stats (FLAT)
             strength: p.strength,
             dexterity: p.dexterity,
             vitality: p.vitality,
@@ -1097,9 +1096,7 @@ select:focus {
             ability: null,
             nature: null,
 
-            // ───────────────
             // Stats
-            // ───────────────
             strength: base.Strength ?? base.strength ?? 0,
             dexterity: base.Dexterity ?? base.dexterity ?? 0,
             vitality: base.Vitality ?? base.vitality ?? 0,
@@ -1112,9 +1109,7 @@ select:focus {
             specialPotential: base.SpecialPotential ?? base.specialPotential ?? 0,
             insightPotential: base.InsightPotential ?? base.insightPotential ?? 0,
 
-            // ───────────────
             // Skills
-            // ───────────────
             fight: base.Fight ?? base.fight ?? 0,
             survival: base.Survival ?? base.survival ?? 0,
             contest: base.Contest ?? base.contest ?? 0,
@@ -1135,7 +1130,7 @@ select:focus {
             Moves: [],
             MoveIds: [],
 
-            // IMPORTANT: already battle-serialized now
+            //TODO: add learnable moves to add move popup
             LearnableMoves: base.LearnableMoves ?? [],
         };
     }
@@ -1320,7 +1315,6 @@ select:focus {
         if (move) {
             const typeColor = TYPE_COLORS[move.type] || "#aaa";
             card.style.borderColor = typeColor;
-            // card.style.boxShadow = `0 0 0 1px ${typeColor} inset`;
             
             card.innerHTML = renderMoveCard(move);
             card.draggable = true;
@@ -1370,14 +1364,14 @@ select:focus {
 
             const move = allMoves.find(m => m.id == result.value);
 
-            // 🧠 BasePokemon → LOCAL ONLY
+            // BasePokemon -> local only
             if (pokemon.kind === "BASE") {
                 pokemon.Moves[replaceIndex] = move;
                 renderStage(currentPokesOnField);
                 return;
             }
 
-            // 🧠 GamePokemon → API
+            // GamePokemon -> Api
             fetch(`${BASE_URL}/moveManipulation`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1413,7 +1407,6 @@ select:focus {
     }
 
     function computeInitiative(poke) {
-        // Change this rule if you want different initiative logic
         let d6 = Math.floor(Math.random() * (7 - 1)) + 1
         return d6 + poke.dexterity + poke.survival ?? 0;
     }
@@ -1445,14 +1438,14 @@ select:focus {
             }
 
             row.innerHTML = `
-            <div>
-                <strong>${idx + 1}.</strong>
-                <span style="color:${nameColor}">${p.name}</span>
-            </div>
-            <div style="color:var(--muted)">
-                Init: ${initiativeMap[getBattleId(p)]}
-                · Dist: ${p.distance ?? 0}
-            </div>
+                <div>
+                    <strong>${idx + 1}.</strong>
+                    <span style="color:${nameColor}">${p.name}</span>
+                </div>
+                <div style="color:var(--muted)">
+                    Init: ${initiativeMap[getBattleId(p)]}
+                    · Dist: ${p.distance ?? 0}
+                </div>
             `;
 
             listEl.appendChild(row);
@@ -1463,7 +1456,7 @@ select:focus {
         const listEl = document.getElementById('initiativeList');
         listEl.innerHTML = '';
 
-        // Sort highest → lowest
+        // Sort highest to lowest
         const sorted = [...pokes].sort((a,b) => computeInitiative(b) - computeInitiative(a));
 
         sorted.forEach((p, index) => {
@@ -1496,7 +1489,6 @@ select:focus {
         }
         updateInitiativePanel(currentPokesOnField);
     });
-
 
     function normalizePokemon(p){
         return {
@@ -1560,15 +1552,15 @@ select:focus {
         const c = document.createElement('div');
         c.className = 'circle' + (i <= value ? ' filled' : '');
         c.addEventListener('click', () => {
-        if (i <= value) {
-            value = i - 1; // decrease
-        } else {
-            value = i; // increase
-        }
-        // update circles visually
-        Array.from(container.children).forEach((circle, idx) => {
-            circle.classList.toggle('filled', idx < value);
-        });
+            if (i <= value) {
+                value = i - 1;
+            } else {
+                value = i;
+            }
+            // update circles visually
+            Array.from(container.children).forEach((circle, idx) => {
+                circle.classList.toggle('filled', idx < value);
+            });
         });
         container.appendChild(c);
     }
@@ -1603,7 +1595,7 @@ select:focus {
             opt.value = bp.id;
             opt.textContent = bp.name;
 
-            // 🔑 restore selection
+            // Restore selection
             if (selectedBasePokemonIds.has(String(bp.id)))
                 opt.selected = true;
 
@@ -1633,7 +1625,7 @@ select:focus {
     const q = (searchInput.value || '').trim().toLowerCase();
 
     list.forEach(p => {
-        const guid = p.guid;  // ALWAYS lowercase, since our normalizePokemon guarantees it
+        const guid = p.guid;
 
         if (!guid) return; // safety
 
@@ -1661,7 +1653,7 @@ select:focus {
 
         let battlePokemons = [];
 
-        // 1️⃣ Fetch real GamePokemon
+        // Fetch GamePokemon
         if (players.length) {
             const res = await fetch(`${BASE_URL}/battleData`, {
                 method: "POST",
@@ -1677,7 +1669,7 @@ select:focus {
             battlePokemons.push(...list.map(p => normalizePokemon(p)));
         }
 
-        // 2️⃣ Spawn BasePokemon (NO API)
+        // Spawn BasePokemon
         basePokemon.forEach(id => {
             const bp = allBasePokemon.find(b => b.id == id);
             if (!bp) return;
@@ -1731,12 +1723,12 @@ select:focus {
             title.textContent = `${p.name} ${p.level ? 'Lv ' + p.level : ''}`;
             titleRow.appendChild(title);
 
-            // spacer pushes everything after it to the right
+            // Spacer pushes everything after it to the right
             const spacer = document.createElement("div");
             spacer.style.flex = "1";
             titleRow.appendChild(spacer);
 
-            // right-side controls
+            // Right-side controls
             const titleControls = document.createElement("div");
             titleControls.style.display = "flex";
             titleControls.style.alignItems = "center";
@@ -1792,7 +1784,7 @@ select:focus {
                 t.textContent = p.primaryType; 
                 tline.appendChild(t); 
             }
-            console.log(p.secondaryType)
+
             if(p.secondaryType) { 
                 const t = document.createElement('div'); 
                 t.className='type'; 
@@ -1832,7 +1824,7 @@ select:focus {
 
             card.appendChild(tline);
 
-            // HEALTH BAR SYSTEM
+            // Health Bar System
             const maxHp = (p.baseHealth ?? 0) + (p.vitality ?? 0);
             let currentHp = p.health ?? maxHp;
 
@@ -1939,11 +1931,10 @@ select:focus {
                 const pct = Math.max(0, Math.min(1, currentLethal / maxHp));
                 lethalFill.style.width = (pct * 100) + "%";
 
-                // Lethal bar color (purple gradient)
                 if (pct === 1) {
-                    lethalFill.style.background = "#ff004c"; // DEAD
+                    lethalFill.style.background = "#ff004c";
                 } else {
-                    lethalFill.style.background = "#8e44ad"; // purple
+                    lethalFill.style.background = "#8e44ad";
                 }
 
                 lethalText.textContent = `${currentLethal}/${maxHp} · Lethal`;
@@ -2047,7 +2038,7 @@ select:focus {
 
             collapsible.appendChild(statColumns);
 
-            // -------- MOVES --------
+            // Moves
             if (p.Moves && Array.isArray(p.Moves)) {
                 const movesWrapper = document.createElement("div");
                 movesWrapper.style.display = "grid";
@@ -2064,7 +2055,7 @@ select:focus {
             collapsible.appendChild(movesWrapper);
             }
 
-            // INITIATIVE INPUT AREA (players + NPCs)
+            // Initiative input
             const initBox = document.createElement('div');
             initBox.style.marginTop = "10px";
             initBox.style.padding = "6px";
@@ -2154,7 +2145,7 @@ select:focus {
         const header = document.createElement("b");
         header.textContent = title;
 
-        // main stat circles (CENTERED UNDER TITLE)
+        // main stat circles 
         const mainCircles = createStatCircles(title.toLowerCase(), statValue ?? 0, max);
         mainCircles.style.justifyContent = "center";
 
@@ -2285,7 +2276,6 @@ select:focus {
 
     // UI wired actions
     document.getElementById('refresh').addEventListener('click', loadAll);
-    // document.getElementById('fetchStats').addEventListener('click', fetchSelectedAndRender);
     document.getElementById('selectAllPlayers').addEventListener('click', ()=>{ for(let i=0;i<playersSelect.options.length;i++) playersSelect.options[i].selected=true });
     document.getElementById('selectAllNpcs').addEventListener('click', ()=>{ for(let i=0;i<basePokemonSelect.options.length;i++) npcbasePokemonSelectsSelect.options[i].selected=true });
     document.getElementById('zoomIn').addEventListener('click', () => {
@@ -2322,10 +2312,9 @@ select:focus {
         playersGrid.innerHTML = '';
         npcsGrid.innerHTML = '';
 
-        // Reset count
+        // Reset count / initiative
         countEl.textContent = '0';
 
-        // Reset initiative state
         initiativeMap = {};
         currentPokesOnField = [];
 
@@ -2337,7 +2326,6 @@ select:focus {
             el.style.display = '';
         });
 
-        // Hide clear button again
         document.getElementById("clearStage").style.display = "none";
     });
 
@@ -2740,7 +2728,7 @@ select:focus {
                     reducedAccuracy: Number(document.getElementById("reducedAccuracy").value),
                     types: document.getElementById("types").value,
                     damageTypes: document.getElementById("damageTypes").value,
-                    priority: document.getElementById("priority").value,
+                    priority: Number(document.querySelector('select[name="priority"]').value),
                     targets: document.getElementById("targets").value,
                     moveRangeType: document.getElementById("moveRangeType").value,
                     moveGridRange: Number(document.getElementById("moveGridRange").value),
@@ -2858,7 +2846,7 @@ select:focus {
                 targets.forEach(p => {
                     if (type === "XP") {
                         p.ExperiencePoints = (p.ExperiencePoints || 0) + amount;
-                        // optionally update backend
+
                         fetch(`${BASE_URL}/addXp/${GAME_ID}/${p.guid}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -2866,7 +2854,7 @@ select:focus {
                         });
                     } else if (type === "Money") {
                         p.Money = (p.Money || 0) + amount;
-                        // optionally update backend
+                        
                         fetch(`${BASE_URL}/addMoney/${GAME_ID}/${p.guid}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -2938,53 +2926,47 @@ select:focus {
     // initial load
     loadAll();
 
-    // ---- NOTES for backend integration (also in footer):
-    // - GET /api/game/pokemons should return JSON { pokemons: [ { Guid, name, isNpc, level, status, baseHealth, health, primaryType, secondaryType, heldItem, ... } ] }
-    // - POST /api/pokemon/batch accepts { guids: [...] } and returns { pokemons: [ ...full objects... ] }
-    // - If your backend uses different field names, adapt the script to map them (e.g. Guid vs guid)
-    // - You may want to enable CORS on port 9000 or serve frontend from the same origin.
-
     const addItemFormHtml = `
-<form id="addItemForm" style="text-align:left;">
-    <div class="mb-3">
-        <label>Name</label>
-        <input type="text" name="Name" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label>Description</label>
-        <input type="text" name="Description" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label>Effect</label>
-        <input type="text" name="Effect" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label>Item Category</label>
-        <select name="ItemCategory" class="form-select" required>
-            {% for key, value in item_categories %}
-                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="mb-3">
-        <label>Minimum Shop Tier</label>
-        <select name="MinShopTier" class="form-select" required>
-            {% for key, value in shop_tiers %}
-                <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="mb-3">
-        <label>Buy Price</label>
-        <input type="number" name="BuyPrice" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label>Sell Price</label>
-        <input type="number" name="SellPrice" class="form-control">
-    </div>
-    <button type="submit" class="btn btn-primary">Add Item</button>
-</form>
-`;
+        <form id="addItemForm" style="text-align:left;">
+            <div class="mb-3">
+                <label>Name</label>
+                <input type="text" name="Name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Description</label>
+                <input type="text" name="Description" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Effect</label>
+                <input type="text" name="Effect" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Item Category</label>
+                <select name="ItemCategory" class="form-select" required>
+                    {% for key, value in item_categories %}
+                        <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Minimum Shop Tier</label>
+                <select name="MinShopTier" class="form-select" required>
+                    {% for key, value in shop_tiers %}
+                        <option value="{{ key }}" {% if loop.first %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Buy Price</label>
+                <input type="number" name="BuyPrice" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Sell Price</label>
+                <input type="number" name="SellPrice" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </form>
+    `;
 
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
     let globalRemoveResourceBtn = document.getElementById("globalRemoveResourceBtn");
@@ -3008,11 +2990,11 @@ select:focus {
         genLootItemBtn.style.marginRight = "10px";
         genLootItemBtn.style.display = "none"
 
-        // Example: open modal for selected player(s)
+        // Open modal for selected player(s)
         genLootItemBtn.onclick = async () => {
             const res = await fetch(`http://192.168.193.96:8000/genLootItem`);
             const data = await res.json();
-            console.log(data); // { item: "SomeItemName" }
+
             Swal.fire({
                 theme: "dark",
                 icon: "question",
@@ -3233,7 +3215,7 @@ select:focus {
             return p;
         }
 
-        // 🔑 GamePokemon: normalize again
+        // GamePokemon: normalize again
         const normalized = normalizePokemon(raw);
 
         // restore battle-only state
@@ -3285,7 +3267,7 @@ select:focus {
             }
         });
 
-        // DELETE
+        // Delete
         if (result.isDenied) {
             const selected = result.value;
 
@@ -3318,10 +3300,9 @@ select:focus {
             return;
         }
 
-        // CANCEL
+        // Cancel
         if (!result.isConfirmed) return;
 
-        // LOAD
         const selected = result.value;
 
         document.querySelectorAll('.selectors').forEach(el => {
@@ -3334,7 +3315,7 @@ select:focus {
         targetBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
-        // LOAD
+        // Load
         restoreBattleSession(allSaves[selected]);
     });
   </script>

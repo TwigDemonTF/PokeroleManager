@@ -49,7 +49,7 @@ def login():
             print(session.get("userId"))
             print(session.get("gameId"))
 
-            return redirect('/Game')
+            return redirect('/Battle')
         else:
             passwordOrGameColor = passwordOrGameColor.title()
             data = {
@@ -118,6 +118,9 @@ def game():
 
 @app.route("/Player")
 def player():
+    if "playerGuid" not in session:
+        return redirect("/Login")
+    
     print(session.get("playerGuid"))
     if session.get("playerGuid"):
         return render_template("player.html", gameId=session.get("gameId"), pokemonGuid=session.get("playerGuid"), baseUrl=app.config["BASE_URL"])
