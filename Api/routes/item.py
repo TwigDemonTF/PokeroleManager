@@ -1,48 +1,20 @@
-from flask import request, jsonify
+from flask import request
 from flask_restful import Resource
 
-from ..models.Items import Item
-from ..models.User import Game
+from Api.services.ItemService import create_item, list_items
 
-from ..Enums.Items.ItemCategory import ItemCategoryEnum
-from ..Enums.Items.ShopTiers import ShopTierEnum
-
-from ..Utils.utils import enum_from_string
-
-from Api.extensions import database
 
 class ItemApi(Resource):
     def post(self):
-        data = request.get_json()
-
-        new_item = Item(
-            name=data.get("name"),
-            description=data.get("description"),
-
-            effectKey=data.get("effectKey"),
-            effectData=data.get("effectData"),
-
-            itemCategory=enum_from_string(ItemCategoryEnum, data.get("itemCategory")),
-            minShopTier=enum_from_string(ShopTierEnum, data.get("minShopTier")),
-
-            isUsable=bool(data.get("isUsable", False)),
-            isEquipable=bool(data.get("isEquipable", False)),
-
-            buyPrice=data.get("buyPrice", 0),
-            sellPrice=data.get("sellPrice", 0),
-            numUses=data.get("numUses", 0)
-        )
-
-        database.session.add(new_item)
-        database.session.commit()
-
+        item = create_item(request.get_json())
         return {
-            "id": new_item.id,
-            "name": new_item.name
+            "status": 201,
+            "id": item.id,
+            "name": item.name
         }, 201
-    
+
     def get(self):
-        items = Item.query.all()
+        items = list_items()
 
         data = [{
             "id": None,
@@ -60,26 +32,7 @@ class ItemApi(Resource):
 
         data.extend(item.to_dict() for item in items)
 
-        return jsonify(data)
-
-class ShopApi(Resource):
-    def post(self):
-        gameId = request.get_json().get("gameId")
-        game = Game.query.filter_by(gameId=gameId).first_or_404()
-        print(game.shopActive)
-        if game.shopActive == True:
-            game.shopActive = False
-        elif game.shopActive == False:
-            game.shopActive = True
-        database.session.commit()
-        return {"shopActive": game.shopActive}, 200
-        
-    def get(self, gameId):
-        game = Game.query.filter_by(gameId=gameId).first_or_404()
-
-        shopData = {
-            "isOpen": game.shopActive,
-            "activeShopTier": game.activeShopTier.value
-        }
-
-        return shopData
+        return {
+            "status": 200,
+            "data": data
+        }, 200

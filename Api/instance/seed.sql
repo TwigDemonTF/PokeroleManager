@@ -622,6 +622,9 @@ INSERT INTO AccuracyModifierGroup VALUES(6,'Insight','Survival','ALERT');
 INSERT INTO AccuracyModifierGroup VALUES(7,'Will','NONE','NONE');
 INSERT INTO AccuracyModifierGroup VALUES(8,'Dexterity','Fight','Brawl');
 INSERT INTO AccuracyModifierGroup VALUES(9,'Dexterity','Fight','Channel');
+INSERT INTO AccuracyModifierGroup VALUES(10,'Dexterity','Brawl','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(11,'Dexterity','Perform','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(12,'Dexterity','Brawl','NONE');
 CREATE TABLE IF NOT EXISTS "DamageModifierGroup" (
 	id INTEGER NOT NULL, 
 	"damageModifier1" VARCHAR(10) NOT NULL, 
@@ -638,6 +641,9 @@ INSERT INTO DamageModifierGroup VALUES(6,'NONE','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(7,'NONE','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(8,'Strength','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(9,'Special','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(10,'Strength','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(11,'NONE','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(12,'Strength','NONE','NONE');
 CREATE TABLE IF NOT EXISTS "HealMove" (
 	id INTEGER NOT NULL, 
 	"healType" VARCHAR(11), 
@@ -708,12 +714,12 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	UNIQUE ("Guid")
 );
-INSERT INTO GamePokemon VALUES(1,1,'Airalin',17,'Female',21,0,'PSYCHIC','FAIRY',2,1,'Healthy',3,4,0,6,1,2,0,1,2,3,2,3,2,3,3,4,3,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'Black','09c38c');
-INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',10,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,4,0,4,1,2,0,NULL,3,4,2,4,3,4,2,4,2,4,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,29,0,'Blue','b513fb');
-INSERT INTO GamePokemon VALUES(3,3,'Cyan',14,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,0,3,2,1,0,NULL,3,5,2,4,2,3,2,3,2,3,2,3,0,0,0,0,0,0,1,0,0,0,0,0,0,16,0,'Orange','d63f99');
-INSERT INTO GamePokemon VALUES(4,4,'Pluey',7,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,4,0,6,1,2,0,NULL,2,4,2,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,37,0,'Purple','a28d51');
-INSERT INTO GamePokemon VALUES(5,488,'Rem',4,'Male',26,0,'DARK',NULL,4,5,'Healthy',3,4,0,4,2,1,0,19,2,4,3,4,1,3,2,5,1,3,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,9,0,'Green','cddc04');
-INSERT INTO GamePokemon VALUES(6,490,'Julian',1,'Male',559,0,'STEEL','GHOST',1,6,'Healthy',3,6,0,6,1,2,0,NULL,2,5,1,3,3,6,1,3,1,3,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,25,0,'Yellow','7b5a36');
+INSERT INTO GamePokemon VALUES(1,1,'Airalin',17,'Female',21,0,'PSYCHIC','FAIRY',2,1,'Healthy',3,5,0,6,1,2,0,1,2,3,2,3,2,3,3,4,3,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,9,0,'Black','09c38c');
+INSERT INTO GamePokemon VALUES(2,2,'Ja-Bo',15,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,7,0,4,1,2,0,NULL,3,4,2,4,4,4,2,4,2,4,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,'Blue','b513fb');
+INSERT INTO GamePokemon VALUES(3,3,'Cyan',17,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,4,0,3,2,1,0,NULL,3,5,2,4,2,3,2,3,2,3,2,3,0,2,0,0,0,0,1,0,0,0,0,0,0,11,0,'Orange','d63f99');
+INSERT INTO GamePokemon VALUES(4,4,'Pluey',7,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,4,0,6,1,2,0,NULL,2,4,2,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,44,0,'Purple','a28d51');
+INSERT INTO GamePokemon VALUES(5,488,'Rem',5,'Male',26,300,'DARK',NULL,4,5,'Healthy',3,4,0,4,2,1,0,19,2,4,3,4,1,3,2,5,1,3,0,1,2,0,0,0,0,0,0,0,0,0,0,0,1,6,0,'Green','cddc04');
+INSERT INTO GamePokemon VALUES(6,490,'Julian',1,'Male',559,0,'STEEL','GHOST',1,6,'Healthy',3,6,0,6,1,2,0,NULL,2,5,1,3,3,6,1,3,1,3,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,27,0,'Yellow','7b5a36');
 CREATE TABLE IF NOT EXISTS "Game" (
 	id INTEGER NOT NULL, 
 	"gameId" VARCHAR(10) NOT NULL, 
@@ -778,6 +784,9 @@ INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''
 INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'p5','User',NULL,NULL,7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
 INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'n0','SingleEnemy','ADJACENT',1,8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
 INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'n0','AllEnemyInRange','ALL_IN_RANGE',2,9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(10,'Scratch','NORMAL','','The Pokemon uses its sharp claws to scratch the enemy.','Physical',2,'n0','SingleEnemy','FRONT',2,10,10,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(11,'Swords Dance','NORMAL','Increase User''s Strength','','Support',0,'n0','User','FRONT',1,11,11,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(12,'Persuit','DARK','If the foe is Switching Out or escaping, Add 2 Dice to the Damage Pool and Priority to this move.','The Pokemon chases the foe to deliver a final blow before it escapes.','Physical',2,'p1','SingleEnemy','TARGET_IN_AREA',2,12,12,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
 CREATE TABLE pokemon_garments (
 	pokemon_id INTEGER NOT NULL, 
 	garment_id INTEGER NOT NULL, 
@@ -868,6 +877,9 @@ INSERT INTO MoveConnection VALUES(8,4,9);
 INSERT INTO MoveConnection VALUES(9,4,8);
 INSERT INTO MoveConnection VALUES(10,5,4);
 INSERT INTO MoveConnection VALUES(11,6,3);
+INSERT INTO MoveConnection VALUES(12,5,10);
+INSERT INTO MoveConnection VALUES(13,6,11);
+INSERT INTO MoveConnection VALUES(14,5,12);
 CREATE TABLE IF NOT EXISTS "BagItem" (
 	id INTEGER NOT NULL, 
 	"itemId" INTEGER NOT NULL, 
@@ -887,7 +899,5 @@ INSERT INTO BagItem VALUES(14,13,4);
 INSERT INTO BagItem VALUES(16,11,1);
 INSERT INTO BagItem VALUES(17,14,6);
 INSERT INTO BagItem VALUES(18,16,5);
-INSERT INTO BagItem VALUES(19,15,5);
-INSERT INTO BagItem VALUES(20,17,5);
 INSERT INTO BagItem VALUES(22,18,5);
 COMMIT;

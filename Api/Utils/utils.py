@@ -78,6 +78,12 @@ STAT_TYPE = {
     "Primal": None,  # not buyable
 }
 
+def resolve_stat(stat_value, potential_value):
+    if stat_value is None or stat_value == 0:
+        if potential_value is None:
+            return 0
+        return potential_value // 2
+    return stat_value
 
 def broadcast_player_update(pokemonGuid, **fields):
     payload = {

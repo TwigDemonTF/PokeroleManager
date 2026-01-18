@@ -125,12 +125,12 @@ def player():
 @app.route("/ItemShop")
 def itemShop():
     res = requests.get(f"{app.config['BASE_URL']}/Item")
-    res.raise_for_status()  # optional but strongly recommended
+    res.raise_for_status()
 
-    data = res.json()
+    payload = res.json()
 
     items = [
-        item for item in data
+        item for item in payload["data"]
         if item["id"] is not None
     ]
 
@@ -185,9 +185,12 @@ def gen_item():
 def battle():
     if not session.get("userId"):
         return redirect("/Login")
-    res = requests.get(f"{app.config["BASE_URL"]}/Item")
+
+    res = requests.get(f'{app.config["BASE_URL"]}/Item')
+    payload = res.json()
+
     items = [
-        item for item in res.json()
+        item for item in payload["data"]
         if item["id"] is not None
     ]
 

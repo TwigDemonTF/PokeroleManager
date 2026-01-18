@@ -1,6 +1,7 @@
 from .auth import MasterLogin, PlayerLogin, Register
 from .player import PlayerData
-from .item import ItemApi, ShopApi
+from .item import ItemApi
+from .shop import ShopApi
 from .battle import BattleApi, GameApi
 from .pokemon import BasePokemonApi, GamePokemonApi, PullCharacterData
 from .pokemon_components import NatureApi, AbilityApi, MoveApi, GarmentApi
