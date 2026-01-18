@@ -623,4 +623,4 @@ def player_state_stream(gameId, pokemonGuid):
 if __name__ == "__main__":
     with app.app_context():
         database.create_all()
-    app.run("0.0.0.0", 9000, debug=True)
+    app.run("0.0.0.0", 9090, debug=True)
