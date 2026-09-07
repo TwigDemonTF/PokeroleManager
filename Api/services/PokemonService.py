@@ -5,8 +5,7 @@ from Api.models.Items import PokemonBag, Garment
 from Api.models.User import Game
 
 from Api.Enums.BagSize import BagSizeEnum
-from Api.Utils.utils import serialize_move_for_battle
-from Api.Utils.utils import resolve_stat
+from Api.Utils.utils import serialize_move_for_battle, resolve_stat, broadcast_player_update
 
 
 # --------------------------------------------------
@@ -121,7 +120,7 @@ def create_base_pokemon(raw):
 # --------------------------------------------------
 
 def create_game_pokemon(raw):
-    game = Game.query.filter_by(id=raw.get("gameId")).first()
+    game = Game.query.filter_by(gameId=raw.get("gameId")).first()
     if not game:
         return None, "Game not found"
 
@@ -211,6 +210,29 @@ def create_game_pokemon(raw):
 # --------------------------------------------------
 # CHARACTER DATA
 # --------------------------------------------------
+
+def toggleEvolution(data):
+    pokemonGuid = data.get("pokemonGuid")
+
+    pokemon = GamePokemon.query.filter_by(Guid=pokemonGuid).first_or_404()
+
+    if pokemon.canEvolve:
+        pokemon.canEvolve = False
+    elif not pokemon.canEvolve:
+        pokemon.canEvolve = True
+    
+    database.session.commit()
+
+    broadcast_player_update(
+        pokemon.Guid,
+        CanEvolve=pokemon.canEvolve,
+    )
+
+    return {"message": f"{pokemon.name}'s evolution status is set to {pokemon.canEvolve}"}, 200
+
+def getEvolutionStatus(pokemonName):
+    evolutionOptions = BasePokemon.query.filter_by(preEvolution=BasePokemon.query.filter_by(id=GamePokemon.query.filter_by(name=pokemonName).first().basePokemonId).first().name).all()
+    return [p.toDict() for p in evolutionOptions]
 
 def pull_character_data(gameId, guid):
     pokemon = (

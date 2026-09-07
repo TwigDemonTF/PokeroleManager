@@ -1,8 +1,11 @@
-from flask import jsonify, request, Response, stream_with_context
+from os import abort
+from flask import jsonify, request, Response, stream_with_context, Blueprint
+from sqlalchemy.orm import joinedload
 
-from .models.Pokemon import GamePokemon, GameEntities
+from .models.Pokemon import GamePokemon, GameEntities, BasePokemon, BasePokemonLearnableMove, GamePokemonUnlockedMove
 from .models.User import Game
-from .models.Items import Item, BagItem, PokemonBag
+from .models.Items import Item, BagItem, PokemonBag, GuildStorageBag, GuildStorageItem, PersonalStorageBag, PersonalStorageItem
+from .models.Moves import MoveConnection
 
 from .Enums.StatusTypes import StatusTypes
 from .Enums.BagSize import BagSizeEnum
@@ -17,7 +20,332 @@ from Api.extensions import database
 import queue
 import json
 
+def bag_space_left(bag: PokemonBag):
+    max_size = bag.bagSize.value
+    return max_size - len(bag.items)
+
 app = create_app()
+
+@app.route("/getBagItem/<string:pokemonGuid>/<int:bagItemId>")
+def getBagItem():
+    item = BagItem.query
+    return item
+
+@app.route("/storage/<string:storage_type>/<string:pokemon_id>/<string:gameId>", methods=["GET"])
+def get_storage_items(storage_type, pokemon_id, gameId):
+    pokemon = GamePokemon.query.filter_by(Guid=pokemon_id).first()
+    if not pokemon:
+        return jsonify({"error": f"Pokemon with id {pokemon_id} not found"}), 404
+    
+    pokemon = GamePokemon.query.options(
+        joinedload(GamePokemon.bag),
+        joinedload(GamePokemon.personalStorage).joinedload(PersonalStorageBag.items).joinedload(PersonalStorageItem.item)
+    ).filter_by(Guid=pokemon_id).first_or_404()
+
+    if storage_type == "personal":
+        if not pokemon.personalStorage:
+            return jsonify({"items": []})
+        items = [
+            {"id": i.id, "name": i.item.name, "description": i.item.description}
+            for i in pokemon.personalStorage.items
+        ]
+    elif storage_type == "guild":
+        game = Game.query.options(joinedload(Game.guildStorage).joinedload(GuildStorageBag.items).joinedload(GuildStorageItem.item)).filter_by(gameId=gameId).first()
+        guild_storage = game.guildStorage
+        
+        if not guild_storage:
+            return jsonify({"items": []})
+        items = [
+            {"id": i.id, "name": i.item.name, "description": i.item.description}
+            for i in guild_storage.items
+        ]
+    else:
+        return jsonify({"error": "Invalid storage type"}), 400
+
+    return jsonify({"items": items})
+
+@app.route("/storage/withdraw", methods=["POST"])
+def withdraw_items():
+    data = request.json
+    pokemon_id = data.get("pokemon_id")
+    storage_type = data.get("storage_type")
+    item_ids = data.get("item_ids")  # IDs of PersonalStorageItem or GuildStorageItem
+    print(item_ids)
+    if not pokemon_id or not storage_type or not item_ids:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    pokemon = GamePokemon.query.options(joinedload(GamePokemon.bag)).filter_by(Guid=pokemon_id).first_or_404()
+    if not pokemon.bag:
+        return jsonify({"error": "This Pokémon has no bag"}), 400
+
+    space_left = bag_space_left(pokemon.bag)
+    if space_left <= 0:
+        return jsonify({"error": "Bag is full"}), 400
+
+    # Limit items withdrawn by bag space
+    item_ids = item_ids[:space_left]
+
+    if storage_type == "personal":
+        storage_items = PersonalStorageItem.query.filter(
+            PersonalStorageItem.id.in_(item_ids)
+        ).all()
+    elif storage_type == "guild":
+        storage_items = GuildStorageItem.query.filter(
+            GuildStorageItem.id.in_(item_ids)
+        ).all()
+    else:
+        return jsonify({"error": "Invalid storage type"}), 400
+    
+    added_items = [i.item.name for i in storage_items]  # Access before delete
+
+    for s_item in storage_items:
+        bag_item = BagItem(itemId=s_item.itemId, bagId=pokemon.bag.id)
+        database.session.add(bag_item)
+        database.session.delete(s_item)  # Remove from storage
+
+    database.session.commit()
+    return jsonify({"success": True, "added_items": added_items})
+
+@app.route("/sendItemToPlayer", methods=["POST"])
+def send_item_to_player():
+    data = request.get_json()
+
+    item_id = data.get("itemId")
+    target_pokemon_id = data.get("playerId")
+
+    if not item_id or not target_pokemon_id:
+        return jsonify({"error": "Missing itemId or playerId"}), 400
+
+    bag_item = BagItem.query.get(item_id)
+    if not bag_item:
+        return jsonify({"error": "Item not found in bag"}), 404
+
+    target_pokemon = GamePokemon.query.get(target_pokemon_id)
+    if not target_pokemon:
+        return jsonify({"error": "Target Pokémon not found"}), 404
+
+    # Ensure target has a bag
+    if not target_pokemon.bag:
+        target_pokemon.bag = PokemonBag(pokemon=target_pokemon)
+        database.session.add(target_pokemon.bag)
+
+    # Move item
+    bag_item.bag = target_pokemon.bag
+
+    database.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Item sent to player",
+        "itemId": bag_item.id,
+        "targetPokemonId": target_pokemon.id
+    })
+
+@app.route("/sendItemToStorage", methods=["POST"])
+def send_item_to_storage():
+    data = request.get_json()
+
+    item_id = data.get("itemId")
+    storage_type = data.get("type")  # "personal" or "guild"
+
+    if not item_id or storage_type not in ("personal", "guild"):
+        return jsonify({"error": "Invalid payload"}), 400
+
+    bag_item = BagItem.query.get(item_id)
+    if not bag_item:
+        return jsonify({"error": "Item not found"}), 404
+
+    item_template_id = bag_item.itemId
+    source_pokemon = bag_item.bag.pokemon
+
+    # Remove from Pokémon bag
+    database.session.delete(bag_item)
+
+    if storage_type == "personal":
+        if not source_pokemon.personalStorage:
+            source_pokemon.personalStorage = PersonalStorageBag(
+                pokemon=source_pokemon
+            )
+            database.session.add(source_pokemon.personalStorage)
+
+        database.session.add(
+            PersonalStorageItem(
+                itemId=item_template_id,
+                bag=source_pokemon.personalStorage
+            )
+        )
+
+    else:  # guild
+        game = Game.query.join(GameEntities).filter(
+            GameEntities.pokemonId == source_pokemon.id
+        ).first()
+
+        if not game:
+            return jsonify({"error": "Game not found"}), 404
+
+        if not game.guildStorage:
+            game.guildStorage = GuildStorageBag(game=game)
+            database.session.add(game.guildStorage)
+
+        database.session.add(
+            GuildStorageItem(
+                itemId=item_template_id,
+                bag=game.guildStorage
+            )
+        )
+
+    database.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": f"Item sent to {storage_type} storage"
+    })
+
+@app.route("/getTeam", methods=["GET"])
+def getTeam():
+    team = GamePokemon.query.with_entities(
+        GamePokemon.id,
+        GamePokemon.name
+    ).filter_by(isNpc=False).all()
+
+    teamArray = [
+        {"id": id, "name": name}
+        for id, name in team
+    ]
+
+    return jsonify(teamArray)
+
+@app.route("/basePokemon/<string:base_id>/learnable-moves", methods=["POST"])
+def assign_learnable_moves(base_id):
+    data = request.json
+    print(data)
+    moveId = data.get("moveId")
+    cost = data.get("unlockCost", 0)
+
+    base = BasePokemon.query.get_or_404(base_id)
+
+    exists = BasePokemonLearnableMove.query.filter_by(
+        basePokemonId=base.id,
+        moveId=moveId,
+        unlockXpCost=cost
+    ).first()
+
+    if exists:
+        return
+
+    lm = BasePokemonLearnableMove(
+        basePokemonId=base.id,
+        moveId=moveId,
+        unlockXpCost=cost
+    )
+    database.session.add(lm)
+
+    database.session.commit()
+    return {"success": True}
+
+@app.route("/learnMove", methods=["POST"])
+def learn_move():
+    data = request.get_json()
+    guid = data.get("pokemonGuid")
+    moveId = data.get("moveId")
+    pokemon = GamePokemon.query.filter_by(Guid=guid).first_or_404()
+
+    lm = BasePokemonLearnableMove.query.filter_by(
+        basePokemonId=pokemon.basePokemonId,
+        moveId=moveId
+    ).first_or_404()
+
+    already = GamePokemonUnlockedMove.query.filter_by(
+        pokemonId=pokemon.id,
+        moveId=moveId
+    ).first()
+
+    if already:
+        return(400, "Move already learned")
+
+    cost = lm.unlockXpCost or 0
+    if pokemon.experiencePoints < cost:
+        return(400, "Not enough XP")
+
+    pokemon.experiencePoints -= cost
+
+    unlocked = GamePokemonUnlockedMove(
+        pokemonId=pokemon.id,
+        moveId=moveId
+    )
+    database.session.add(unlocked)
+
+    if cost > 0:
+        pokemon.level += 1
+
+    database.session.commit()
+    return {"success": True}
+
+@app.route("/pokemon/<string:guid>/equip-move", methods=["POST"])
+def equip_move(guid):
+    data = request.json
+    new_move_id = data["newMoveId"]
+    replace_move_id = data.get("replaceMoveId")
+
+    pokemon = GamePokemon.query.filter_by(Guid=guid).first_or_404()
+
+    learned = GamePokemonUnlockedMove.query.filter_by(
+        pokemonId=pokemon.id,
+        moveId=new_move_id
+    ).first()
+
+    if not learned:
+        abort(400, "Move not learned")
+
+    if replace_move_id:
+        MoveConnection.query.filter_by(
+            pokemonId=pokemon.id,
+            moveId=replace_move_id
+        ).delete()
+
+    conn = MoveConnection(
+        pokemonId=pokemon.id,
+        moveId=new_move_id
+    )
+    database.session.add(conn)
+    database.session.commit()
+
+    return {"success": True}
+
+@app.route("/evolvePokemon/<string:gameId>/<string:guid>/<string:evolutionName>", methods=["POST"])
+def evolve_pokemon(gameId, guid, evolutionName):
+    pokemon = GamePokemon.query.filter_by(Guid=guid).first_or_404()
+    new_base = BasePokemon.query.filter_by(name=evolutionName).first_or_404()
+
+    old_base = pokemon.basePokemon
+
+    # swap base pokemon
+    pokemon.basePokemonId = new_base.id
+    pokemon.canEvolve = False
+
+    # base stats
+    pokemon.baseHealth = new_base.baseHealth
+    pokemon.primaryType = new_base.primaryType
+    pokemon.secondaryType = new_base.secondaryType
+
+    # potentials (overwrite)
+    pokemon.strengthPotential = new_base.strengthPotential
+    pokemon.dexterityPotential = new_base.dexterityPotential
+    pokemon.vitalityPotential = new_base.vitalityPotential
+    pokemon.specialPotential = new_base.specialPotential
+    pokemon.insightPotential = new_base.insightPotential
+
+    # DO NOT clamp stats
+    # (if current stat > potential, keep it)
+
+    # health recalculation
+    max_hp = pokemon.baseHealth + pokemon.vitality
+    pokemon.health = max_hp
+    pokemon.lethalHealth = max_hp
+
+    database.session.commit()
+
+    return {"success": True}
 
 @app.route('/updateHealth', methods=['POST'])
 def UpdateHealth():
@@ -249,9 +577,11 @@ def AddItemToBag(gameId, pokemonGuid, itemId):
 
         if current_items_count >= max_items:
             return jsonify({"success": False, "message": "Bag is full"}), 400
+        #6. Get item state
+        itemState = getItemState(Item)
 
-        # 6. Add the item to the bag
-        bag_item = BagItem(itemId=item.id, bagId=pokemon.bag.id)
+        # 7. Add the item to the bag
+        bag_item = BagItem(itemId=item.id, bagId=pokemon.bag.id, state=itemState)
         database.session.add(bag_item)
         database.session.commit()
 
@@ -269,6 +599,13 @@ def AddItemToBag(gameId, pokemonGuid, itemId):
     except Exception as e:
         database.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
+
+def getItemState(item: Item) -> dict:
+    state: dict = {}
+    match (item.effectKey):
+        case "heal_pool": state = {"HealAmount": item.effectData["maxAmount"]}
+        case "SITRUS_BERRY": state = {}
+    return state
 
 @app.route("/equipItem/<string:gameId>/<string:pokemonGuid>/<int:itemId>", methods=["POST"])
 def EquipItem(gameId, pokemonGuid, itemId):

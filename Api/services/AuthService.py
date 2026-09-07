@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from Api.extensions import database
 from Api.models.User import User, Game
 from Api.models.Pokemon import GamePokemon, GameEntities
+from Api.models.Items import GuildStorageBag
 from Api.Utils.utils import generate_game_id
 
 
@@ -31,6 +32,8 @@ def register_user(username: str, password: str):
         weather="None",
         userId=user.id
     )
+
+    game.guildStorage = GuildStorageBag(items=[])
 
     database.session.add(game)
     database.session.commit()

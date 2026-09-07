@@ -56,7 +56,8 @@ def login():
                 "gameId": usernameOrGameId,
                 "gameColor": passwordOrGameColor,
             }
-
+            print(data["gameColor"])
+            print(data["gameId"])
             res = requests.post(f"{app.config["BASE_URL"]}/playerLogin", json=data)
             res = res.json()
             print(res["message"])
@@ -203,7 +204,7 @@ def battle():
     item_categories = enums.get("ItemCategoryEnum", {})
     shop_tiers = enums.get("ShopTierEnum", {})
 
-    res = requests.get(f"{app.config["BASE_URL"]}/addMove")
+    res = requests.get(f"{app.config["BASE_URL"]}/moveData")
 
     context = {
         "gameId": session.get("gameId"),
@@ -211,7 +212,7 @@ def battle():
         "item_categories": item_categories,
         "shop_tiers": shop_tiers,
         "baseUrl": app.config["BASE_URL"],
-        "moveData": res.json(),
+        "moveData": res.json()["moveData"],
     }
     return render_template("battle.html", **context)
 

@@ -4,6 +4,8 @@ from Api.services.MoveService import list_moves_for_battle, add_or_replace_move
 from Api.services.ShopService import buy_item
 from Api.services.ResourceService import remove_resources
 
+from ..services.PokemonService import toggleEvolution, getEvolutionStatus
+from ..services.PokemonComponentService import getMoveEnumData
 
 class MoveManipulation(Resource):
     def get(self):
@@ -17,6 +19,15 @@ class MoveManipulation(Resource):
             data.get("ReplaceIndex")
         )
 
+class PokemonEvolution(Resource):
+    def get(self, pokemonName=None):
+        if pokemonName is None:
+            return {"error": "pokemonName is required"}, 400
+        return getEvolutionStatus(pokemonName)
+
+    def post(self):
+        data = request.get_json()
+        return toggleEvolution(data)
 
 class BuyItem(Resource):
     def post(self):
@@ -31,3 +42,7 @@ class BuyItem(Resource):
 class RemoveResourcesApi(Resource):
     def post(self):
         return remove_resources(request.get_json())
+
+class MoveData(Resource):
+    def get(self):
+        return {"moveData": getMoveEnumData()}

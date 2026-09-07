@@ -91,6 +91,8 @@ def get_player_data(gameId, playerGuid):
             "damageType": move.damageType.name if move.damageType else None,
             "basePower": move.basePower,
             "target": move.target.value if move.target else None,
+            "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
+            "moveGridRange": move.moveGridRange if move.moveGridRange else None,
             "priority": move.priority.name if move.priority else None,
             "accuracyModifiers": acc_mods,
             "damageModifiers": dmg_mods,
@@ -123,9 +125,85 @@ def get_player_data(gameId, playerGuid):
             "flavorText": move.flavorText,
         })
 
+    learnable_moves_data = []
+    learned_move_ids = {um.moveId for um in pokemon.unlocked_moves}
+    equipped_move_ids = {mc.moveId for mc in pokemon.move_connections}
+
+    for lm in pokemon.basePokemon.learnable_moves:
+        move = lm.move
+
+        acc_mods = extract_modifiers_from_group(
+            move.accuracy_modifier_group,
+            "accuracyModifier"
+        )
+
+        dmg_mods = extract_modifiers_from_group(
+            move.damage_modifier_group,
+            "damageModifier"
+        )
+
+        heal_data = None
+        if move.heal_move:
+            heal_data = {
+                "healType": move.heal_move.healType.name
+                    if move.heal_move.healType else None,
+                "healAmount": move.heal_move.healAmount
+            }
+
+        effects = [
+            {
+                "effect": conn.move_effect.effect.name,
+                "effectLevel": conn.move_effect.effectLevel.name,
+                "effectLevelDice": conn.move_effect.effectLevelDice
+            }
+            for conn in move.effect_connections
+        ]
+
+        learnable_moves_data.append({
+            "id": move.id,
+            "name": move.name,
+            "type": move.type.value if move.type else None,
+            "damageType": move.damageType.name if move.damageType else None,
+            "basePower": move.basePower,
+            "target": move.target.value if move.target else None,
+            "priority": move.priority.name if move.priority else None,
+            "accuracyModifiers": acc_mods,
+            "damageModifiers": dmg_mods,
+            "reducedAccuracy": move.reducedAccuracy,
+            "hasCritical": move.hasCritical,
+            "hasLethal": move.hasLethal,
+            "hasBlock": move.hasBlock,
+            "hasRecoil": move.hasRecoil,
+            "hasWeatherChange": move.hasWeatherChange,
+            "weatherChangeTo": move.weatherChangeTo.name if move.weatherChangeTo else None,
+            "hasModifiedDamage": move.hasModifiedDamage,
+            "alwaysHitEffect": move.alwaysHitEffect,
+            "alwaysFailEffect": move.alwaysFailEffect,
+            "isChargeMove": move.isChargeMove,
+            "isFistBased": move.isFistBased,
+            "isHighCrit": move.isHighCrit,
+            "isNeverFail": move.isNeverFail,
+            "isHealingMove": move.isHealingMove,
+            "isShieldMove": move.isShieldMove,
+            "isSoundBased": move.isSoundBased,
+            "isMultiHit": move.isMultiHit,
+            "multiHitCount": move.multiHitCount.name if move.multiHitCount else None,
+            "isSwitchMove": move.isSwitchMove,
+            "requiresRecharge": move.requiresRecharge,
+            "healMove": heal_data,
+            "effects": effects,
+            "effectText": move.effectText,
+            "flavorText": move.flavorText,
+            "unlockXpCost": lm.unlockXpCost,  # the unlock cost
+            "isLearned": move.id in learned_move_ids,  # whether Pokémon has unlocked it
+            "isEquipped": move.id in equipped_move_ids, # whether Pokémon has equipped it
+        })
+
     pokemon_data = {
         "GameId": gameId,
         "Guid": pokemon.Guid,
+        "Species": base.name,
+        "CanEvolve": pokemon.canEvolve,
         "Name": pokemon.name,
         "Level": pokemon.level,
         "Gender": pokemon.gender,
@@ -200,10 +278,13 @@ def get_player_data(gameId, playerGuid):
 
         "ExperiencePoints": pokemon.experiencePoints,
         "IsNpc": pokemon.isNpc,
+        "IsShiny": pokemon.isShiny,
         "PlayerColor": pokemon.playerColor,
 
         "Moves": moves_data,
         "MoveIds": [mc.move.id for mc in pokemon.move_connections],
+
+        "learnableMoves": learnable_moves_data,
 
         "Bag": bag_data
     }

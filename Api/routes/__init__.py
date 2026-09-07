@@ -5,7 +5,7 @@ from .shop import ShopApi
 from .battle import BattleApi, GameApi
 from .pokemon import BasePokemonApi, GamePokemonApi, PullCharacterData
 from .pokemon_components import NatureApi, AbilityApi, MoveApi, GarmentApi
-from .pokemon_manipulation import MoveManipulation, BuyItem, RemoveResourcesApi
+from .pokemon_manipulation import MoveManipulation, MoveData, BuyItem, RemoveResourcesApi, PokemonEvolution
 
 def registerResources(api):
     api.add_resource(Register, "/register")
@@ -29,5 +29,7 @@ def registerResources(api):
     api.add_resource(ShopApi, "/Shop/<string:gameId>", "/Shop")
 
     api.add_resource(MoveManipulation, "/moveManipulation")
+    api.add_resource(MoveData, "/moveData")
+    api.add_resource(PokemonEvolution, "/evolution", "/evolution/<string:pokemonName>")
     api.add_resource(RemoveResourcesApi, "/removeResources")
     api.add_resource(BuyItem, "/buyItem")

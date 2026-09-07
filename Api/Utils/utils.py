@@ -121,23 +121,39 @@ def getBooleanFields():
     ]
     return boolean_fields
 
+# ! Legacy function
+# def extract_modifiers_from_group(group, prefix):
+#     """
+#     Extracts modifiers from group.accuracyModifier1/2/3 or damageModifier1/2/3.
+#     prefix = 'accuracyModifier' or 'damageModifier'
+#     """
+#     if not group:
+#         return []
+
+#     fields = [f"{prefix}{i}" for i in (1,2,3)]
+#     mods = []
+
+#     for field in fields:
+#         value = getattr(group, field, None)
+#         if value is not None:
+#             mods.append(value.name)
+
+#     return mods
+
 def extract_modifiers_from_group(group, prefix):
-    """
-    Extracts modifiers from group.accuracyModifier1/2/3 or damageModifier1/2/3.
-    prefix = 'accuracyModifier' or 'damageModifier'
-    """
     if not group:
-        return []
+        return [None, None, None]
 
-    fields = [f"{prefix}{i}" for i in (1,2,3)]
-    mods = []
+    modifiers = []
 
-    for field in fields:
-        value = getattr(group, field, None)
-        if value is not None:
-            mods.append(value.name)
+    for i in range(1, 4):
+        modifier = getattr(group, f"{prefix}{i}")
 
-    return mods
+        modifiers.append(
+            modifier.value if modifier is not None else None
+        )
+
+    return modifiers
 
 def updatePokemonHealth(game_id, guid, new_health):
     # Find the game (optional, ensures game exists)
@@ -270,7 +286,7 @@ def serialize_move_for_battle(move):
     heal_data = None
     if move.heal_move:
         heal_data = {
-            "healType": move.heal_move.healType.name
+            "healType": move.heal_move.healType.value
                 if move.heal_move.healType else None,
             "healAmount": move.heal_move.healAmount
         }
@@ -279,22 +295,22 @@ def serialize_move_for_battle(move):
     for conn in move.effect_connections:
         me = conn.move_effect
         effects.append({
-            "effect": me.effect.name,
-            "effectLevel": me.effectLevel.name,
+            "effect": me.effect.value,
+            "effectLevel": me.effectLevel.value,
             "effectLevelDice": me.effectLevelDice
         })
 
     return {
         "id": move.id,
         "name": move.name,
-        "type": move.type.name if move.type else None,
-        "damageType": move.damageType.name if move.damageType else None,
+        "type": move.type.value if move.type else None,
+        "damageType": move.damageType.value if move.damageType else None,
 
         "basePower": move.basePower,
-        "target": move.target.name if move.target else None,
+        "target": move.target.value if move.target else None,
         "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
         "moveGridRange": move.moveGridRange,
-        "priority": move.priority.name if move.priority else None,
+        "priority": move.priority.value if move.priority else None,
 
         "accuracyModifiers": acc_mods,
         "damageModifiers": dmg_mods,
@@ -305,7 +321,7 @@ def serialize_move_for_battle(move):
         "hasBlock": move.hasBlock,
         "hasRecoil": move.hasRecoil,
         "hasWeatherChange": move.hasWeatherChange,
-        "weatherChangeTo": move.weatherChangeTo.name
+        "weatherChangeTo": move.weatherChangeTo.value
             if move.weatherChangeTo else None,
 
         "hasModifiedDamage": move.hasModifiedDamage,
@@ -320,7 +336,7 @@ def serialize_move_for_battle(move):
         "isShieldMove": move.isShieldMove,
         "isSoundBased": move.isSoundBased,
         "isMultiHit": move.isMultiHit,
-        "multiHitCount": move.multiHitCount.name
+        "multiHitCount": move.multiHitCount.value
             if move.multiHitCount else None,
         "isSwitchMove": move.isSwitchMove,
         "requiresRecharge": move.requiresRecharge,

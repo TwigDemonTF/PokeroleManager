@@ -3,6 +3,7 @@ from sqlalchemy import Enum
 from sqlalchemy.orm import relationship
 from ..Enums.Items.ShopTiers import ShopTierEnum
 
+
 class User(database.Model):
     __tablename__ = "User"
     id = database.Column(database.Integer, primary_key=True, nullable=False)
@@ -27,3 +28,16 @@ class Game(database.Model):
 
     # Relationship: one game can have many GameEntities
     entities = relationship("GameEntities", back_populates="game")
+
+    guildStorage = database.relationship(
+        "GuildStorageBag",
+        back_populates="game",
+        uselist=False,
+        overlaps="game",
+        cascade="all, delete-orphan"
+    )
+
+    # @staticmethod
+    # def create_guild_storage(self):
+    #     if not self.guildStorage:
+    #         self.guildStorage = GuildStorageBag(items=[])

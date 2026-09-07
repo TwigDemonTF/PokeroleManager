@@ -532,18 +532,6 @@ INSERT INTO BasePokemon VALUES(490,'Honedge','Doublade',NULL,3,3,1,1,0,'STEEL','
 INSERT INTO BasePokemon VALUES(491,'Doublade','Aegislash','Honedge',4,3,1,1,0,'STEEL','GHOST',3,6,1,3,4,8,2,4,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(492,'Aegislash (Defense Form)',NULL,'Doublade',5,3,1,1,0,'STEEL','GHOST',2,4,1,3,4,8,2,4,4,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 INSERT INTO BasePokemon VALUES(493,'Aegislash (Attack Form)',NULL,'Doublade',5,3,1,1,0,'STEEL','GHOST',4,8,1,3,2,4,4,8,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(494,'Hakamo-o','Kommo-o','Jangmo-o',4,3,1,1,0,'DRAGON','FIGHTING',2,5,2,4,2,5,2,4,2,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(495,'Pawniard','Bisharp',NULL,3,3,1,1,0,'DARK','STEEL',2,5,2,4,2,5,1,3,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(496,'Bisharp','Kingambit','Pawniard',4,3,1,1,0,'DARK','STEEL',3,7,2,5,3,6,2,4,2,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(497,'Noibat','Noivern',NULL,3,3,1,1,0,'FLYING','DRAGON',1,3,2,4,1,3,2,4,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(498,'Noivern',NULL,'Noibat',3,3,1,1,0,'FLYING','DRAGON',2,5,3,7,2,5,3,6,2,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(499,'Sobble','Drizzile',NULL,3,3,1,1,0,'WATER',NULL,1,3,2,5,1,3,2,5,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(500,'Drizzile','Inteleon','Sobble',4,3,1,1,0,'WATER',NULL,2,4,2,5,2,4,3,6,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(501,'Inteleon',NULL,'Drizzile',5,3,1,1,0,'WATER',NULL,2,5,3,7,2,4,3,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(502,'Purrloin','Liepard',NULL,3,3,1,1,0,'DARK',NULL,2,4,2,4,1,3,2,4,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(503,'Liepard',NULL,'Purrloin',4,3,1,1,0,'DARK',NULL,2,5,3,6,2,4,2,5,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(504,'Lucario','Mega-Lucario','Riolu',4,3,0,0,0,'FIGHTING','STEEL',3,6,2,5,2,5,3,6,2,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-INSERT INTO BasePokemon VALUES(505,'Litten','Torracat',NULL,3,3,0,0,0,'FIRE',NULL,2,4,2,5,1,3,2,4,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 CREATE TABLE IF NOT EXISTS "User" (
 	id INTEGER NOT NULL, 
 	username VARCHAR(100) NOT NULL, 
@@ -563,7 +551,6 @@ INSERT INTO Nature VALUES(1,'Brave','The Brave of heart will face any situation 
 INSERT INTO Nature VALUES(2,'Quiet','Life is what happens around those with a Quiet nature. They often take a passive stance over the circumstances around them. Strong thoughts or opinions they have will rarely be expressed, so they may be afraid to make a mistake or consider it a hassle to take action. When they manage to get the attention of others they rarely know what to do with themselves.');
 INSERT INTO Nature VALUES(3,'Lonely','They like to keep their distance and do everything on their own. They ofter feel its up to them and nobody else to get things done and will take the burden of a responsibility that should be shared. Interacting with others is like a chore for them but being isolate also makes them feel misunderstood. They are hard to get close to but they can be trusted to do their best even if there''s no one around to guide them.');
 INSERT INTO Nature VALUES(4,'Naughty','Why should they listen to you? You are not their boss! Most of the time they''ll deliberately do the opposite from what''s expected from them. Why? Because they can, of course. They love to see others get mad and will use their clever mind and cunning to get away with their misdeeds. When they stress they put a cool facade, dont let that fool you. They need to be coaxed or put in their place to behave properly.');
-INSERT INTO Nature VALUES(5,'Quirky','You can''t really understand how their mind works. Those who have a Quirky nature will usually see the world in a unique way that only they seem to comprehend. The way they act will be peculiar and often attract puzzled looks. The way they solve problems will often be completely different than the way anyone else would have solved them. They accept new things easily and are eager for stimulator.');
 CREATE TABLE IF NOT EXISTS "Ability" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -577,7 +564,6 @@ INSERT INTO Ability VALUES(3,'Bulletproof','The armor on this Pokemon''s body pr
 INSERT INTO Ability VALUES(4,'Inner Focus','The Pokemon is extremely serious and focused on everything it does. It remains calm and never backs down, even if its getting severly injured.','This Pokemon does not Flinch and cannot be Intimidated (Ability).');
 INSERT INTO Ability VALUES(5,'Illusion','The pokemon casts an illusion on itself to look like another creature it has seen. The illusion is indistinguishable from the real one.','When this pokemon comes out, it will have the form of another Pokemon in the party, it will regain it original form if it takes damage. When taking a human form, it cannot speak and its tail may remain visible.');
 INSERT INTO Ability VALUES(6,'No Guard','This Pokemon can focus on attacking perfectly but will be open to the attacks of its foes as it wont focus on anything but its precision','You can declare you wont make any Evasion Action at the sart of the Round. If you do, roll all the moves of this Pokemon as if they had no reduced accuracy.');
-INSERT INTO Ability VALUES(7,'Infiltrator','The pokemon is very stealthy in its movement, it is naturally harder to detect than others.','Shiled Moves, Safeguard, Substitute, Light Screen, and Reflect are ignored by this Pokemon.');
 CREATE TABLE IF NOT EXISTS "Item" (
     id INTEGER NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -614,8 +600,6 @@ INSERT INTO Item VALUES(17,'Ether','Its depicted as a small, blue bottle with a 
 INSERT INTO Item VALUES(18,'Oran Berry','A small, round, blue fruit that resembles a berry. It has a smooth surface and is known for its vibrant color, making it visually appealing.',NULL,'heal_percentage','{"Percentage": 30}','ELITE','HEALING_ITEM',300,200,1,1,1);
 INSERT INTO Item VALUES(19,'Chople Berry','A small, red berry that is soft and round in shape. It is often associated with a medium chance of producing a Pokéblock and is known for its ability to weaken Fighting-type moves when held by a Pokémon.',NULL,'move_type_damage_reduction','{"Percentage": 50}','ADVANCED','HELD_ITEM',150,100,1,1,1);
 INSERT INTO Item VALUES(20,'Pouch','Just a brown pouch.',NULL,'default','{}','BASIC','MISC',0,0,0,0,0);
-INSERT INTO Item VALUES(21,'??? Rock','A heavy and rack gray looking rock.',NULL,'default','{}','BASIC','MISC',0,0,0,0,0);
-INSERT INTO Item VALUES(22,'Bone','A straight white bone. It doesnt look like it came from a human being.',NULL,'default','{}','BASIC','MISC',0,0,0,0,1);
 CREATE TABLE IF NOT EXISTS "Garment" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -630,18 +614,18 @@ CREATE TABLE IF NOT EXISTS "AccuracyModifierGroup" (
 	"accuracyModifier3" VARCHAR(10), 
 	PRIMARY KEY (id)
 );
-INSERT INTO AccuracyModifierGroup VALUES(1,'DEXTERITY','CHANNEL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(2,'TOUGH_CUTE','PERFORM','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(3,'DEXTERITY','BRAWL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(4,'TOUGH','INTIMIDATE','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(5,'DEXTERITY','BRAWL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(6,'INSIGHT','ALERT','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(7,'WILL','CHANNEL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(8,'DEXTERITY','BRAWL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(9,'DEXTERITY','CHANNEL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(10,'DEXTERITY','BRAWL','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(11,'DEXTERITY','PERFORM','NONE');
-INSERT INTO AccuracyModifierGroup VALUES(12,'DEXTERITY','BRAWL','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(1,'Dexterity','Channel','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(2,'Tough_Cute','Perform','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(3,'Dexterity','Brawl','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(4,'Tough','Intimidate','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(5,'Dexterity','Brawl','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(6,'Insight','Alert','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(7,'Will','Channel','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(8,'Dexterity','Brawl','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(9,'Dexterity','Channel','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(10,'Dexterity','Brawl','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(11,'Dexterity','Perform','NONE');
+INSERT INTO AccuracyModifierGroup VALUES(12,'Dexterity','Brawl','NONE');
 CREATE TABLE IF NOT EXISTS "DamageModifierGroup" (
 	id INTEGER NOT NULL, 
 	"damageModifier1" VARCHAR(10) NOT NULL, 
@@ -649,18 +633,18 @@ CREATE TABLE IF NOT EXISTS "DamageModifierGroup" (
 	"damageModifier3" VARCHAR(10), 
 	PRIMARY KEY (id)
 );
-INSERT INTO DamageModifierGroup VALUES(1,'SPECIAL','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(1,'Special','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(2,'NONE','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(3,'STRENGTH','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(3,'Strength','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(4,'NONE','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(5,'STRENGTH','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(5,'Strength','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(6,'NONE','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(7,'NONE','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(8,'STRENGTH','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(9,'SPECIAL','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(10,'STRENGTH','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(8,'Strength','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(9,'Special','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(10,'Strength','NONE','NONE');
 INSERT INTO DamageModifierGroup VALUES(11,'NONE','NONE','NONE');
-INSERT INTO DamageModifierGroup VALUES(12,'STRENGTH','NONE','NONE');
+INSERT INTO DamageModifierGroup VALUES(12,'Strength','NONE','NONE');
 CREATE TABLE IF NOT EXISTS "HealMove" (
 	id INTEGER NOT NULL, 
 	"healType" VARCHAR(11), 
@@ -733,15 +717,12 @@ CREATE TABLE IF NOT EXISTS "GamePokemon" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	UNIQUE ("Guid")
 );
-INSERT INTO GamePokemon VALUES(1,354,0,'Airalin',17,'Female',21,0,'PSYCHIC','FAIRY',2,1,'Healthy',4,6,0,6,1,3,0,1,2,3,2,4,2,3,3,4,3,4,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,89,0,1,'Origin','09c38c');
-INSERT INTO GamePokemon VALUES(2,494,0,'Ja-Bo',26,'Male',22,34,'DRAGON','FIGHTING',1,3,'Fainted',5,0,0,4,1,3,1,NULL,3,5,3,4,4,5,3,4,3,5,3,2,0,2,0,0,0,0,0,0,0,0,0,0,0,15,0,0,'Blue','b513fb');
-INSERT INTO GamePokemon VALUES(3,504,0,'Cyan',33,'Female',20,978,'FIGHTING','STEEL',3,4,'Fainted',4,0,0,6,2,2,0,NULL,3,6,2,5,2,5,3,6,2,5,2,3,0,4,1,0,0,1,2,1,1,0,0,0,0,29,0,0,'Orange','d63f99');
-INSERT INTO GamePokemon VALUES(4,4,0,'Pluey',16,'Male',3,33,'WATER',NULL,4,2,'Healthy',3,5,0,6,1,3,0,NULL,2,4,3,3,2,4,2,4,3,4,2,2,1,0,1,0,0,0,0,0,1,0,1,0,0,46,0,1,'Purple','a28d51');
-INSERT INTO GamePokemon VALUES(5,488,0,'Rem',5,'Male',26,300,'DARK',NULL,4,5,'Healthy',3,4,0,4,2,1,0,19,2,4,3,4,1,3,2,5,1,3,0,1,2,0,0,0,0,0,0,0,0,0,0,0,1,6,0,0,'None','cddc04');
-INSERT INTO GamePokemon VALUES(6,490,0,'Julian',1,'Male',559,0,'STEEL','GHOST',1,6,'Healthy',3,6,0,6,1,2,0,NULL,2,5,1,3,3,6,1,3,1,3,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,27,0,1,'None','7b5a36');
-INSERT INTO GamePokemon VALUES(7,495,0,'Silent Blade',16,'Male',24,0,'DARK','STEEL',3,4,'Healthy',3,5,0,3,1,2,0,'Error loading',2,5,3,4,2,5,1,3,1,3,1,2,0,1,0,0,2,1,2,0,2,0,0,1,0,46,0,0,'Green','23e6c1');
-INSERT INTO GamePokemon VALUES(8,497,0,'Grimnir R. Kreutz',16,'Male',21,0,'FLYING','DRAGON',5,7,'Healthy',3,3,0,3,1,2,0,'Error loading',2,3,3,4,1,3,2,4,1,3,0,1,3,0,3,0,0,0,0,0,0,0,0,0,1,31,0,1,'Yellow','c2c77c');
-INSERT INTO GamePokemon VALUES(9,505,0,'Luna',1,'Female',12,0,'FIRE',NULL,2,2,'Healthy',3,4,0,3,1,2,0,NULL,2,4,2,5,1,3,2,4,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'Pink','d36ab1');
+INSERT INTO GamePokemon VALUES(1,354,0,'Airalin',17,'Female',21,0,'PSYCHIC','FAIRY',2,1,'Healthy',4,6,0,6,1,2,0,1,2,3,2,4,2,3,3,4,3,4,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,17,0,1,'Black','09c38c');
+INSERT INTO GamePokemon VALUES(2,2,1,'Ja-Bo',15,'Male',22,0,'DRAGON',NULL,1,3,'Healthy',3,1,0,4,1,2,0,NULL,3,4,2,4,4,4,2,4,2,4,3,2,0,1,0,0,0,0,0,0,0,0,0,0,0,8,0,0,'Blue','b513fb');
+INSERT INTO GamePokemon VALUES(3,3,0,'Cyan',17,'Female',20,45,'FIGHTING',NULL,3,4,'Healthy',3,2,0,3,2,1,0,NULL,3,5,2,4,2,3,2,3,2,3,2,3,0,2,0,0,0,0,1,0,0,0,0,0,0,18,0,0,'Orange','d63f99');
+INSERT INTO GamePokemon VALUES(4,4,0,'Pluey',7,'Male',3,0,'WATER',NULL,4,2,'Healthy',3,3,0,6,1,2,0,NULL,2,4,2,3,2,4,2,4,2,4,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,46,0,1,'Purple','a28d51');
+INSERT INTO GamePokemon VALUES(5,488,0,'Rem',5,'Male',26,300,'DARK',NULL,4,5,'Healthy',3,4,0,4,2,1,0,19,2,4,3,4,1,3,2,5,1,3,0,1,2,0,0,0,0,0,0,0,0,0,0,0,1,6,0,0,'Green','cddc04');
+INSERT INTO GamePokemon VALUES(6,490,0,'Julian',1,'Male',559,0,'STEEL','GHOST',1,6,'Healthy',3,6,0,6,1,2,0,NULL,2,5,1,3,3,6,1,3,1,3,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,27,0,1,'Yellow','7b5a36');
 CREATE TABLE IF NOT EXISTS "Game" (
 	id INTEGER NOT NULL, 
 	"gameId" VARCHAR(10) NOT NULL, 
@@ -797,18 +778,18 @@ CREATE TABLE IF NOT EXISTS "Move" (
 	FOREIGN KEY("modifiedDamageId") REFERENCES "DamageModifierGroup" (id), 
 	FOREIGN KEY("healingTypeId") REFERENCES "HealMove" (id)
 );
-INSERT INTO Move VALUES(1,'Confusion','PSYCHIC','Roll 1 Chance Dice to Confuse the foe','The target''s mind is hit by a weak psychic force that leaves them wondering if they were hit by an invisible enemy. Sometimes the foe is left seeing things that aren''t really there.','Special',2,'ZERO','SINGLE_ENEMY','RANGED_OR_SPECIAL',NULL,1,1,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(2,'Growl','NORMAL','Reduce the foe''s Strength.','Either by a menacing attitude or cute demeanor, the foe will be unsure about attacking the user with full force.','Support',0,'ZERO','ALL_ENEMY_IN_RANGE','ALL_IN_RANGE',2,2,2,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(3,'Tackle','NORMAL','','A basic attack that consists of charging at an enemy.','Physical',2,'ZERO','SINGLE_ENEMY','ADJACENT',2,3,3,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(4,'Leer','NORMAL','Recude the Defense of those affected.','A vicious glare that will make any opponent doubt its own strength in battle.','Support',0,'ZERO','ALL_ENEMY_IN_RANGE','ALL_IN_RANGE',2,4,4,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(5,'Quick Attack','NORMAL','Double the Pokemon''s movement speed.','An attack as fast as lightning','Physical',2,'PLUS_ONE','SINGLE_ENEMY','TARGET_IN_AREA',2,5,5,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''s Evasion. User''s Normal and Fighting Moves can affect Ghost Types and Ghost Moves can affect Normal Types','The Pokemon uses its developed senses and mental ability to forsee the immediate future','Support',0,'ZERO','SINGLE_ENEMY','TARGET_IN_AREA',2,6,6,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'PLUS_FIVE','USER',NULL,NULL,7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'ZERO','SINGLE_ENEMY','ADJACENT',1,8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'ZERO','ALL_ENEMY_IN_RANGE','ALL_IN_RANGE',2,9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(10,'Scratch','NORMAL','','The Pokemon uses its sharp claws to scratch the enemy.','Physical',2,'ZERO','SINGLE_ENEMY','FRONT',2,10,10,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(11,'Swords Dance','NORMAL','Increase User''s Strength','','Support',0,'ZERO','USER','FRONT',1,11,11,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
-INSERT INTO Move VALUES(12,'Persuit','DARK','If the foe is Switching Out or escaping, Add 2 Dice to the Damage Pool and Priority to this move.','The Pokemon chases the foe to deliver a final blow before it escapes.','Physical',2,'PLUS_ONE','SINGLE_ENEMY','TARGET_IN_AREA',2,12,12,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(1,'Confusion','PSYCHIC','Roll 1 Chance Dice to Confuse the foe','The target''s mind is hit by a weak psychic force that leaves them wondering if they were hit by an invisible enemy. Sometimes the foe is left seeing things that aren''t really there.','Special',2,'n0','SingleEnemy','RANGED_OR_SPECIAL',NULL,1,1,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(2,'Growl','NORMAL','Reduce the foe''s Strength.','Either by a menacing attitude or cute demeanor, the foe will be unsure about attacking the user with full force.','Support',0,'n0','AllEnemyInRange','ALL_IN_RANGE',2,2,2,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(3,'Tackle','NORMAL','','A basic attack that consists of charging at an enemy.','Physical',2,'n0','SingleEnemy','ADJACENT',2,3,3,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(4,'Leer','NORMAL','Recude the Defense of those affected.','A vicious glare that will make any opponent doubt its own strength in battle.','Support',0,'n0','AllEnemyInRange','ALL_IN_RANGE',2,4,4,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(5,'Quick Attack','NORMAL','Double the Pokemon''s movement speed.','An attack as fast as lightning','Physical',2,'p1','SingleEnemy','TARGET_IN_AREA',2,5,5,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(6,'Foresight','NORMAL','Ignore any increase in the foe''s Evasion. User''s Normal and Fighting Moves can affect Ghost Types and Ghost Moves can affect Normal Types','The Pokemon uses its developed senses and mental ability to forsee the immediate future','Support',0,'n0','SingleEnemy','TARGET_IN_AREA',2,6,6,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(7,'Endure','NORMAL','The user cannot be reduced to less than 1 Health by the next attack. Status ailments, recoil, or self inflicted damage will still affect it.','The user gets prepared to recieve a fatal blow. It resists the pain despite being seriously hurt.','Support',0,'p5','User',NULL,NULL,7,7,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,1,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(8,'Pound','NORMAL','','A decent hit to smash the foe','Physical',2,'n0','SingleEnemy','ADJACENT',1,8,8,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(9,'Bubble','WATER','Roll 1 Chance Dice to Reduce the foe''s Dexterity.','A spray of bubbles flies around the enemies, some of the bubbles stick to their bodies, hindering their movement.','Special',2,'n0','AllEnemyInRange','ALL_IN_RANGE',2,9,9,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(10,'Scratch','NORMAL','','The Pokemon uses its sharp claws to scratch the enemy.','Physical',2,'n0','SingleEnemy','FRONT',2,10,10,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(11,'Swords Dance','NORMAL','Increase User''s Strength','','Support',0,'n0','User','FRONT',1,11,11,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
+INSERT INTO Move VALUES(12,'Persuit','DARK','If the foe is Switching Out or escaping, Add 2 Dice to the Damage Pool and Priority to this move.','The Pokemon chases the foe to deliver a final blow before it escapes.','Physical',2,'p1','SingleEnemy','TARGET_IN_AREA',2,12,12,0,0,0,0,0,0,0,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,'ONE',NULL,0);
 CREATE TABLE pokemon_garments (
 	pokemon_id INTEGER NOT NULL, 
 	garment_id INTEGER NOT NULL, 
@@ -847,9 +828,12 @@ INSERT INTO GameEntities VALUES(1,1,1);
 INSERT INTO GameEntities VALUES(2,1,2);
 INSERT INTO GameEntities VALUES(3,1,3);
 INSERT INTO GameEntities VALUES(4,1,4);
+INSERT INTO GameEntities VALUES(5,1,5);
+INSERT INTO GameEntities VALUES(6,1,6);
 INSERT INTO GameEntities VALUES(7,1,7);
 INSERT INTO GameEntities VALUES(8,1,8);
-INSERT INTO GameEntities VALUES(13,1,9);
+INSERT INTO GameEntities VALUES(9,1,5);
+INSERT INTO GameEntities VALUES(10,1,6);
 CREATE TABLE IF NOT EXISTS "PokemonBag" (
 	id INTEGER NOT NULL, 
 	"bagSize" VARCHAR(6) NOT NULL, 
@@ -867,8 +851,6 @@ INSERT INTO PokemonBag VALUES(7,'size5',7);
 INSERT INTO PokemonBag VALUES(8,'size5',8);
 INSERT INTO PokemonBag VALUES(9,'size5',5);
 INSERT INTO PokemonBag VALUES(10,'size5',6);
-INSERT INTO PokemonBag VALUES(11,'size5',7);
-INSERT INTO PokemonBag VALUES(12,'size5',8);
 CREATE TABLE IF NOT EXISTS "PersonalStorageBag" (
 	id INTEGER NOT NULL, 
 	"pokemonId" INTEGER NOT NULL, 
@@ -917,9 +899,6 @@ INSERT INTO MoveConnection VALUES(11,6,3);
 INSERT INTO MoveConnection VALUES(12,5,10);
 INSERT INTO MoveConnection VALUES(13,6,11);
 INSERT INTO MoveConnection VALUES(14,5,12);
-INSERT INTO MoveConnection VALUES(15,7,10);
-INSERT INTO MoveConnection VALUES(16,7,4);
-INSERT INTO MoveConnection VALUES(17,8,10);
 CREATE TABLE IF NOT EXISTS "BagItem" (
 	id INTEGER NOT NULL, 
 	"itemId" INTEGER NOT NULL, 
@@ -928,21 +907,20 @@ CREATE TABLE IF NOT EXISTS "BagItem" (
 	FOREIGN KEY("itemId") REFERENCES "Item" (id), 
 	FOREIGN KEY("bagId") REFERENCES "PokemonBag" (id)
 );
-INSERT INTO BagItem VALUES(10,10,4,'{}');
-INSERT INTO BagItem VALUES(13,12,3,'{}');
-INSERT INTO BagItem VALUES(14,13,4,'{}');
-INSERT INTO BagItem VALUES(17,14,6,'{}');
-INSERT INTO BagItem VALUES(18,16,5,'{}');
-INSERT INTO BagItem VALUES(22,18,5,'{}');
-INSERT INTO BagItem VALUES(27,3,1,'{}');
-INSERT INTO BagItem VALUES(28,2,1,'{}');
-INSERT INTO BagItem VALUES(29,11,1,'{}');
-INSERT INTO BagItem VALUES(30,1,2,'{}');
-INSERT INTO BagItem VALUES(31,20,7,'{}');
-INSERT INTO BagItem VALUES(32,21,2,'{}');
-INSERT INTO BagItem VALUES(33,22,2,'{}');
-INSERT INTO BagItem VALUES(34,22,4,'{}');
-INSERT INTO BagItem VALUES(35,22,4,'{}');
+INSERT INTO BagItem VALUES(4,4,2);
+INSERT INTO BagItem VALUES(5,5,3);
+INSERT INTO BagItem VALUES(7,9,2);
+INSERT INTO BagItem VALUES(10,10,4);
+INSERT INTO BagItem VALUES(13,12,3);
+INSERT INTO BagItem VALUES(14,13,4);
+INSERT INTO BagItem VALUES(17,14,6);
+INSERT INTO BagItem VALUES(18,16,5);
+INSERT INTO BagItem VALUES(22,18,5);
+INSERT INTO BagItem VALUES(27,3,1);
+INSERT INTO BagItem VALUES(28,2,1);
+INSERT INTO BagItem VALUES(29,11,1);
+INSERT INTO BagItem VALUES(30,1,2);
+INSERT INTO BagItem VALUES(31,20,2);
 CREATE TABLE IF NOT EXISTS "PersonalStorageItem" (
 	id INTEGER NOT NULL, 
 	"itemId" INTEGER NOT NULL, 

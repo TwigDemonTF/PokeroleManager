@@ -28,15 +28,19 @@ class BasePokemonApi(Resource):
 class GamePokemonApi(Resource):
     def post(self):
         raw = request.get_json()
+        print(raw)
         if raw is None:
             return {"error": "No JSON received"}, 400
 
-        pokemon, entity = create_game_pokemon(raw)
+        pokemon, entity_or_error = create_game_pokemon(raw)
+
+        if pokemon is None:
+            return {"error": entity_or_error}, 400
 
         return {
             "message": f"Created Pokémon '{pokemon.name}'",
             "pokemonId": pokemon.id,
-            "gameEntityId": entity.id
+            "gameEntityId": entity_or_error.id
         }, 201
 
 

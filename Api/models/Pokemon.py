@@ -1,6 +1,11 @@
-from Api.extensions import database
 from sqlalchemy import Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
+from datetime import datetime, date
+from decimal import Decimal
+
+import enum
+
+from Api.extensions import database
 from ..Enums.Types import Types as TypeEnum
 
 pokemon_garments = database.Table(
@@ -63,6 +68,10 @@ class BasePokemon(database.Model):
         back_populates="basePokemon",
         cascade="all, delete-orphan"
     )
+    
+    __computed_fields__ = [
+        "learnable_moves_list"
+    ]
 
     @property
     def learnable_moves_list(self):
@@ -77,9 +86,34 @@ class BasePokemon(database.Model):
 
     def toDict(self):
         data = {}
+
         for column in self.__table__.columns:
-            if column.name != "id":
-                data[column.name] = getattr(self, column.name)
+            if column.name == "id":
+                continue
+
+            value = getattr(self, column.name)
+
+            # Enum → value or name
+            if isinstance(value, enum.Enum):
+                value = value.value  # or value.name
+
+            # datetime / date → ISO string
+            elif isinstance(value, (datetime, date)):
+                value = value.isoformat()
+
+            # Decimal → float (or str if precision matters)
+            elif isinstance(value, Decimal):
+                value = float(value)
+
+            data[column.name] = value
+
+        for field in getattr(self, "__computed_fields__", []):
+            attr = getattr(self, field, None)
+            if callable(attr):
+                data[field] = attr()
+            else:
+                data[field] = attr
+
         return data
 
 class BasePokemonLearnableMove(database.Model):
@@ -117,6 +151,7 @@ class GamePokemon(database.Model):
     id = database.Column(database.Integer, primary_key=True, nullable=False)
     basePokemonId = database.Column(database.Integer, database.ForeignKey("BasePokemon.id"))
     basePokemon = relationship("BasePokemon")
+    canEvolve = database.Column(database.Boolean, nullable=False, default=False)
 
     name = database.Column(database.String(), nullable=False, default="")
     level = database.Column(database.Integer, nullable=False, default=0)
@@ -185,13 +220,17 @@ class GamePokemon(database.Model):
 
     experiencePoints = database.Column(database.Integer, nullable=False, default=0)
     isNpc = database.Column(database.Boolean, nullable=False)
+    isShiny = database.Column(database.Boolean, nullable=False, default=False)
     playerColor = database.Column(database.String(20), nullable=False, default="None")
     Guid = database.Column(database.String(6), nullable=False, unique=True)
 
-    unlocked_moves = relationship(
-        "GamePokemonUnlockedMove",
+    unlocked_moves = relationship("GamePokemonUnlockedMove", back_populates="pokemon", cascade="all, delete-orphan")
+
+    personalStorage = database.relationship(
+        "PersonalStorageBag",
         back_populates="pokemon",
-        cascade="all, delete-orphan"
+        uselist=False,
+        overlaps="pokemon"
     )
 
     @property

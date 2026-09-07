@@ -1573,7 +1573,6 @@ select:focus {
         if (!res.ok) throw new Error("Failed to load BasePokemon");
 
         allBasePokemon = await res.json();
-
         renderBasePokemonSelect();
     }
 
@@ -1665,6 +1664,7 @@ select:focus {
             });
 
             const raw = await res.json();
+            console.log(raw)
             const list = raw.data || raw.pokemons || [];
             battlePokemons.push(...list.map(p => normalizePokemon(p)));
         }
@@ -2297,6 +2297,8 @@ select:focus {
         genLootItemBtn.style.display = "block";
         toggleShopBtn.style.display = "block";
         targetBtn.style.display = "block";
+        togglePokemovEvolveBtn.style.display = "block";
+        grantMoveBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         fetchSelectedAndRender();
@@ -2546,7 +2548,10 @@ select:focus {
         });
     }
 
-    function openAddMoveModal(onCreatedCallback = null) {
+    async function openAddMoveModal(onCreatedCallback = null) {
+        const response = await fetch(`http://192.168.193.96:9090/moveData`);
+        const moveData = await response.json();
+        console.log(moveData)
         Swal.fire({
             title: "Add New Move",
             theme: "dark",
@@ -2615,14 +2620,14 @@ select:focus {
             <label>Type</label>
             <select style="max-height 100px !important;" id="types">
                 {% for item in moveData.types %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Damage Type</label>
             <select id="damageTypes">
                 {% for item in moveData.damageTypes %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
@@ -2640,14 +2645,14 @@ select:focus {
             <label>Target</label>
             <select id="targets">
                 {% for item in moveData.targets %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Move Range Type</label>
             <select id="moveRangeType">
                 {% for item in moveData.moveRangeTypesEnum %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
@@ -2664,49 +2669,49 @@ select:focus {
             <label>Heal Type</label>
             <select id="healTypes">
                 {% for item in moveData.healTypes %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Accuracy Modifier 1</label>
             <select id="accuracyModifier1">
                 {% for item in moveData.accuracyModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Accuracy Modifier 2</label>
             <select id="accuracyModifier2">
                 {% for item in moveData.accuracyModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Accuracy Modifier 3</label>
             <select id="accuracyModifier3">
                 {% for item in moveData.accuracyModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Damage Modifier 1</label>
             <select id="damageModifier1">
                 {% for item in moveData.damageModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Damage Modifier 2</label>
             <select id="damageModifier2">
                 {% for item in moveData.damageModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
             <label>Damage Modifier 3</label>
             <select id="damageModifier3">
                 {% for item in moveData.damageModifiers %}
-                <option value="{{ item.id }}">{{ item.value }}</option>
+                <option value="{{ item.value }}">{{ item.value }}</option>
                 {% endfor %}
             </select>
 
@@ -2970,7 +2975,9 @@ select:focus {
 
     let globalAddResourceBtn = document.getElementById("globalAddResourceBtn");
     let globalRemoveResourceBtn = document.getElementById("globalRemoveResourceBtn");
+    let togglePokemovEvolveBtn = document.getElementById("togglePokemovEvolveBtn");
     let genLootItemBtn = document.getElementById("genLootItemBtn");
+    let grantMoveBtn = document.getElementById("grantMoveBtn");
     let toggleShopBtn = document.getElementById("toggleShopBtn");
 
     const initiativePanel = document.getElementById("initiativePanel");
@@ -3045,6 +3052,117 @@ select:focus {
         actionPanel.appendChild(toggleShopBtn);
     }
 
+    function openPokemonMoveModal() {
+        Swal.fire({
+            title: 'Select Pokémon and Move',
+            html: `
+            <div style="display: flex; gap: 20px;">
+                <!-- Pokémon Select -->
+                <div style="flex: 1;">
+                    <input type="text" id="pokemonSearch" placeholder="Search Pokémon" style="width: 100%; margin-bottom: 5px; padding: 5px;" />
+                    <select id="pokemonSelect" size="10" style="width: 100%;">
+                        ${allBasePokemon.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                    </select>
+                </div>
+
+                <!-- Move Select + Unlock Cost -->
+                <div style="flex: 1;">
+                    <input type="text" id="moveSearch" placeholder="Search Move" style="width: 100%; margin-bottom: 5px; padding: 5px;" />
+                    <select id="moveSelect" size="10" style="width: 100%;">
+                        ${allMoves.map(m => `<option value="${m.id}">${m.name} (${m.type})</option>`).join('')}
+                    </select>
+                    <input type="number" id="unlockCost" placeholder="Unlock Cost" style="width: 100%; margin-top: 5px; padding: 5px;" min="0" />
+                </div>
+            </div>
+            `,
+            width: 600,
+            showCancelButton: true,
+            confirmButtonText: 'Grant',
+            preConfirm: () => {
+                const selectedPokemonId = document.getElementById('pokemonSelect').value;
+                const selectedMoveId = document.getElementById('moveSelect').value;
+                const unlockCost = parseInt(document.getElementById('unlockCost').value);
+
+                if (!selectedPokemonId) {
+                    Swal.showValidationMessage('Please select a Pokémon!');
+                    return false;
+                }
+
+                if (!selectedMoveId) {
+                    Swal.showValidationMessage('Please select a move!');
+                    return false;
+                }
+
+                if (isNaN(unlockCost) || unlockCost < 0) {
+                    Swal.showValidationMessage('Please enter a valid unlock cost!');
+                    return false;
+                }
+
+                return {
+                    pokemonId: selectedPokemonId,
+                    moveId: selectedMoveId,
+                    unlockCost: unlockCost
+                };
+            },
+            didOpen: () => {
+                const pokemonSearch = document.getElementById('pokemonSearch');
+                const pokemonSelect = document.getElementById('pokemonSelect');
+
+                const moveSearch = document.getElementById('moveSearch');
+                const moveSelect = document.getElementById('moveSelect');
+
+                // Pokémon search filter
+                pokemonSearch.addEventListener('input', () => {
+                    const term = pokemonSearch.value.toLowerCase();
+                    Array.from(pokemonSelect.options).forEach(option => {
+                        option.style.display = option.text.toLowerCase().includes(term) ? '' : 'none';
+                    });
+                });
+
+                // Move search filter
+                moveSearch.addEventListener('input', () => {
+                    const term = moveSearch.value.toLowerCase();
+                    Array.from(moveSelect.options).forEach(option => {
+                        option.style.display = option.text.toLowerCase().includes(term) ? '' : 'none';
+                    });
+                });
+            }
+        }).then(result => {
+            if (result.isConfirmed && result.value) {
+                const payload = result.value;
+                console.log(payload)
+                // Send to API endpoint
+                fetch(`${BASE_URL}/basePokemon/${payload.pokemonId}/learnable-moves`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire('Success', 'Move granted successfully!', 'success');
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Failed to grant move', 'error');
+                });
+            }
+        });
+    }
+
+    if (!grantMoveBtn) {
+        grantMoveBtn = document.createElement("button");
+        grantMoveBtn.id = "grantMoveBtn";
+        grantMoveBtn.textContent = "Grant Moves";
+        grantMoveBtn.className = "btn btn-success";
+        grantMoveBtn.style.marginTop = "10px";
+        grantMoveBtn.style.marginRight = "10px";
+        grantMoveBtn.style.display = "none"
+
+        grantMoveBtn.onclick = openPokemonMoveModal;
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(grantMoveBtn);
+    }
 
     if (!globalAddResourceBtn) {
         globalAddResourceBtn = document.createElement("button");
@@ -3174,6 +3292,52 @@ select:focus {
 
         const actionPanel = document.getElementById("actionPanel");
         actionPanel.appendChild(globalRemoveResourceBtn);
+    }
+
+    if (!togglePokemovEvolveBtn) {
+        togglePokemovEvolveBtn = document.createElement("button")
+        togglePokemovEvolveBtn.id = "togglePokemovEvolveBtn";
+        togglePokemovEvolveBtn.textContent = "Toggle CanEvolve";
+        togglePokemovEvolveBtn.className = "btn btn-success";
+        togglePokemovEvolveBtn.style.marginTop = "10px";
+        togglePokemovEvolveBtn.style.marginLeft = "10px";
+        togglePokemovEvolveBtn.style.display = "none";
+
+        togglePokemovEvolveBtn.onclick = async () => {
+            const players = currentPokesOnField.filter(p => !p.isNpc);
+
+            if (!players.length) return;
+
+            const { value: selectedGuid } = await Swal.fire({
+                title: "Select Player",
+                input: "select",
+                inputOptions: Object.fromEntries(
+                players.map(p => [p.guid, p.name])
+                ),
+                theme: "dark",
+                showCancelButton: true,
+            });
+
+            if (!selectedGuid) return;
+
+            const pokemon = players.find(p => p.guid === selectedGuid);
+            const itemOptionsHtml = pokemon.Bag.items
+            .map(bi => `<option value="${bi.bagItemId}">${bi.item.name}</option>`)
+            .join("");
+
+            console.log(selectedGuid)
+
+            await fetch(`${BASE_URL}/evolution`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                pokemonGuid: selectedGuid,
+            })
+            });
+        }
+
+        const actionPanel = document.getElementById("actionPanel");
+        actionPanel.appendChild(togglePokemovEvolveBtn);
     }
 
     document.getElementById("saveBattle").addEventListener("click", async () => {
@@ -3313,6 +3477,7 @@ select:focus {
         genLootItemBtn.style.display = "block";
         toggleShopBtn.style.display = "block";
         targetBtn.style.display = "block";
+        grantMoveBtn.style.display = "block";
         document.getElementById("clearStage").style.display = "block";
 
         // Load

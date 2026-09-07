@@ -1,7 +1,7 @@
 from enum import Enum
 
 class Types(Enum):
-    TYPELESS = "None"
+    TYPELESS = "Typeless"
     NORMAL = "Normal"
     FIRE = "Fire"
     WATER = "Water"

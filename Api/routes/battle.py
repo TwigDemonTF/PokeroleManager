@@ -21,6 +21,7 @@ class GameApi(Resource):
             .filter(Game.gameId == gameId)
             .all()
         )
+        print(allPokemon)
 
         if not allPokemon:
             return {"data": [], "message": "No characters found"}, 200
@@ -280,7 +281,7 @@ class BattleApi(Resource):
                     "target": move.target.name if move.target else None,
                     "moveRangeType": move.moveRangeType.value if move.moveRangeType else None,
                     "moveGridRange": move.moveGridRange if move.moveGridRange else None,
-                    "priority": move.priority.name if move.priority else None,
+                    "priority": move.priority.value if move.priority else None,
 
                     "accuracyModifiers": acc_mods,
                     "damageModifiers": dmg_mods,
